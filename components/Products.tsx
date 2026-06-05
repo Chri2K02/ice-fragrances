@@ -87,7 +87,7 @@ export function Products() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Car Freshener</h3>
+                <h3 className="text-lg font-medium">Air Freshener&apos;s</h3>
                 <span className="font-semibold opacity-60">—</span>
               </div>
               <div className={`${glacialRegular.className} text-sm opacity-70 space-y-1`}>
