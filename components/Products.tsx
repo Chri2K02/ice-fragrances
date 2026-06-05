@@ -1,6 +1,6 @@
 import { getProduct, type Product } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
-import { glacial } from "@/lib/fonts";
+import { glacial, glacialRegular } from "@/lib/fonts";
 
 const WOMEN_IDS = ["frost-mind", "hailstone-wildflower"];
 const MEN_IDS = ["glacier-hours", "iceberg-embrace"];
@@ -87,9 +87,12 @@ export function Products() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Air Freshener</h3>
+                <h3 className="text-lg font-medium">Car Freshener</h3>
                 <span className="font-semibold opacity-60">—</span>
               </div>
+              <p className={`${glacialRegular.className} text-sm opacity-70`}>
+                Light, tangy and cleanses the car in a spring fresh manner
+              </p>
             </div>
           </div>
         </div>
