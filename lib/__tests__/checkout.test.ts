@@ -10,7 +10,7 @@ describe("buildLineItems", () => {
         price_data: {
           currency: "usd",
           unit_amount: 10800,
-          product_data: { name: "Frost Mind" },
+          product_data: { name: "Frost" },
         },
       },
     ]);

@@ -10,7 +10,7 @@ export type Product = {
 export const PRODUCTS: Product[] = [
   {
     id: "frost-mind",
-    name: "Frost Mind",
+    name: "Frost",
     priceCents: 10800,
     video: "/media/frost-mind.mp4",
     poster: "/media/frost-mind.jpg",
@@ -26,7 +26,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "hailstone-wildflower",
-    name: "Hailstone Wildflower",
+    name: "Hailstone",
     priceCents: 10800,
     video: "/media/hailstone-wildflower.mp4",
     poster: "/media/hailstone-wildflower.jpg",
@@ -34,7 +34,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "iceberg-embrace",
-    name: "Iceberg Embrace",
+    name: "Iceberg",
     priceCents: 10800,
     video: "/media/iceberg-embrace.mp4",
     poster: "/media/iceberg-embrace.jpg",

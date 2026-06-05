@@ -1,5 +1,6 @@
 import { getProduct, type Product } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
+import { glacial } from "@/lib/fonts";
 
 const WOMEN_IDS = ["frost-mind", "hailstone-wildflower"];
 const MEN_IDS = ["glacier-hours", "iceberg-embrace"];
@@ -14,7 +15,10 @@ export function Products() {
   const humidifier = getProduct("humidifier");
 
   return (
-    <section id="products" className="max-w-6xl mx-auto px-4 mt-24">
+    <section
+      id="products"
+      className={`${glacial.className} uppercase max-w-6xl mx-auto px-4 mt-24`}
+    >
       <h2 className="text-3xl font-semibold mb-12 text-center">The Collection</h2>
 
       {/* Two gendered columns with vertical divider lines and space between */}
