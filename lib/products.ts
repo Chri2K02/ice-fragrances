@@ -101,7 +101,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "air-freshener",
-    name: "Air Freshener's",
+    name: "Car Freshener's",
     priceCents: 3800,
     poster: "/media/air-freshener.jpg",
     tagline: "Light, tangy and cleanses the car in a spring fresh manner",
