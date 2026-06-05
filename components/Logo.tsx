@@ -10,6 +10,13 @@ export function Logo() {
   useEffect(() => setMounted(true), []);
   const src = logoForTheme(mounted ? resolvedTheme : "light");
   return (
-    <Image src={src} alt="Ice Fragrances" width={180} height={60} priority />
+    <Image
+      src={src}
+      alt="Ice Fragrances"
+      width={180}
+      height={60}
+      priority
+      className="dark:[filter:drop-shadow(0_0_1px_rgba(255,255,255,0.55))]"
+    />
   );
 }
