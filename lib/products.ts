@@ -99,6 +99,14 @@ export const PRODUCTS: Product[] = [
     tagline: "Freshen your world",
     notes: "A water & oil based scented humidifier",
   },
+  {
+    id: "air-freshener",
+    name: "Air Freshener's",
+    priceCents: 3800,
+    poster: "/media/air-freshener.jpg",
+    tagline: "Light, tangy and cleanses the car in a spring fresh manner",
+    notes: "70 fresheners each order",
+  },
 ];
 
 export function getProduct(id: string): Product | undefined {

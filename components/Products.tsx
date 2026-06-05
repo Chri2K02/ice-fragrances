@@ -1,6 +1,6 @@
 import { getProduct, type Product } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
-import { glacial, glacialRegular } from "@/lib/fonts";
+import { glacial } from "@/lib/fonts";
 
 const WOMEN_IDS = ["frost-mind", "hailstone-wildflower"];
 const MEN_IDS = ["glacier-hours", "iceberg-embrace"];
@@ -14,7 +14,7 @@ export function Products() {
   const women = pick(WOMEN_IDS);
   const men = pick(MEN_IDS);
   const apparel = pick(APPAREL_IDS);
-  const humidifier = getProduct("humidifier");
+  const accessories = pick(["humidifier", "air-freshener"]);
 
   return (
     <section
@@ -64,37 +64,16 @@ export function Products() {
         </div>
       )}
 
-      {/* Humidifier — its own section */}
-      {humidifier && (
+      {/* Accessories — humidifier + air freshener */}
+      {accessories.length > 0 && (
         <div className="mt-20 border-t border-black/15 dark:border-white/15 pt-12">
           <h3 className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.3em] opacity-80">
             Accessories
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto">
-            <ProductCard product={humidifier} />
-
-            {/* Air Freshener — placeholder (coming soon) */}
-            <div
-              className="rounded-2xl p-4 flex flex-col gap-3"
-              style={{ background: "var(--card)" }}
-            >
-              <div
-                className="relative aspect-[9/16] overflow-hidden rounded-2xl grid place-items-center"
-                style={{ background: "color-mix(in srgb, var(--fg) 8%, transparent)" }}
-              >
-                <span className="text-xs uppercase tracking-[0.3em] opacity-60">
-                  Coming soon
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Air Freshener&apos;s</h3>
-                <span className="font-semibold opacity-60">—</span>
-              </div>
-              <div className={`${glacialRegular.className} text-sm opacity-70 space-y-1`}>
-                <p>Light, tangy and cleanses the car in a spring fresh manner</p>
-                <p>70 fresheners each order</p>
-              </div>
-            </div>
+            {accessories.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
           </div>
         </div>
       )}
