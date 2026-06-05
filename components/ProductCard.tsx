@@ -95,7 +95,7 @@ export function ProductCard({ product }: { product: Product }) {
       <button
         type="button"
         onClick={() => add(product.id)}
-        className="mt-1 rounded-full px-4 py-2 font-medium text-black"
+        className="mt-1 rounded-full px-4 py-2 font-medium text-black border-2 border-black"
         style={{ background: "var(--accent)" }}
       >
         Add to Cart
