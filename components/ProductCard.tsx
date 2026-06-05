@@ -14,16 +14,19 @@ export function ProductCard({ product }: { product: Product }) {
   const add = useCart((s) => s.add);
   const price = `$${(product.priceCents / 100).toFixed(2)}`;
 
-  // Build the ordered media list: photos first, then the video (if any).
+  // Build the ordered media list: first photo (thumbnail), then the video
+  // (if any), then the rest of the gallery.
   const photos =
     product.images && product.images.length > 0
       ? product.images
       : [product.poster];
+  const [firstPhoto, ...restPhotos] = photos;
   const slides: Slide[] = [
-    ...photos.map((src) => ({ type: "image" as const, src })),
+    { type: "image" as const, src: firstPhoto },
     ...(product.video
       ? [{ type: "video" as const, src: product.video, poster: product.poster }]
       : []),
+    ...restPhotos.map((src) => ({ type: "image" as const, src })),
   ];
 
   const [idx, setIdx] = useState(0);
