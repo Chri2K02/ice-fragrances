@@ -70,8 +70,27 @@ export function Products() {
           <h3 className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.3em] opacity-80">
             Accessories
           </h3>
-          <div className="max-w-xs mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto">
             <ProductCard product={humidifier} />
+
+            {/* Air Freshener — placeholder (coming soon) */}
+            <div
+              className="rounded-2xl p-4 flex flex-col gap-3"
+              style={{ background: "var(--card)" }}
+            >
+              <div
+                className="relative aspect-[9/16] overflow-hidden rounded-2xl grid place-items-center"
+                style={{ background: "color-mix(in srgb, var(--fg) 8%, transparent)" }}
+              >
+                <span className="text-xs uppercase tracking-[0.3em] opacity-60">
+                  Coming soon
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Air Freshener</h3>
+                <span className="font-semibold opacity-60">—</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
