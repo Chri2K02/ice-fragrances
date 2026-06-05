@@ -72,7 +72,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "tshirt",
-    name: "T-Shirt",
+    name: "Half-Sleeve Tees",
     priceCents: 3800,
     poster: "/media/tshirt-5.jpg",
     images: [
@@ -82,15 +82,13 @@ export const PRODUCTS: Product[] = [
       "/media/tshirt-3.jpg",
       "/media/tshirt-4.jpg",
     ],
-    notes: "Half-sleeve tees",
   },
   {
     id: "dress-shirt",
-    name: "Dress Shirt",
+    name: "Nylon Dress Shirts",
     priceCents: 6800,
     poster: "/media/dress-shirt-2.jpg",
     images: ["/media/dress-shirt-2.jpg", "/media/dress-shirt-1.jpg"],
-    notes: "Nylon dress shirts",
   },
   {
     id: "humidifier",
