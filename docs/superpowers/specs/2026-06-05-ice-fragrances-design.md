@@ -161,12 +161,12 @@ Source assets currently in `C:\Users\ckear\Downloads\icefrag\`.
 ## Deployment
 
 - Vercel project, environment variables for Stripe keys (test + live).
-- Custom domain (already owned — **exact domain: TBD, user to provide**).
+- Custom domain: **icefragrances.com** (already owned).
 - Stripe in test mode until launch, then switch to live keys.
 
 ## Open Items (to confirm during/after spec review)
 
-1. **Domain name** — user owns a domain; exact name to be filled in.
+1. ~~Domain name~~ — **icefragrances.com** (confirmed).
 2. **Humidifier shipping** — assumed free; confirm.
 3. **Shipping region** — assumed US only; confirm (international changes checkout).
 4. **Product display names** — confirm short names vs the longer video names.
