@@ -12,15 +12,19 @@ export function Header({ onCartClick }: { onCartClick: () => void }) {
     >
       <div className="max-w-6xl mx-auto px-4 py-5 relative flex items-center justify-center">
         <Logo />
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3">
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-3">
           <ThemeToggle />
           <button
             type="button"
             onClick={onCartClick}
             aria-label="Open cart"
-            className="rounded-full border px-3 py-1 text-sm"
+            className="rounded-full border px-2 sm:px-3 py-1 text-sm whitespace-nowrap"
           >
-            Cart ({count})
+            <span className="sm:hidden" aria-hidden>
+              🛒
+            </span>
+            <span className="hidden sm:inline">Cart</span>
+            <span> ({count})</span>
           </button>
         </div>
       </div>
