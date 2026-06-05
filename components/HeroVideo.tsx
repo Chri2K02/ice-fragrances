@@ -20,7 +20,7 @@ export function HeroVideo() {
           </h1>
           <a
             href="#products"
-            className="inline-block mt-5 rounded-full px-6 py-3 font-bold text-black border-2 border-black"
+            className={`${glacial.className} inline-block mt-5 rounded-full px-6 py-3 font-bold text-black border-2 border-black`}
             style={{ background: "var(--accent)" }}
           >
             Shop
