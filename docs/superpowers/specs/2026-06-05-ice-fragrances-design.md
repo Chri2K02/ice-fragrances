@@ -23,7 +23,7 @@ out via Stripe. The site supports light and dark modes.
 - No product reviews, blog, or additional pages.
 - No custom order-management dashboard — Stripe's dashboard handles orders.
 - No inventory tracking system (manual for now).
-- No internationalization — US shipping only at launch.
+- No broad internationalization — ships to US + Canada only at launch.
 
 ## Tech Stack
 
@@ -106,19 +106,17 @@ Browser (one page)
 
 Source assets currently in `C:\Users\ckear\Downloads\icefrag\`.
 
-| Product    | For sale | Price | Video                          | Photo                  |
-|------------|----------|-------|--------------------------------|------------------------|
-| CloudNine  | No (hero only) | —  | `CloudNine.mp4`                | — (none)               |
-| Frost      | Yes      | $108  | `FrostMind.mp4`                | `FrostThumbnail.jpg`   |
-| Glacier    | Yes      | $108  | `GlacierHours.mp4`             | `GlacierThumbnail.jpg` |
-| Hailstone  | Yes      | $108  | `HailstoneWildflowerFinal.mp4` | `HailstoneThumbnail.jpg` |
-| Iceberg    | Yes      | $108  | `IcebergEmbrace.mp4`           | `IcebergThumbnail.jpg` |
-| Humidifier | Yes      | $38   | `HumidiferAdFinal.mp4`         | `Edit1.jpg`            |
+| Display name        | For sale | Price | Video                          | Photo                  |
+|---------------------|----------|-------|--------------------------------|------------------------|
+| (CloudNine hero)    | No (hero only) | —  | `CloudNine.mp4`                | — (none)               |
+| Frost Mind          | Yes      | $108  | `FrostMind.mp4`                | `FrostThumbnail.jpg`   |
+| Glacier Hours       | Yes      | $108  | `GlacierHours.mp4`             | `GlacierThumbnail.jpg` |
+| Hailstone Wildflower| Yes      | $108  | `HailstoneWildflowerFinal.mp4` | `HailstoneThumbnail.jpg` |
+| Iceberg Embrace     | Yes      | $108  | `IcebergEmbrace.mp4`           | `IcebergThumbnail.jpg` |
+| Humidifier          | Yes      | $38   | `HumidiferAdFinal.mp4`         | `Edit1.jpg`            |
 
-- Colognes: **$108, free shipping**. Humidifier: **$38** (assumed free shipping —
-  confirm).
-- Product display names TBD with user (e.g. "Frost" vs "FrostMind"). Defaults:
-  the short folder name (Frost, Glacier, Hailstone, Iceberg, Humidifier).
+- Colognes: **$108**. Humidifier: **$38**. **Free shipping on all** to US + Canada.
+- Display names use the longer product names (above), per user.
 
 ## Video Handling (Performance)
 
@@ -136,8 +134,8 @@ Source assets currently in `C:\Users\ckear\Downloads\icefrag\`.
 1. Visitor adds items to the cart (client `cartStore`).
 2. Checkout button POSTs line items to `/api/checkout`.
 3. Server validates each item against the `products` config, builds a Stripe
-   Checkout Session (line items, shipping address collection = US, shipping
-   rate = $0 free), returns the session URL.
+   Checkout Session (line items, shipping address collection = US + Canada,
+   shipping rate = $0 free), returns the session URL.
 4. Browser redirects to Stripe-hosted Checkout.
 5. On success → success state/page; on cancel → return to page with cart intact.
 6. Orders + customer/shipping details appear in the Stripe dashboard; Stripe
@@ -167,8 +165,9 @@ Source assets currently in `C:\Users\ckear\Downloads\icefrag\`.
 ## Open Items (to confirm during/after spec review)
 
 1. ~~Domain name~~ — **icefragrances.com** (confirmed).
-2. **Humidifier shipping** — assumed free; confirm.
-3. **Shipping region** — assumed US only; confirm (international changes checkout).
-4. **Product display names** — confirm short names vs the longer video names.
+2. ~~Humidifier shipping~~ — **free** (confirmed).
+3. ~~Shipping region~~ — **US + Canada**, free shipping on all (confirmed).
+4. ~~Product display names~~ — **longer names** (Frost Mind, Glacier Hours,
+   Hailstone Wildflower, Iceberg Embrace, Humidifier) (confirmed).
 5. **Dark-mode logo polish** — confirm approach if the default (frosted header /
    subtle glow) needs adjusting.
