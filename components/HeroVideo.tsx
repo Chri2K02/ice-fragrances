@@ -1,0 +1,29 @@
+import { VideoPlayer } from "@/components/VideoPlayer";
+
+export function HeroVideo() {
+  return (
+    <section className="relative">
+      <div className="max-w-6xl mx-auto px-4 pt-8">
+        <div className="aspect-video w-full overflow-hidden rounded-3xl">
+          <VideoPlayer
+            src="/media/cloudnine.mp4"
+            poster="/media/cloudnine.jpg"
+            label="Ice Fragrances"
+          />
+        </div>
+        <div className="text-center mt-8">
+          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
+            Scent, frozen in a moment.
+          </h1>
+          <a
+            href="#products"
+            className="inline-block mt-5 rounded-full px-6 py-3 font-medium text-black"
+            style={{ background: "var(--accent)" }}
+          >
+            Shop
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
