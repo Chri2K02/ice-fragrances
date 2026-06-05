@@ -10,12 +10,9 @@ export function Header({ onCartClick }: { onCartClick: () => void }) {
       className="sticky top-0 z-40 backdrop-blur-md border-b border-black/10 dark:border-white/10"
       style={{ background: "color-mix(in srgb, var(--bg) 80%, transparent)" }}
     >
-      <div className="max-w-6xl mx-auto px-4 h-28 grid grid-cols-3 items-center">
-        <div aria-hidden />
-        <div className="flex justify-center">
-          <Logo />
-        </div>
-        <div className="flex items-center justify-end gap-3">
+      <div className="max-w-6xl mx-auto px-4 py-5 relative flex items-center justify-center">
+        <Logo />
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3">
           <ThemeToggle />
           <button
             type="button"
