@@ -4,6 +4,7 @@ import Image from "next/image";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { useCart } from "@/lib/cartStore";
 import type { Product } from "@/lib/products";
+import { glacialRegular } from "@/lib/fonts";
 
 export function ProductCard({ product }: { product: Product }) {
   const [showPhoto, setShowPhoto] = useState(true);
@@ -45,7 +46,7 @@ export function ProductCard({ product }: { product: Product }) {
         <h3 className="text-lg font-medium">{product.name}</h3>
         <span className="font-semibold">{price}</span>
       </div>
-      <div className="text-sm opacity-70 space-y-1">
+      <div className={`${glacialRegular.className} text-sm opacity-70 space-y-1`}>
         <p className="italic">{product.tagline}</p>
         <p>{product.notes}</p>
         {product.oil && <p>Oil concentration: {product.oil}</p>}
