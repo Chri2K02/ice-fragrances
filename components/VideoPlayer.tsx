@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type Props = { src: string; poster: string; label: string };
 
@@ -7,8 +7,10 @@ export function VideoPlayer({ src, poster, label }: Props) {
   const ref = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
 
-  // Keep the DOM element's muted property in sync (attribute alone is unreliable)
-  useEffect(() => {
+  // Keep the DOM element's muted property in sync BEFORE paint, so the browser
+  // sees a muted element and does not block autoplay (React's `muted` attribute
+  // alone is unreliable).
+  useLayoutEffect(() => {
     if (ref.current) ref.current.muted = muted;
   }, [muted]);
 
@@ -28,12 +30,13 @@ export function VideoPlayer({ src, poster, label }: Props) {
   }, []);
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full">
       <video
         ref={ref}
         data-testid="video"
         src={src}
         poster={poster}
+        autoPlay
         loop
         muted
         playsInline

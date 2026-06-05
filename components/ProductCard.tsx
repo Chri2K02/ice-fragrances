@@ -15,7 +15,7 @@ export function ProductCard({ product }: { product: Product }) {
       className="rounded-2xl p-4 flex flex-col gap-3"
       style={{ background: "var(--card)" }}
     >
-      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
+      <div className="relative aspect-square overflow-hidden rounded-2xl">
         {showPhoto ? (
           <Image
             src={product.poster}

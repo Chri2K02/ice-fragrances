@@ -4,7 +4,7 @@ export function HeroVideo() {
   return (
     <section className="relative">
       <div className="max-w-6xl mx-auto px-4 pt-8">
-        <div className="aspect-video w-full overflow-hidden rounded-3xl">
+        <div className="mx-auto w-full max-w-sm aspect-[9/16] overflow-hidden rounded-3xl">
           <VideoPlayer
             src="/media/cloudnine.mp4"
             poster="/media/cloudnine.jpg"
