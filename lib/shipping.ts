@@ -30,15 +30,19 @@ export function shippingRateCents(country: Country, region: string): number {
   return ZONE_CENTS[zoneFor(country, region)];
 }
 
+// True when the cart has any item that is NOT free-shipping (apparel/accessory).
+// Those carts need the address step to compute a zone rate; all-cologne carts don't.
+export function cartNeedsShipping(items: CartItem[]): boolean {
+  return items.some((i) => !getProduct(i.id)?.freeShipping);
+}
+
 // All-cologne carts ship free; any apparel/accessory triggers the zone rate.
 export function orderShippingCents(
   items: CartItem[],
   country: Country,
   region: string
 ): number {
-  const allFree =
-    items.length > 0 && items.every((i) => getProduct(i.id)?.freeShipping);
-  return allFree ? 0 : shippingRateCents(country, region);
+  return cartNeedsShipping(items) ? shippingRateCents(country, region) : 0;
 }
 
 export const CA_PROVINCES: [string, string][] = [

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { buildLineItems } from "@/lib/checkout";
-import { orderShippingCents, type Country } from "@/lib/shipping";
+import {
+  cartNeedsShipping,
+  shippingRateCents,
+  type Country,
+} from "@/lib/shipping";
 import type { CartItem } from "@/lib/cartStore";
 
 type Address = {
@@ -36,47 +40,71 @@ function validateAddress(a: unknown): Address {
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as { items: CartItem[]; address: unknown };
+    const body = (await req.json()) as { items: CartItem[]; address?: unknown };
     const lineItems = buildLineItems(body.items);
-    const address = validateAddress(body.address);
-    const shipping = orderShippingCents(body.items, address.country, address.state);
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
-    const stripeAddress = {
-      line1: address.line1,
-      city: address.city,
-      state: address.state,
-      postal_code: address.postal,
-      country: address.country,
-    };
-
-    // Pre-set the customer's address so automatic tax uses it (no double entry).
-    const customer = await stripe.customers.create({
-      name: address.name,
-      address: stripeAddress,
-      shipping: { name: address.name, address: stripeAddress },
-    });
-
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      customer: customer.id,
-      line_items: lineItems,
-      automatic_tax: { enabled: true },
-      shipping_options: [
-        {
-          shipping_rate_data: {
-            type: "fixed_amount",
-            fixed_amount: { amount: shipping, currency: "usd" },
-            display_name: shipping === 0 ? "Free shipping" : "Shipping",
-            tax_behavior: "exclusive",
-          },
-        },
-      ],
+    const urls = {
       success_url: `${siteUrl}/success`,
       cancel_url: `${siteUrl}/`,
-    });
+    };
+
+    let session: Stripe.Checkout.Session;
+
+    if (cartNeedsShipping(body.items)) {
+      // Apparel/accessories: address collected on our site -> compute zone rate.
+      const address = validateAddress(body.address);
+      const shipping = shippingRateCents(address.country, address.state);
+      const stripeAddress = {
+        line1: address.line1,
+        city: address.city,
+        state: address.state,
+        postal_code: address.postal,
+        country: address.country,
+      };
+      const customer = await stripe.customers.create({
+        name: address.name,
+        address: stripeAddress,
+        shipping: { name: address.name, address: stripeAddress },
+      });
+      session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        customer: customer.id,
+        line_items: lineItems,
+        automatic_tax: { enabled: true },
+        shipping_options: [
+          {
+            shipping_rate_data: {
+              type: "fixed_amount",
+              fixed_amount: { amount: shipping, currency: "usd" },
+              display_name: "Shipping",
+              tax_behavior: "exclusive",
+            },
+          },
+        ],
+        ...urls,
+      });
+    } else {
+      // All colognes: free shipping, let Stripe collect the address.
+      session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        line_items: lineItems,
+        automatic_tax: { enabled: true },
+        shipping_address_collection: { allowed_countries: ["US", "CA"] },
+        shipping_options: [
+          {
+            shipping_rate_data: {
+              type: "fixed_amount",
+              fixed_amount: { amount: 0, currency: "usd" },
+              display_name: "Free shipping",
+              tax_behavior: "exclusive",
+            },
+          },
+        ],
+        ...urls,
+      });
+    }
 
     return NextResponse.json({ url: session.url });
   } catch (err) {

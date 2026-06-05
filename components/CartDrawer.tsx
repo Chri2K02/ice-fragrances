@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useCart } from "@/lib/cartStore";
 import { getProduct } from "@/lib/products";
-import { regionsFor, type Country } from "@/lib/shipping";
+import { regionsFor, cartNeedsShipping, type Country } from "@/lib/shipping";
 
 const EMPTY = { name: "", country: "CA" as Country, state: "", line1: "", city: "", postal: "" };
 
@@ -19,6 +19,7 @@ export function CartDrawer({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const total = `$${(totalCents() / 100).toFixed(2)}`;
+  const needsAddress = cartNeedsShipping(items);
 
   const canSubmit =
     addr.name && addr.state && addr.line1 && addr.city && addr.postal;
@@ -106,17 +107,20 @@ export function CartDrawer({
               <span>Subtotal</span>
               <span>{total}</span>
             </div>
+            {error && <p className="text-sm text-red-500 mt-3">{error}</p>}
             <button
               type="button"
-              disabled={items.length === 0}
-              onClick={() => setStep("address")}
+              disabled={items.length === 0 || loading}
+              onClick={() => (needsAddress ? setStep("address") : payNow())}
               className="mt-4 w-full rounded-full px-4 py-3 font-medium text-black border-2 border-black disabled:opacity-40"
               style={{ background: "var(--accent)" }}
             >
-              Checkout
+              {loading ? "Redirecting…" : "Checkout"}
             </button>
             <p className="text-xs opacity-60 mt-2 text-center">
-              Shipping &amp; taxes calculated at the next step.
+              {needsAddress
+                ? "Shipping & taxes calculated at the next step."
+                : "Colognes ship free. Taxes calculated at checkout."}
             </p>
           </>
         )}
