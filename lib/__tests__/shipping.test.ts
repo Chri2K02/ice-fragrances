@@ -35,12 +35,12 @@ describe("orderShippingCents", () => {
     expect(orderShippingCents(items, "US", "TX")).toBe(0);
   });
 
-  it("charges the zone rate when an apparel/accessory item is present", () => {
+  it("is free when the cart contains a cologne, even alongside an accessory", () => {
     const items = [
       { id: "frost-mind", qty: 1 },
       { id: "humidifier", qty: 1 },
     ];
-    expect(orderShippingCents(items, "CA", "AB")).toBe(1200);
+    expect(orderShippingCents(items, "CA", "AB")).toBe(0);
   });
 
   it("charges the zone rate for an accessory-only cart", () => {

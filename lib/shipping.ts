@@ -30,13 +30,14 @@ export function shippingRateCents(country: Country, region: string): number {
   return ZONE_CENTS[zoneFor(country, region)];
 }
 
-// True when the cart has any item that is NOT free-shipping (apparel/accessory).
-// Those carts need the address step to compute a zone rate; all-cologne carts don't.
+// Any cologne in the cart makes the whole order ship free. Shipping is only
+// charged when the cart is entirely apparel/accessories (no cologne) — those
+// carts need the address step to compute a zone rate.
 export function cartNeedsShipping(items: CartItem[]): boolean {
-  return items.some((i) => !getProduct(i.id)?.freeShipping);
+  return items.length > 0 && !items.some((i) => getProduct(i.id)?.freeShipping);
 }
 
-// All-cologne carts ship free; any apparel/accessory triggers the zone rate.
+// Free if the cart contains a cologne; otherwise the zone rate.
 export function orderShippingCents(
   items: CartItem[],
   country: Country,
