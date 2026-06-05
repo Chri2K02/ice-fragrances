@@ -102,7 +102,7 @@ export const PRODUCTS: Product[] = [
     video: "/media/humidifier.mp4",
     poster: "/media/humidifier.jpg",
     tagline: "Freshen your world",
-    notes: "A water & oil based scented humidifier",
+    notes: "A water & oil based scented humidifier. Order comes with an oil base.",
   },
   {
     id: "air-freshener",
