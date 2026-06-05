@@ -2,6 +2,9 @@
 import { useState } from "react";
 import { useCart } from "@/lib/cartStore";
 import { getProduct } from "@/lib/products";
+import { regionsFor, type Country } from "@/lib/shipping";
+
+const EMPTY = { name: "", country: "CA" as Country, state: "", line1: "", city: "", postal: "" };
 
 export function CartDrawer({
   open,
@@ -11,26 +14,36 @@ export function CartDrawer({
   onClose: () => void;
 }) {
   const { items, remove, totalCents } = useCart();
+  const [step, setStep] = useState<"cart" | "address">("cart");
+  const [addr, setAddr] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const total = `$${(totalCents() / 100).toFixed(2)}`;
 
-  async function checkout() {
+  const canSubmit =
+    addr.name && addr.state && addr.line1 && addr.city && addr.postal;
+
+  async function payNow() {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ items, address: addr }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
-      else alert(data.error ?? "Checkout failed");
+      else setError(data.error ?? "Checkout failed");
     } catch {
-      alert("Checkout failed. Please try again.");
+      setError("Checkout failed. Please try again.");
     } finally {
       setLoading(false);
     }
   }
+
+  const field =
+    "w-full rounded-lg border border-black/15 dark:border-white/20 bg-transparent px-3 py-2 text-sm";
 
   return (
     <div
@@ -44,63 +57,146 @@ export function CartDrawer({
         onClick={onClose}
       />
       <aside
-        className={`absolute right-0 top-0 h-full w-full max-w-md p-5 shadow-xl transition-transform ${
+        className={`absolute right-0 top-0 h-full w-full max-w-md p-5 shadow-xl overflow-y-auto transition-transform ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
         style={{ background: "var(--bg)" }}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Your Cart</h2>
+          <h2 className="text-xl font-semibold">
+            {step === "cart" ? "Your Cart" : "Shipping address"}
+          </h2>
           <button type="button" onClick={onClose} aria-label="Close cart">
             ✕
           </button>
         </div>
 
-        {items.length === 0 ? (
-          <p className="opacity-70">Your cart is empty.</p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {items.map((i) => {
-              const p = getProduct(i.id);
-              if (!p) return null;
-              return (
-                <li key={i.id} className="flex justify-between items-center">
-                  <span>
-                    {p.name} × {i.qty}
-                  </span>
-                  <span className="flex items-center gap-3">
-                    ${((p.priceCents * i.qty) / 100).toFixed(2)}
-                    <button
-                      type="button"
-                      onClick={() => remove(i.id)}
-                      aria-label={`Remove ${p.name}`}
-                      className="opacity-60 hover:opacity-100"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+        {step === "cart" && (
+          <>
+            {items.length === 0 ? (
+              <p className="opacity-70">Your cart is empty.</p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {items.map((i) => {
+                  const p = getProduct(i.id);
+                  if (!p) return null;
+                  return (
+                    <li key={i.id} className="flex justify-between items-center">
+                      <span>
+                        {p.name} × {i.qty}
+                      </span>
+                      <span className="flex items-center gap-3">
+                        ${((p.priceCents * i.qty) / 100).toFixed(2)}
+                        <button
+                          type="button"
+                          onClick={() => remove(i.id)}
+                          aria-label={`Remove ${p.name}`}
+                          className="opacity-60 hover:opacity-100"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            <div className="mt-6 border-t pt-4 flex justify-between font-semibold">
+              <span>Subtotal</span>
+              <span>{total}</span>
+            </div>
+            <button
+              type="button"
+              disabled={items.length === 0}
+              onClick={() => setStep("address")}
+              className="mt-4 w-full rounded-full px-4 py-3 font-medium text-black border-2 border-black disabled:opacity-40"
+              style={{ background: "var(--accent)" }}
+            >
+              Checkout
+            </button>
+            <p className="text-xs opacity-60 mt-2 text-center">
+              Shipping &amp; taxes calculated at the next step.
+            </p>
+          </>
         )}
 
-        <div className="mt-6 border-t pt-4 flex justify-between font-semibold">
-          <span>Total</span>
-          <span>{total}</span>
-        </div>
-        <button
-          type="button"
-          disabled={items.length === 0 || loading}
-          onClick={checkout}
-          className="mt-4 w-full rounded-full px-4 py-3 font-medium text-black disabled:opacity-40"
-          style={{ background: "var(--accent)" }}
-        >
-          {loading ? "Redirecting…" : "Checkout"}
-        </button>
-        <p className="text-xs opacity-60 mt-2 text-center">
-          Free shipping to US &amp; Canada.
-        </p>
+        {step === "address" && (
+          <div className="flex flex-col gap-3">
+            <p className="text-sm opacity-70">
+              Enter your shipping address to calculate shipping &amp; taxes.
+            </p>
+            <input
+              className={field}
+              placeholder="Full name"
+              value={addr.name}
+              onChange={(e) => setAddr({ ...addr, name: e.target.value })}
+            />
+            <input
+              className={field}
+              placeholder="Street address"
+              value={addr.line1}
+              onChange={(e) => setAddr({ ...addr, line1: e.target.value })}
+            />
+            <input
+              className={field}
+              placeholder="City"
+              value={addr.city}
+              onChange={(e) => setAddr({ ...addr, city: e.target.value })}
+            />
+            <div className="flex gap-3">
+              <select
+                className={field}
+                value={addr.country}
+                onChange={(e) =>
+                  setAddr({ ...addr, country: e.target.value as Country, state: "" })
+                }
+              >
+                <option value="CA">Canada</option>
+                <option value="US">United States</option>
+              </select>
+              <select
+                className={field}
+                value={addr.state}
+                onChange={(e) => setAddr({ ...addr, state: e.target.value })}
+              >
+                <option value="">
+                  {addr.country === "CA" ? "Province" : "State"}
+                </option>
+                {regionsFor(addr.country).map(([code, label]) => (
+                  <option key={code} value={code}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <input
+              className={field}
+              placeholder={addr.country === "CA" ? "Postal code" : "ZIP code"}
+              value={addr.postal}
+              onChange={(e) => setAddr({ ...addr, postal: e.target.value })}
+            />
+
+            {error && <p className="text-sm text-red-500">{error}</p>}
+
+            <button
+              type="button"
+              disabled={!canSubmit || loading}
+              onClick={payNow}
+              className="mt-1 w-full rounded-full px-4 py-3 font-medium text-black border-2 border-black disabled:opacity-40"
+              style={{ background: "var(--accent)" }}
+            >
+              {loading ? "Redirecting…" : "Continue to payment"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep("cart")}
+              className="text-sm opacity-60 hover:opacity-100"
+            >
+              ‹ Back to cart
+            </button>
+          </div>
+        )}
       </aside>
     </div>
   );

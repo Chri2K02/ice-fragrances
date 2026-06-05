@@ -8,6 +8,7 @@ export type Product = {
   tagline?: string; // evocative line under the title
   notes?: string; // scent notes / description
   oil?: string; // oil concentration, e.g. "18%"
+  freeShipping?: boolean; // true = always free shipping (colognes)
 };
 
 export const PRODUCTS: Product[] = [
@@ -15,6 +16,7 @@ export const PRODUCTS: Product[] = [
     id: "frost-mind",
     name: "Frost",
     priceCents: 10800,
+    freeShipping: true,
     video: "/media/frost-mind.mp4",
     poster: "/media/frost-mind.jpg",
     tagline: 'Takes you to a "different state of mind" (Kid Bloom)',
@@ -26,6 +28,7 @@ export const PRODUCTS: Product[] = [
     id: "glacier-hours",
     name: "Glacier",
     priceCents: 10800,
+    freeShipping: true,
     video: "/media/glacier-hours.mp4",
     poster: "/media/glacier-hours.jpg",
     images: [
@@ -44,6 +47,7 @@ export const PRODUCTS: Product[] = [
     id: "hailstone-wildflower",
     name: "Hailstone",
     priceCents: 10800,
+    freeShipping: true,
     video: "/media/hailstone-wildflower.mp4",
     poster: "/media/hailstone-wildflower.jpg",
     tagline: 'Smells like an absolute "wildflower" (Beach House)',
@@ -55,6 +59,7 @@ export const PRODUCTS: Product[] = [
     id: "iceberg-embrace",
     name: "Iceberg",
     priceCents: 10800,
+    freeShipping: true,
     video: "/media/iceberg-embrace.mp4",
     poster: "/media/iceberg-embrace.jpg",
     images: [
