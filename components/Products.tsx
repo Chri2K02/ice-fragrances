@@ -90,9 +90,10 @@ export function Products() {
                 <h3 className="text-lg font-medium">Car Freshener</h3>
                 <span className="font-semibold opacity-60">—</span>
               </div>
-              <p className={`${glacialRegular.className} text-sm opacity-70`}>
-                Light, tangy and cleanses the car in a spring fresh manner
-              </p>
+              <div className={`${glacialRegular.className} text-sm opacity-70 space-y-1`}>
+                <p>Light, tangy and cleanses the car in a spring fresh manner</p>
+                <p>70 fresheners each order</p>
+              </div>
             </div>
           </div>
         </div>
