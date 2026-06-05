@@ -16,7 +16,7 @@ export function Logo() {
       width={554}
       height={283}
       priority
-      className="h-12 w-auto dark:[filter:drop-shadow(0_0_1px_rgba(255,255,255,0.55))]"
+      className="h-20 w-auto dark:[filter:drop-shadow(0_0_1px_rgba(255,255,255,0.55))]"
     />
   );
 }
