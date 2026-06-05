@@ -6,7 +6,7 @@ import { useCart } from "@/lib/cartStore";
 import type { Product } from "@/lib/products";
 
 export function ProductCard({ product }: { product: Product }) {
-  const [showPhoto, setShowPhoto] = useState(false);
+  const [showPhoto, setShowPhoto] = useState(true);
   const add = useCart((s) => s.add);
   const price = `$${(product.priceCents / 100).toFixed(2)}`;
 
@@ -15,7 +15,7 @@ export function ProductCard({ product }: { product: Product }) {
       className="rounded-2xl p-4 flex flex-col gap-3"
       style={{ background: "var(--card)" }}
     >
-      <div className="relative aspect-square overflow-hidden rounded-2xl">
+      <div className="relative aspect-[9/16] overflow-hidden rounded-2xl">
         {showPhoto ? (
           <Image
             src={product.poster}

@@ -22,17 +22,17 @@ beforeEach(() => useCart.getState().clear());
 const product = PRODUCTS[0]; // Frost Mind
 
 describe("ProductCard", () => {
-  it("shows the video first and flips to the photo on arrow click", async () => {
+  it("shows the photo first and flips to the video on arrow click", async () => {
     render(<ProductCard product={product} />);
-    expect(screen.getByTestId("video")).toBeInTheDocument();
-    expect(screen.queryByTestId("product-photo")).toBeNull();
-
-    await userEvent.click(screen.getByRole("button", { name: /show photo/i }));
     expect(screen.getByTestId("product-photo")).toBeInTheDocument();
     expect(screen.queryByTestId("video")).toBeNull();
 
     await userEvent.click(screen.getByRole("button", { name: /show video/i }));
     expect(screen.getByTestId("video")).toBeInTheDocument();
+    expect(screen.queryByTestId("product-photo")).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: /show photo/i }));
+    expect(screen.getByTestId("product-photo")).toBeInTheDocument();
   });
 
   it("adds the product to the cart", async () => {
