@@ -35,3 +35,9 @@ body {
   background: var(--bg);
   color: var(--fg);
 }
+
+/* Interactive elements show the pointer cursor (disabled ones stay default). */
+button:not(:disabled),
+a {
+  cursor: pointer;
+}
