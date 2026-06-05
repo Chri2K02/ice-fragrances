@@ -11,7 +11,7 @@ export function HeroVideo() {
             label="Ice Fragrances"
           />
         </div>
-        <div className="text-center mt-8">
+        <div className="text-center mt-8 mx-auto max-w-sm">
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
             Scent, frozen in a moment.
           </h1>
