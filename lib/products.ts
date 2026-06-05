@@ -57,6 +57,14 @@ export const PRODUCTS: Product[] = [
     priceCents: 10800,
     video: "/media/iceberg-embrace.mp4",
     poster: "/media/iceberg-embrace.jpg",
+    images: [
+      "/media/iceberg-embrace.jpg",
+      "/media/iceberg-1.jpg",
+      "/media/iceberg-2.jpg",
+      "/media/iceberg-3.jpg",
+      "/media/iceberg-4.jpg",
+      "/media/iceberg-5.jpg",
+    ],
     tagline: 'Makes the world "embrace" (Pastel Ghost)',
     notes:
       "Highlights bergamot, eucalyptus, mint, pomelo, rosemary and eucalyptus boldly without being overpowering",
