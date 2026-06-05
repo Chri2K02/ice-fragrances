@@ -13,10 +13,10 @@ export function Logo() {
     <Image
       src={src}
       alt="Ice Fragrances"
-      width={1004}
-      height={569}
+      width={554}
+      height={283}
       priority
-      className="h-14 w-auto dark:[filter:drop-shadow(0_0_1px_rgba(255,255,255,0.55))]"
+      className="h-12 w-auto dark:[filter:drop-shadow(0_0_1px_rgba(255,255,255,0.55))]"
     />
   );
 }
