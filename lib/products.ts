@@ -58,7 +58,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "tshirt",
     name: "T-Shirt",
-    priceCents: 4500,
+    priceCents: 3800,
     poster: "/media/tshirt-1.jpg",
     images: [
       "/media/tshirt-1.jpg",
@@ -71,7 +71,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "dress-shirt",
     name: "Dress Shirt",
-    priceCents: 7500,
+    priceCents: 6800,
     poster: "/media/dress-shirt-1.jpg",
     images: ["/media/dress-shirt-1.jpg", "/media/dress-shirt-2.jpg"],
   },
