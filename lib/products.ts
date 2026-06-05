@@ -18,7 +18,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "glacier-hours",
-    name: "Glacier Hours",
+    name: "Glacier",
     priceCents: 10800,
     video: "/media/glacier-hours.mp4",
     poster: "/media/glacier-hours.jpg",
