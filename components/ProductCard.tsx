@@ -45,7 +45,11 @@ export function ProductCard({ product }: { product: Product }) {
         <h3 className="text-lg font-medium">{product.name}</h3>
         <span className="font-semibold">{price}</span>
       </div>
-      <p className="text-sm opacity-70">{product.blurb}</p>
+      <div className="text-sm opacity-70 space-y-1">
+        <p className="italic">{product.tagline}</p>
+        <p>{product.notes}</p>
+        {product.oil && <p>Oil concentration: {product.oil}</p>}
+      </div>
 
       <button
         type="button"
