@@ -64,9 +64,6 @@ export async function POST(req: Request) {
       customer: customer.id,
       line_items: lineItems,
       automatic_tax: { enabled: true },
-      payment_intent_data: {
-        shipping: { name: address.name, address: stripeAddress },
-      },
       shipping_options: [
         {
           shipping_rate_data: {
