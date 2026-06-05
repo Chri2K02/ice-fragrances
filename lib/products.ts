@@ -27,8 +27,9 @@ export const PRODUCTS: Product[] = [
     name: "Glacier",
     priceCents: 10800,
     video: "/media/glacier-hours.mp4",
-    poster: "/media/glacier-1.jpg",
+    poster: "/media/glacier-hours.jpg",
     images: [
+      "/media/glacier-hours.jpg",
       "/media/glacier-1.jpg",
       "/media/glacier-2.jpg",
       "/media/glacier-3.jpg",
