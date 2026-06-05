@@ -4,6 +4,7 @@ import { glacial } from "@/lib/fonts";
 
 const WOMEN_IDS = ["frost-mind", "hailstone-wildflower"];
 const MEN_IDS = ["glacier-hours", "iceberg-embrace"];
+const APPAREL_IDS = ["tshirt", "dress-shirt"];
 
 function pick(ids: string[]): Product[] {
   return ids.map(getProduct).filter((p): p is Product => Boolean(p));
@@ -12,6 +13,7 @@ function pick(ids: string[]): Product[] {
 export function Products() {
   const women = pick(WOMEN_IDS);
   const men = pick(MEN_IDS);
+  const apparel = pick(APPAREL_IDS);
   const humidifier = getProduct("humidifier");
 
   return (
@@ -47,6 +49,20 @@ export function Products() {
           </div>
         </div>
       </div>
+
+      {/* Apparel — between the colognes and the humidifier */}
+      {apparel.length > 0 && (
+        <div className="mt-20 border-t border-black/15 dark:border-white/15 pt-12">
+          <h3 className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.3em] opacity-80">
+            Apparel
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto">
+            {apparel.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Humidifier — its own section */}
       {humidifier && (

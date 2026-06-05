@@ -2,10 +2,11 @@ export type Product = {
   id: string;
   name: string;
   priceCents: number; // server-trusted price
-  video: string; // path under /public
-  poster: string; // path under /public
-  tagline: string; // evocative line under the title
-  notes: string; // scent notes / description
+  poster: string; // primary still / first image
+  video?: string; // cologne video (optional)
+  images?: string[]; // photo gallery, e.g. apparel
+  tagline?: string; // evocative line under the title
+  notes?: string; // scent notes / description
   oil?: string; // oil concentration, e.g. "18%"
 };
 
@@ -53,6 +54,26 @@ export const PRODUCTS: Product[] = [
     notes:
       "Highlights bergamot, eucalyptus, mint, pomelo, rosemary and eucalyptus boldly without being overpowering",
     oil: "13%",
+  },
+  {
+    id: "tshirt",
+    name: "T-Shirt",
+    priceCents: 4500,
+    poster: "/media/tshirt-1.jpg",
+    images: [
+      "/media/tshirt-1.jpg",
+      "/media/tshirt-2.jpg",
+      "/media/tshirt-3.jpg",
+      "/media/tshirt-4.jpg",
+      "/media/tshirt-5.jpg",
+    ],
+  },
+  {
+    id: "dress-shirt",
+    name: "Dress Shirt",
+    priceCents: 7500,
+    poster: "/media/dress-shirt-1.jpg",
+    images: ["/media/dress-shirt-1.jpg", "/media/dress-shirt-2.jpg"],
   },
   {
     id: "humidifier",
