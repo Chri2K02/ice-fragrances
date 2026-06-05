@@ -68,7 +68,7 @@ export function Products() {
       {humidifier && (
         <div className="mt-20 border-t border-black/15 dark:border-white/15 pt-12">
           <h3 className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.3em] opacity-80">
-            For the Home
+            Accessories
           </h3>
           <div className="max-w-xs mx-auto">
             <ProductCard product={humidifier} />
