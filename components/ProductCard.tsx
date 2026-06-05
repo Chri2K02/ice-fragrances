@@ -37,7 +37,7 @@ export function ProductCard({ product }: { product: Product }) {
           aria-label={showPhoto ? "Show video" : "Show photo"}
           className="absolute top-3 right-3 rounded-full bg-black/60 text-white w-9 h-9 grid place-items-center backdrop-blur"
         >
-          {showPhoto ? "‹" : "›"}
+          {showPhoto ? "›" : "‹"}
         </button>
       </div>
 

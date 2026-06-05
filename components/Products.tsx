@@ -22,7 +22,7 @@ export function Products() {
         {/* Women — left */}
         <div className="md:border-r md:border-black/15 dark:md:border-white/15 md:pr-10">
           <h3 className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.3em] opacity-80">
-            Women
+            Women&apos;s
           </h3>
           <div className="grid gap-8">
             {women.map((p) => (
@@ -34,7 +34,7 @@ export function Products() {
         {/* Men — right */}
         <div className="md:border-l md:border-black/15 dark:md:border-white/15 md:pl-10">
           <h3 className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.3em] opacity-80">
-            Men
+            Men&apos;s
           </h3>
           <div className="grid gap-8">
             {men.map((p) => (
