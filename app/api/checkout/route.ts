@@ -14,6 +14,7 @@ export async function POST(req: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: lineItems,
+      automatic_tax: { enabled: true },
       shipping_address_collection: { allowed_countries: ["US", "CA"] },
       shipping_options: [
         {
@@ -21,6 +22,7 @@ export async function POST(req: Request) {
             type: "fixed_amount",
             fixed_amount: { amount: 0, currency: "usd" },
             display_name: "Free shipping",
+            tax_behavior: "exclusive",
           },
         },
       ],

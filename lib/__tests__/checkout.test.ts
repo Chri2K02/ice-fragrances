@@ -10,7 +10,8 @@ describe("buildLineItems", () => {
         price_data: {
           currency: "usd",
           unit_amount: 10800,
-          product_data: { name: "Frost" },
+          tax_behavior: "exclusive",
+          product_data: { name: "Frost", tax_code: "txcd_99999999" },
         },
       },
     ]);

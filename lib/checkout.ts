@@ -6,9 +6,13 @@ export type StripeLineItem = {
   price_data: {
     currency: "usd";
     unit_amount: number;
-    product_data: { name: string };
+    tax_behavior: "exclusive";
+    product_data: { name: string; tax_code: string };
   };
 };
+
+// Stripe Tax code for general tangible/physical goods.
+const PHYSICAL_GOODS_TAX_CODE = "txcd_99999999";
 
 export function buildLineItems(items: CartItem[]): StripeLineItem[] {
   if (!Array.isArray(items) || items.length === 0) {
@@ -27,7 +31,11 @@ export function buildLineItems(items: CartItem[]): StripeLineItem[] {
       price_data: {
         currency: "usd",
         unit_amount: product.priceCents,
-        product_data: { name: product.name },
+        tax_behavior: "exclusive",
+        product_data: {
+          name: product.name,
+          tax_code: PHYSICAL_GOODS_TAX_CODE,
+        },
       },
     };
   });
