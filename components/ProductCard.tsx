@@ -6,22 +6,32 @@ import { useCart } from "@/lib/cartStore";
 import type { Product } from "@/lib/products";
 import { glacialRegular } from "@/lib/fonts";
 
+type Slide =
+  | { type: "image"; src: string }
+  | { type: "video"; src: string; poster: string };
+
 export function ProductCard({ product }: { product: Product }) {
   const add = useCart((s) => s.add);
   const price = `$${(product.priceCents / 100).toFixed(2)}`;
 
-  const hasVideo = Boolean(product.video);
-  const gallery =
+  // Build the ordered media list: photos first, then the video (if any).
+  const photos =
     product.images && product.images.length > 0
       ? product.images
       : [product.poster];
+  const slides: Slide[] = [
+    ...photos.map((src) => ({ type: "image" as const, src })),
+    ...(product.video
+      ? [{ type: "video" as const, src: product.video, poster: product.poster }]
+      : []),
+  ];
 
-  // Video products toggle photo <-> video; gallery products cycle photos.
-  const [showPhoto, setShowPhoto] = useState(true);
   const [idx, setIdx] = useState(0);
+  const current = slides[idx];
+  const multi = slides.length > 1;
 
   const arrowBtn =
-    "absolute z-10 rounded-full bg-black/60 text-white w-9 h-9 grid place-items-center backdrop-blur";
+    "absolute z-10 top-1/2 -translate-y-1/2 rounded-full bg-black/60 text-white w-9 h-9 grid place-items-center backdrop-blur";
 
   return (
     <div
@@ -29,63 +39,44 @@ export function ProductCard({ product }: { product: Product }) {
       style={{ background: "var(--card)" }}
     >
       <div className="relative aspect-[9/16] overflow-hidden rounded-2xl">
-        {hasVideo ? (
-          showPhoto ? (
-            <Image
-              src={product.poster}
-              alt={product.name}
-              fill
-              data-testid="product-photo"
-              className="object-cover"
-            />
-          ) : (
-            <VideoPlayer
-              src={product.video!}
-              poster={product.poster}
-              label={product.name}
-            />
-          )
-        ) : (
+        {current.type === "image" ? (
           <Image
-            src={gallery[idx]}
-            alt={`${product.name} (${idx + 1} of ${gallery.length})`}
+            src={current.src}
+            alt={product.name}
             fill
             data-testid="product-photo"
             className="object-cover"
           />
+        ) : (
+          <VideoPlayer
+            src={current.src}
+            poster={current.poster}
+            label={product.name}
+          />
         )}
 
-        {hasVideo ? (
-          <button
-            type="button"
-            onClick={() => setShowPhoto((v) => !v)}
-            aria-label={showPhoto ? "Show video" : "Show photo"}
-            className={`${arrowBtn} top-3 right-3`}
-          >
-            {showPhoto ? "›" : "‹"}
-          </button>
-        ) : gallery.length > 1 ? (
+        {multi && (
           <>
             <button
               type="button"
               onClick={() =>
-                setIdx((i) => (i - 1 + gallery.length) % gallery.length)
+                setIdx((i) => (i - 1 + slides.length) % slides.length)
               }
-              aria-label="Previous photo"
-              className={`${arrowBtn} top-1/2 left-3 -translate-y-1/2`}
+              aria-label="Previous media"
+              className={`${arrowBtn} left-3`}
             >
               ‹
             </button>
             <button
               type="button"
-              onClick={() => setIdx((i) => (i + 1) % gallery.length)}
-              aria-label="Next photo"
-              className={`${arrowBtn} top-1/2 right-3 -translate-y-1/2`}
+              onClick={() => setIdx((i) => (i + 1) % slides.length)}
+              aria-label="Next media"
+              className={`${arrowBtn} right-3`}
             >
               ›
             </button>
           </>
-        ) : null}
+        )}
       </div>
 
       <div className="flex items-center justify-between">

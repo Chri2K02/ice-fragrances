@@ -22,16 +22,16 @@ beforeEach(() => useCart.getState().clear());
 const product = PRODUCTS[0]; // Frost Mind
 
 describe("ProductCard", () => {
-  it("shows the photo first and flips to the video on arrow click", async () => {
-    render(<ProductCard product={product} />);
+  it("starts on the first photo and the arrow cycles through media", async () => {
+    render(<ProductCard product={product} />); // frost: [photo, video]
     expect(screen.getByTestId("product-photo")).toBeInTheDocument();
     expect(screen.queryByTestId("video")).toBeNull();
 
-    await userEvent.click(screen.getByRole("button", { name: /show video/i }));
+    await userEvent.click(screen.getByRole("button", { name: /next media/i }));
     expect(screen.getByTestId("video")).toBeInTheDocument();
     expect(screen.queryByTestId("product-photo")).toBeNull();
 
-    await userEvent.click(screen.getByRole("button", { name: /show photo/i }));
+    await userEvent.click(screen.getByRole("button", { name: /next media/i }));
     expect(screen.getByTestId("product-photo")).toBeInTheDocument();
   });
 

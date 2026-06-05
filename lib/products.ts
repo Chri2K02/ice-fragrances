@@ -27,7 +27,13 @@ export const PRODUCTS: Product[] = [
     name: "Glacier",
     priceCents: 10800,
     video: "/media/glacier-hours.mp4",
-    poster: "/media/glacier-hours.jpg",
+    poster: "/media/glacier-1.jpg",
+    images: [
+      "/media/glacier-1.jpg",
+      "/media/glacier-2.jpg",
+      "/media/glacier-3.jpg",
+      "/media/glacier-4.jpg",
+    ],
     tagline: 'Feels like "insomnia relief" during "after hours" (The Weeknd)',
     notes:
       "Features grapefruit, elderwood, cedarwood, neroli, lavender and blood orange in an infinitely timeless manner",
