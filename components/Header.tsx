@@ -39,7 +39,7 @@ export function Header() {
             <Logo />
           </Link>
 
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-3">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col sm:flex-row items-end sm:items-center gap-1.5 sm:gap-3">
             <CurrencyToggle />
             <ThemeToggle />
             <button
