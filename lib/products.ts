@@ -19,6 +19,12 @@ export const PRODUCTS: Product[] = [
     freeShipping: true,
     video: "/media/frost-mind.mp4",
     poster: "/media/frost-mind.jpg",
+    images: [
+      "/media/frost-mind.jpg",
+      "/media/frost-1.jpg",
+      "/media/frost-2.jpg",
+      "/media/frost-3.jpg",
+    ],
     tagline: 'Takes you to a "different state of mind" (Kid Bloom)',
     notes:
       "Showcases vanilla, amber, pink pepper, nutmeg, red rose and white rose with supreme elegance",
@@ -50,6 +56,12 @@ export const PRODUCTS: Product[] = [
     freeShipping: true,
     video: "/media/hailstone-wildflower.mp4",
     poster: "/media/hailstone-wildflower.jpg",
+    images: [
+      "/media/hailstone-wildflower.jpg",
+      "/media/hailstone-1.jpg",
+      "/media/hailstone-2.jpg",
+      "/media/hailstone-3.jpg",
+    ],
     tagline: 'Smells like an absolute "wildflower" (Beach House)',
     notes:
       "Hallmarks jasmine, coriander, incense, cloves, tonka bean, red rose and clementine with a spice to the scent overall",
@@ -101,6 +113,11 @@ export const PRODUCTS: Product[] = [
     priceCents: 3800,
     video: "/media/humidifier.mp4",
     poster: "/media/humidifier.jpg",
+    images: [
+      "/media/humidifier.jpg",
+      "/media/humidifier-1.jpg",
+      "/media/humidifier-2.jpg",
+    ],
     tagline: "Freshen your world",
     notes: "A water & oil based scented humidifier. Order comes with an oil base.",
   },
