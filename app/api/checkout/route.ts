@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { auth } from "@clerk/nextjs/server";
 import { buildLineItems } from "@/lib/checkout";
 import {
   cartNeedsShipping,
@@ -50,6 +51,13 @@ export async function POST(req: Request) {
       cancel_url: `${siteUrl}/`,
     };
 
+    // Attach the cart + signed-in user so the webhook can record the order.
+    const { userId } = await auth();
+    const metadata = {
+      items: JSON.stringify(body.items),
+      userId: userId ?? "",
+    };
+
     let session: Stripe.Checkout.Session;
 
     if (cartNeedsShipping(body.items)) {
@@ -72,6 +80,7 @@ export async function POST(req: Request) {
         mode: "payment",
         customer: customer.id,
         line_items: lineItems,
+        metadata,
         automatic_tax: { enabled: true },
         shipping_options: [
           {
@@ -90,6 +99,7 @@ export async function POST(req: Request) {
       session = await stripe.checkout.sessions.create({
         mode: "payment",
         line_items: lineItems,
+        metadata,
         automatic_tax: { enabled: true },
         shipping_address_collection: { allowed_countries: ["US", "CA"] },
         shipping_options: [
