@@ -6,6 +6,8 @@ import { useCart } from "@/lib/cartStore";
 import type { Product } from "@/lib/products";
 import { glacialRegular } from "@/lib/fonts";
 import { Reviews } from "@/components/Reviews";
+import { formatPrice } from "@/lib/currency";
+import { useDisplayCurrency } from "@/lib/currencyStore";
 
 type Slide =
   | { type: "image"; src: string }
@@ -13,7 +15,8 @@ type Slide =
 
 export function ProductCard({ product }: { product: Product }) {
   const add = useCart((s) => s.add);
-  const price = `$${(product.priceCents / 100).toFixed(2)}`;
+  const currency = useDisplayCurrency();
+  const price = formatPrice(product.priceCents, currency);
 
   // Build the ordered media list: first photo (thumbnail), then the video
   // (if any), then the rest of the gallery.

@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useCart } from "@/lib/cartStore";
 import { getProduct } from "@/lib/products";
 import { regionsFor, cartNeedsShipping, type Country } from "@/lib/shipping";
+import { formatPrice } from "@/lib/currency";
+import { useDisplayCurrency } from "@/lib/currencyStore";
 
 const EMPTY = { name: "", country: "CA" as Country, state: "", line1: "", city: "", postal: "" };
 
@@ -18,7 +20,8 @@ export function CartDrawer({
   const [addr, setAddr] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const total = `$${(totalCents() / 100).toFixed(2)}`;
+  const currency = useDisplayCurrency();
+  const total = formatPrice(totalCents(), currency);
   const needsAddress = cartNeedsShipping(items);
 
   const canSubmit =
@@ -31,7 +34,7 @@ export function CartDrawer({
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, address: addr }),
+        body: JSON.stringify({ items, address: addr, currency }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -87,7 +90,7 @@ export function CartDrawer({
                         {p.name} × {i.qty}
                       </span>
                       <span className="flex items-center gap-3">
-                        ${((p.priceCents * i.qty) / 100).toFixed(2)}
+                        {formatPrice(p.priceCents * i.qty, currency)}
                         <button
                           type="button"
                           onClick={() => remove(i.id)}

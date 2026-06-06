@@ -8,6 +8,7 @@ import {
   type Country,
 } from "@/lib/shipping";
 import type { CartItem } from "@/lib/cartStore";
+import { type Currency, convertCents, stripeCurrency } from "@/lib/currency";
 
 type Address = {
   name: string;
@@ -41,8 +42,14 @@ function validateAddress(a: unknown): Address {
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as { items: CartItem[]; address?: unknown };
-    const lineItems = buildLineItems(body.items);
+    const body = (await req.json()) as {
+      items: CartItem[];
+      address?: unknown;
+      currency?: string;
+    };
+    const currency: Currency = body.currency === "CAD" ? "CAD" : "USD";
+    const cur = stripeCurrency(currency);
+    const lineItems = buildLineItems(body.items, currency);
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -86,7 +93,7 @@ export async function POST(req: Request) {
           {
             shipping_rate_data: {
               type: "fixed_amount",
-              fixed_amount: { amount: shipping, currency: "usd" },
+              fixed_amount: { amount: convertCents(shipping, currency), currency: cur },
               display_name: "Shipping",
               tax_behavior: "exclusive",
             },
@@ -106,7 +113,7 @@ export async function POST(req: Request) {
           {
             shipping_rate_data: {
               type: "fixed_amount",
-              fixed_amount: { amount: 0, currency: "usd" },
+              fixed_amount: { amount: 0, currency: cur },
               display_name: "Free shipping",
               tax_behavior: "exclusive",
             },

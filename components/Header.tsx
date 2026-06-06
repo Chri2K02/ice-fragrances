@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { CurrencyToggle } from "@/components/CurrencyToggle";
 import { CartDrawer } from "@/components/CartDrawer";
 import { useCart } from "@/lib/cartStore";
 
@@ -39,6 +40,7 @@ export function Header() {
           </Link>
 
           <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-3">
+            <CurrencyToggle />
             <ThemeToggle />
             <button
               type="button"

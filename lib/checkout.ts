@@ -1,10 +1,11 @@
 import { getProduct } from "@/lib/products";
 import type { CartItem } from "@/lib/cartStore";
+import { type Currency, convertCents, stripeCurrency } from "@/lib/currency";
 
 export type StripeLineItem = {
   quantity: number;
   price_data: {
-    currency: "usd";
+    currency: "usd" | "cad";
     unit_amount: number;
     tax_behavior: "exclusive";
     product_data: { name: string; tax_code: string };
@@ -14,7 +15,10 @@ export type StripeLineItem = {
 // Stripe Tax code for general tangible/physical goods.
 const PHYSICAL_GOODS_TAX_CODE = "txcd_99999999";
 
-export function buildLineItems(items: CartItem[]): StripeLineItem[] {
+export function buildLineItems(
+  items: CartItem[],
+  currency: Currency = "USD"
+): StripeLineItem[] {
   if (!Array.isArray(items) || items.length === 0) {
     throw new Error("Cart is empty");
   }
@@ -29,8 +33,8 @@ export function buildLineItems(items: CartItem[]): StripeLineItem[] {
     return {
       quantity: item.qty,
       price_data: {
-        currency: "usd",
-        unit_amount: product.priceCents,
+        currency: stripeCurrency(currency),
+        unit_amount: convertCents(product.priceCents, currency),
         tax_behavior: "exclusive",
         product_data: {
           name: product.name,
