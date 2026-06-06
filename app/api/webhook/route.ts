@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { orders, orderItems } from "@/lib/db/schema";
+import { orders, orderItems, inventory } from "@/lib/db/schema";
 import { getProduct } from "@/lib/products";
 import type { CartItem } from "@/lib/cartStore";
 
@@ -63,6 +63,19 @@ export async function POST(req: Request) {
             qty: i.qty,
           }))
         );
+      }
+
+      // Decrement tracked inventory (no-op for untracked variants).
+      for (const i of items) {
+        await db
+          .update(inventory)
+          .set({ stock: sql`GREATEST(${inventory.stock} - ${i.qty}, 0)` })
+          .where(
+            and(
+              eq(inventory.productId, i.id),
+              eq(inventory.size, i.size ?? "")
+            )
+          );
       }
     }
   }

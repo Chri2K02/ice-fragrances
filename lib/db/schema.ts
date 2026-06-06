@@ -4,6 +4,7 @@ import {
   text,
   integer,
   timestamp,
+  unique,
 } from "drizzle-orm/pg-core";
 
 export const orders = pgTable("orders", {
@@ -24,6 +25,17 @@ export const orderItems = pgTable("order_items", {
   name: text("name").notNull(),
   qty: integer("qty").notNull().default(1),
 });
+
+export const inventory = pgTable(
+  "inventory",
+  {
+    id: serial("id").primaryKey(),
+    productId: text("product_id").notNull(),
+    size: text("size").notNull().default(""),
+    stock: integer("stock").notNull().default(0),
+  },
+  (t) => ({ uniq: unique("inventory_product_size").on(t.productId, t.size) })
+);
 
 export const reviews = pgTable("reviews", {
   id: serial("id").primaryKey(),

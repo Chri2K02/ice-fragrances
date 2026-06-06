@@ -36,5 +36,16 @@ export async function GET(req: Request) {
     created_at timestamp NOT NULL DEFAULT now()
   )`;
 
-  return NextResponse.json({ ok: true, tables: ["orders", "order_items", "reviews"] });
+  await sql`CREATE TABLE IF NOT EXISTS inventory (
+    id serial PRIMARY KEY,
+    product_id text NOT NULL,
+    size text NOT NULL DEFAULT '',
+    stock integer NOT NULL DEFAULT 0,
+    CONSTRAINT inventory_product_size UNIQUE (product_id, size)
+  )`;
+
+  return NextResponse.json({
+    ok: true,
+    tables: ["orders", "order_items", "reviews", "inventory"],
+  });
 }

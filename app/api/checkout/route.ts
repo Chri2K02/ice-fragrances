@@ -9,6 +9,10 @@ import {
 } from "@/lib/shipping";
 import type { CartItem } from "@/lib/cartStore";
 import { type Currency, convertCents, stripeCurrency } from "@/lib/currency";
+import { and, eq } from "drizzle-orm";
+import { getDb } from "@/lib/db";
+import { inventory } from "@/lib/db/schema";
+import { getProduct } from "@/lib/products";
 
 type Address = {
   name: string;
@@ -50,6 +54,26 @@ export async function POST(req: Request) {
     const currency: Currency = body.currency === "USD" ? "USD" : "CAD";
     const cur = stripeCurrency(currency);
     const lineItems = buildLineItems(body.items, currency);
+
+    // Reject if any tracked variant is sold out / short on stock.
+    const db = getDb();
+    for (const item of body.items) {
+      const rows = await db
+        .select({ stock: inventory.stock })
+        .from(inventory)
+        .where(
+          and(
+            eq(inventory.productId, item.id),
+            eq(inventory.size, item.size ?? "")
+          )
+        );
+      if (rows.length && rows[0].stock < item.qty) {
+        const p = getProduct(item.id);
+        throw new Error(
+          `${p?.name ?? item.id}${item.size ? ` (${item.size})` : ""} is sold out`
+        );
+      }
+    }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";

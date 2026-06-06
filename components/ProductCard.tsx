@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { useCart } from "@/lib/cartStore";
@@ -41,6 +41,21 @@ export function ProductCard({ product }: { product: Product }) {
 
   const needsSize = (product.sizes?.length ?? 0) > 0;
   const [size, setSize] = useState("");
+
+  const [stockMap, setStockMap] = useState<Record<string, number> | null>(null);
+  useEffect(() => {
+    fetch(`/api/stock?productId=${product.id}`)
+      .then((r) => r.json())
+      .then((d) => setStockMap(d.stock ?? {}))
+      .catch(() => {});
+  }, [product.id]);
+
+  const isOut = (variant: string) =>
+    stockMap != null && variant in stockMap && stockMap[variant] <= 0;
+  const productSoldOut = needsSize
+    ? product.sizes!.every((s) => isOut(s))
+    : isOut("");
+  const addDisabled = productSoldOut || (needsSize && (!size || isOut(size)));
 
   const arrowBtn =
     "absolute z-10 top-1/2 -translate-y-1/2 rounded-full bg-black/60 text-white w-9 h-9 grid place-items-center backdrop-blur";
@@ -89,6 +104,14 @@ export function ProductCard({ product }: { product: Product }) {
             </button>
           </>
         )}
+
+        {productSoldOut && (
+          <div className="absolute inset-0 z-20 grid place-items-center bg-black/50">
+            <span className="rounded-full bg-black text-white px-4 py-1.5 text-sm font-medium uppercase tracking-wide">
+              Sold Out
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between">
@@ -107,26 +130,32 @@ export function ProductCard({ product }: { product: Product }) {
       <div className="mt-auto flex flex-col gap-3">
         {needsSize && (
           <div className="flex flex-wrap gap-2 normal-case">
-            {product.sizes!.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setSize(s)}
-                className="rounded-full border-2 px-3 py-1 text-sm"
-                style={
-                  size === s
-                    ? { background: "var(--accent)", color: "#000", borderColor: "#000" }
-                    : { borderColor: "rgba(128,128,128,0.4)" }
-                }
-              >
-                {s}
-              </button>
-            ))}
+            {product.sizes!.map((s) => {
+              const out = isOut(s);
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  disabled={out}
+                  onClick={() => setSize(s)}
+                  className={`rounded-full border-2 px-3 py-1 text-sm ${
+                    out ? "line-through opacity-40" : ""
+                  }`}
+                  style={
+                    size === s && !out
+                      ? { background: "var(--accent)", color: "#000", borderColor: "#000" }
+                      : { borderColor: "rgba(128,128,128,0.4)" }
+                  }
+                >
+                  {s}
+                </button>
+              );
+            })}
           </div>
         )}
         <button
           type="button"
-          disabled={needsSize && !size}
+          disabled={addDisabled || (needsSize && !size)}
           onClick={() => {
             add(product.id, size || undefined);
             show(`Added ${product.name}${size ? ` (${size})` : ""} to cart`);
@@ -134,7 +163,11 @@ export function ProductCard({ product }: { product: Product }) {
           className="rounded-full px-4 py-2 font-medium text-black border-2 border-black normal-case disabled:opacity-40"
           style={{ background: "var(--accent)" }}
         >
-          {needsSize && !size ? "Select a size" : "Add to Cart"}
+          {productSoldOut
+            ? "Sold Out"
+            : needsSize && !size
+              ? "Select a size"
+              : "Add to Cart"}
         </button>
       </div>
 
