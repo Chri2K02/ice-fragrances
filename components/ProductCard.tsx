@@ -5,6 +5,7 @@ import { VideoPlayer } from "@/components/VideoPlayer";
 import { useCart } from "@/lib/cartStore";
 import type { Product } from "@/lib/products";
 import { glacialRegular } from "@/lib/fonts";
+import { Reviews } from "@/components/Reviews";
 
 type Slide =
   | { type: "image"; src: string }
@@ -103,6 +104,8 @@ export function ProductCard({ product }: { product: Product }) {
       >
         Add to Cart
       </button>
+
+      <Reviews productId={product.id} />
     </div>
   );
 }
