@@ -12,7 +12,7 @@ type CurrencyState = {
 export const useCurrency = create<CurrencyState>()(
   persist(
     (set) => ({
-      currency: "USD",
+      currency: "CAD",
       setCurrency: (currency) => set({ currency }),
     }),
     { name: "icefrag-currency" }
@@ -24,5 +24,5 @@ export function useDisplayCurrency(): Currency {
   const currency = useCurrency((s) => s.currency);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  return mounted ? currency : "USD";
+  return mounted ? currency : "CAD";
 }

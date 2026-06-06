@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       address?: unknown;
       currency?: string;
     };
-    const currency: Currency = body.currency === "CAD" ? "CAD" : "USD";
+    const currency: Currency = body.currency === "USD" ? "USD" : "CAD";
     const cur = stripeCurrency(currency);
     const lineItems = buildLineItems(body.items, currency);
 

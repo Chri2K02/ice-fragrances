@@ -1,18 +1,22 @@
 export type Currency = "USD" | "CAD";
 
-// Fixed USD -> CAD rate. Update this when the rate drifts.
-export const USD_TO_CAD = 1.38;
+// Base prices in the product config are CAD. This is the fixed CAD -> USD rate
+// for showing/charging USD. Update this when the rate drifts.
+export const CAD_TO_USD = 0.72;
 
-export function convertCents(usdCents: number, currency: Currency): number {
-  return currency === "CAD" ? Math.round(usdCents * USD_TO_CAD) : usdCents;
+// Converts a base (CAD) amount in cents to the selected currency.
+export function convertCents(baseCadCents: number, currency: Currency): number {
+  return currency === "USD"
+    ? Math.round(baseCadCents * CAD_TO_USD)
+    : baseCadCents;
 }
 
-export function formatPrice(usdCents: number, currency: Currency): string {
-  const cents = convertCents(usdCents, currency);
-  const symbol = currency === "CAD" ? "CA$" : "$";
+export function formatPrice(baseCadCents: number, currency: Currency): string {
+  const cents = convertCents(baseCadCents, currency);
+  const symbol = currency === "USD" ? "US$" : "$";
   return `${symbol}${(cents / 100).toFixed(2)}`;
 }
 
 export function stripeCurrency(currency: Currency): "usd" | "cad" {
-  return currency === "CAD" ? "cad" : "usd";
+  return currency === "USD" ? "usd" : "cad";
 }

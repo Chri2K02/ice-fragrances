@@ -8,7 +8,7 @@ describe("buildLineItems", () => {
       {
         quantity: 2,
         price_data: {
-          currency: "usd",
+          currency: "cad",
           unit_amount: 10800,
           tax_behavior: "exclusive",
           product_data: { name: "Frost", tax_code: "txcd_99999999" },

@@ -17,7 +17,7 @@ const PHYSICAL_GOODS_TAX_CODE = "txcd_99999999";
 
 export function buildLineItems(
   items: CartItem[],
-  currency: Currency = "USD"
+  currency: Currency = "CAD"
 ): StripeLineItem[] {
   if (!Array.isArray(items) || items.length === 0) {
     throw new Error("Cart is empty");
