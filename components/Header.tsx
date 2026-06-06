@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CartDrawer } from "@/components/CartDrawer";
@@ -8,6 +9,7 @@ import { useCart } from "@/lib/cartStore";
 
 export function Header() {
   const count = useCart((s) => s.count());
+  const { isSignedIn } = useAuth();
   const [cartOpen, setCartOpen] = useState(false);
 
   return (
@@ -23,6 +25,12 @@ export function Header() {
             </Link>
             <Link href="/shipping" className="hover:opacity-70">
               Shipping
+            </Link>
+            <Link
+              href={isSignedIn ? "/account" : "/sign-in"}
+              className="hover:opacity-70"
+            >
+              {isSignedIn ? "Account" : "Sign in"}
             </Link>
           </nav>
 
