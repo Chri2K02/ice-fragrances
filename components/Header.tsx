@@ -19,7 +19,7 @@ export function Header() {
         style={{ background: "color-mix(in srgb, var(--bg) 80%, transparent)" }}
       >
         <div className="max-w-6xl mx-auto px-4 py-5 relative flex items-center justify-center">
-          <nav className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-3 sm:gap-4 text-xs sm:text-sm">
+          <nav className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm">
             <Link href="/" className="hover:opacity-70">
               Home
             </Link>
