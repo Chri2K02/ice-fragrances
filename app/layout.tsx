@@ -3,6 +3,7 @@ import { ThemeProvider } from "next-themes";
 import { ClerkThemed } from "@/components/ClerkThemed";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { Toaster } from "@/components/Toaster";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,6 +24,7 @@ export default function RootLayout({
             <Header />
             {children}
             <Footer />
+            <Toaster />
           </ClerkThemed>
         </ThemeProvider>
       </body>

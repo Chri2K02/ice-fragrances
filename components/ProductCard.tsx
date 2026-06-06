@@ -8,6 +8,7 @@ import { glacialRegular } from "@/lib/fonts";
 import { Reviews } from "@/components/Reviews";
 import { formatPrice } from "@/lib/currency";
 import { useDisplayCurrency } from "@/lib/currencyStore";
+import { useToast } from "@/lib/toastStore";
 
 type Slide =
   | { type: "image"; src: string }
@@ -15,6 +16,7 @@ type Slide =
 
 export function ProductCard({ product }: { product: Product }) {
   const add = useCart((s) => s.add);
+  const show = useToast((s) => s.show);
   const currency = useDisplayCurrency();
   const price = formatPrice(product.priceCents, currency);
 
@@ -101,7 +103,10 @@ export function ProductCard({ product }: { product: Product }) {
 
       <button
         type="button"
-        onClick={() => add(product.id)}
+        onClick={() => {
+          add(product.id);
+          show(`Added ${product.name} to cart`);
+        }}
         className="mt-auto rounded-full px-4 py-2 font-medium text-black border-2 border-black normal-case"
         style={{ background: "var(--accent)" }}
       >
