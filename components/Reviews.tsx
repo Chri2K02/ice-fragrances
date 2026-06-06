@@ -15,6 +15,7 @@ type Data = {
   signedIn: boolean;
   canReview: boolean;
   alreadyReviewed: boolean;
+  isAdmin: boolean;
 };
 
 function Stars({ value }: { value: number }) {
@@ -71,6 +72,16 @@ export function Reviews({ productId }: { productId: string }) {
     }
   }
 
+  async function del(id: number) {
+    if (!confirm("Delete this review?")) return;
+    try {
+      const res = await fetch(`/api/reviews?id=${id}`, { method: "DELETE" });
+      if (res.ok) await load();
+    } catch {
+      /* ignore */
+    }
+  }
+
   if (!data) return null;
 
   return (
@@ -96,7 +107,18 @@ export function Reviews({ productId }: { productId: string }) {
             >
               <div className="flex justify-between items-center">
                 <Stars value={r.rating} />
-                <span className="opacity-60 text-xs">{r.authorName}</span>
+                <span className="opacity-60 text-xs flex items-center gap-2">
+                  {r.authorName}
+                  {data.isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => del(r.id)}
+                      className="text-red-500 underline"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </span>
               </div>
               {r.body && <p className="opacity-80 mt-1">{r.body}</p>}
             </div>

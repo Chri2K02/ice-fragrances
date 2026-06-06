@@ -39,9 +39,15 @@ export async function GET(req: Request) {
   const { userId } = await auth();
   let canReview = false;
   let alreadyReviewed = false;
+  let isAdmin = false;
   if (userId) {
     alreadyReviewed = list.some((r) => r.clerkUserId === userId);
     canReview = !alreadyReviewed && (await hasPurchased(db, userId, productId));
+    if (count > 0 && process.env.ADMIN_EMAIL) {
+      const user = await currentUser();
+      isAdmin =
+        user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL;
+    }
   }
 
   return NextResponse.json({
@@ -57,7 +63,28 @@ export async function GET(req: Request) {
     signedIn: !!userId,
     canReview,
     alreadyReviewed,
+    isAdmin,
   });
+}
+
+export async function DELETE(req: Request) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const user = await currentUser();
+  if (
+    !process.env.ADMIN_EMAIL ||
+    user?.primaryEmailAddress?.emailAddress !== process.env.ADMIN_EMAIL
+  ) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const id = Number(new URL(req.url).searchParams.get("id"));
+  if (!Number.isInteger(id) || id <= 0) {
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+  }
+  await getDb().delete(reviews).where(eq(reviews.id, id));
+  return NextResponse.json({ ok: true });
 }
 
 export async function POST(req: Request) {
