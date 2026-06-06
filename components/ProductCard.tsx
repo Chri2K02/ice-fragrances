@@ -39,6 +39,9 @@ export function ProductCard({ product }: { product: Product }) {
   const current = slides[idx];
   const multi = slides.length > 1;
 
+  const needsSize = (product.sizes?.length ?? 0) > 0;
+  const [size, setSize] = useState("");
+
   const arrowBtn =
     "absolute z-10 top-1/2 -translate-y-1/2 rounded-full bg-black/60 text-white w-9 h-9 grid place-items-center backdrop-blur";
 
@@ -101,17 +104,39 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => {
-          add(product.id);
-          show(`Added ${product.name} to cart`);
-        }}
-        className="mt-auto rounded-full px-4 py-2 font-medium text-black border-2 border-black normal-case"
-        style={{ background: "var(--accent)" }}
-      >
-        Add to Cart
-      </button>
+      <div className="mt-auto flex flex-col gap-3">
+        {needsSize && (
+          <div className="flex flex-wrap gap-2 normal-case">
+            {product.sizes!.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSize(s)}
+                className="rounded-full border-2 px-3 py-1 text-sm"
+                style={
+                  size === s
+                    ? { background: "var(--accent)", color: "#000", borderColor: "#000" }
+                    : { borderColor: "rgba(128,128,128,0.4)" }
+                }
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+        <button
+          type="button"
+          disabled={needsSize && !size}
+          onClick={() => {
+            add(product.id, size || undefined);
+            show(`Added ${product.name}${size ? ` (${size})` : ""} to cart`);
+          }}
+          className="rounded-full px-4 py-2 font-medium text-black border-2 border-black normal-case disabled:opacity-40"
+          style={{ background: "var(--accent)" }}
+        >
+          {needsSize && !size ? "Select a size" : "Add to Cart"}
+        </button>
+      </div>
 
       <Reviews productId={product.id} />
     </div>

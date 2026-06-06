@@ -85,15 +85,19 @@ export function CartDrawer({
                   const p = getProduct(i.id);
                   if (!p) return null;
                   return (
-                    <li key={i.id} className="flex justify-between items-center">
+                    <li
+                      key={i.id + (i.size ?? "")}
+                      className="flex justify-between items-center"
+                    >
                       <span>
-                        {p.name} × {i.qty}
+                        {p.name}
+                        {i.size ? ` (${i.size})` : ""} × {i.qty}
                       </span>
                       <span className="flex items-center gap-3">
                         {formatPrice(p.priceCents * i.qty, currency)}
                         <button
                           type="button"
-                          onClick={() => remove(i.id)}
+                          onClick={() => remove(i.id, i.size)}
                           aria-label={`Remove ${p.name}`}
                           className="opacity-60 hover:opacity-100"
                         >

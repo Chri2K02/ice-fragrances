@@ -57,7 +57,9 @@ export async function POST(req: Request) {
           items.map((i) => ({
             orderId: order.id,
             productId: i.id,
-            name: getProduct(i.id)?.name ?? i.id,
+            name:
+              (getProduct(i.id)?.name ?? i.id) +
+              (i.size ? ` (${i.size})` : ""),
             qty: i.qty,
           }))
         );

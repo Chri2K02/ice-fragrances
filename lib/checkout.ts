@@ -37,7 +37,7 @@ export function buildLineItems(
         unit_amount: convertCents(product.priceCents, currency),
         tax_behavior: "exclusive",
         product_data: {
-          name: product.name,
+          name: product.name + (item.size ? ` (${item.size})` : ""),
           tax_code: PHYSICAL_GOODS_TAX_CODE,
         },
       },

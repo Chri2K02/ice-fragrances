@@ -9,6 +9,7 @@ export type Product = {
   notes?: string; // scent notes / description
   oil?: string; // oil concentration, e.g. "18%"
   freeShipping?: boolean; // true = always free shipping (colognes)
+  sizes?: string[]; // apparel size options
 };
 
 export const PRODUCTS: Product[] = [
@@ -91,6 +92,7 @@ export const PRODUCTS: Product[] = [
     id: "tshirt",
     name: "Half-Sleeve Tees",
     priceCents: 3800,
+    sizes: ["L", "XL"],
     poster: "/media/tshirt-5.jpg",
     images: [
       "/media/tshirt-5.jpg",
@@ -104,6 +106,7 @@ export const PRODUCTS: Product[] = [
     id: "dress-shirt",
     name: "Nylon Dress Shirts",
     priceCents: 6800,
+    sizes: ["M", "L", "XL"],
     poster: "/media/dress-shirt-2.jpg",
     images: ["/media/dress-shirt-2.jpg", "/media/dress-shirt-1.jpg"],
   },
