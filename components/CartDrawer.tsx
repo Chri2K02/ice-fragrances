@@ -3,8 +3,9 @@ import { useState } from "react";
 import { useCart } from "@/lib/cartStore";
 import { getProduct } from "@/lib/products";
 import { regionsFor, cartNeedsShipping, type Country } from "@/lib/shipping";
-import { formatPrice } from "@/lib/currency";
+import { formatPrice, convertCents } from "@/lib/currency";
 import { useDisplayCurrency } from "@/lib/currencyStore";
+import { fbTrack } from "@/lib/fbpixel";
 
 const EMPTY = { name: "", country: "CA" as Country, state: "", line1: "", city: "", postal: "" };
 
@@ -30,6 +31,11 @@ export function CartDrawer({
   async function payNow() {
     setLoading(true);
     setError(null);
+    fbTrack("InitiateCheckout", {
+      value: convertCents(totalCents(), currency) / 100,
+      currency,
+      num_items: items.reduce((n, i) => n + i.qty, 0),
+    });
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",

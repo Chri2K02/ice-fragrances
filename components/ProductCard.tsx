@@ -6,9 +6,10 @@ import { useCart } from "@/lib/cartStore";
 import type { Product } from "@/lib/products";
 import { glacialRegular } from "@/lib/fonts";
 import { Reviews } from "@/components/Reviews";
-import { formatPrice } from "@/lib/currency";
+import { formatPrice, convertCents } from "@/lib/currency";
 import { useDisplayCurrency } from "@/lib/currencyStore";
 import { useToast } from "@/lib/toastStore";
+import { fbTrack } from "@/lib/fbpixel";
 
 type Slide =
   | { type: "image"; src: string }
@@ -159,6 +160,13 @@ export function ProductCard({ product }: { product: Product }) {
           onClick={() => {
             add(product.id, size || undefined);
             show(`Added ${product.name}${size ? ` (${size})` : ""} to cart`);
+            fbTrack("AddToCart", {
+              content_name: product.name,
+              content_ids: [product.id],
+              content_type: "product",
+              value: convertCents(product.priceCents, currency) / 100,
+              currency,
+            });
           }}
           className="rounded-full px-4 py-2 font-medium text-black border-2 border-black normal-case disabled:opacity-40"
           style={{ background: "var(--accent)" }}

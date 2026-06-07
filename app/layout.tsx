@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Toaster } from "@/components/Toaster";
 import { ScrollTop } from "@/components/ScrollTop";
+import { MetaPixel } from "@/components/MetaPixel";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,6 +24,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <ClerkThemed>
             <ScrollTop />
+            <MetaPixel />
             <Header />
             {children}
             <Footer />
