@@ -57,7 +57,11 @@ export function Header() {
             </a>
           </nav>
 
-          <Link href="/" aria-label="Ice Fragrances home">
+          <Link
+            href="/"
+            aria-label="Ice Fragrances home"
+            className="-translate-y-2 sm:translate-y-0"
+          >
             <Logo />
           </Link>
 
