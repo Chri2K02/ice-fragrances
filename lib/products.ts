@@ -85,7 +85,7 @@ export const PRODUCTS: Product[] = [
     ],
     tagline: 'Makes the world "embrace" (Pastel Ghost)',
     notes:
-      "Highlights bergamot, eucalyptus, mint, pomelo, rosemary and eucalyptus boldly without being overpowering",
+      "Highlights bergamot, eucalyptus, mint, pomelo and rosemary boldly without being overpowering",
     oil: "13%",
   },
   {
