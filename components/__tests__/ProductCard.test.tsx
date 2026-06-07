@@ -43,6 +43,6 @@ describe("ProductCard", () => {
 
   it("displays the formatted price", () => {
     render(<ProductCard product={product} />);
-    expect(screen.getByText("$108.00")).toBeInTheDocument();
+    expect(screen.getByText("C$108.00")).toBeInTheDocument();
   });
 });
