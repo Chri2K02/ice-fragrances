@@ -13,7 +13,7 @@ export function convertCents(baseCadCents: number, currency: Currency): number {
 
 export function formatPrice(baseCadCents: number, currency: Currency): string {
   const cents = convertCents(baseCadCents, currency);
-  const symbol = currency === "USD" ? "US$" : "$";
+  const symbol = currency === "USD" ? "US$" : "C$";
   return `${symbol}${(cents / 100).toFixed(2)}`;
 }
 
