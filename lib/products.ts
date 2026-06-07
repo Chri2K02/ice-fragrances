@@ -131,7 +131,7 @@ export const PRODUCTS: Product[] = [
     poster: "/media/air-freshener-2.jpg",
     images: ["/media/air-freshener-2.jpg", "/media/air-freshener.jpg"],
     tagline: "Light, tangy, and cleanses your car with a spring-fresh scent",
-    notes: "70 fresheners per order, plus 3 free",
+    notes: "70 fresheners per order, plus 3 free ones with every order",
   },
 ];
 
