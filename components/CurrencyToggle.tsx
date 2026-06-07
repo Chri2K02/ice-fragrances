@@ -12,7 +12,7 @@ export function CurrencyToggle() {
       type="button"
       aria-label="Toggle currency (USD / CAD)"
       onClick={() => setCurrency(currency === "USD" ? "CAD" : "USD")}
-      className="rounded-full border px-2 sm:px-3 py-1 text-sm whitespace-nowrap"
+      className="rounded-full border px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap"
     >
       {currency}
     </button>

@@ -13,7 +13,7 @@ export function ThemeToggle() {
       type="button"
       aria-label="Toggle dark mode"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="rounded-full border px-2 sm:px-3 py-1 text-sm whitespace-nowrap"
+      className="rounded-full border px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap"
     >
       <span aria-hidden>{isDark ? "☀" : "☾"}</span>
       <span className="hidden sm:inline">{isDark ? " Light" : " Dark"}</span>

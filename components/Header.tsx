@@ -25,7 +25,7 @@ export function Header() {
               Home
             </Link>
             <Link href="/shipping" className="hover:opacity-70">
-              Shipping
+              Shipping/PSA
             </Link>
             <Link
               href={isSignedIn ? "/account" : "/sign-in"}
@@ -46,7 +46,7 @@ export function Header() {
               type="button"
               onClick={() => setCartOpen(true)}
               aria-label="Open cart"
-              className="rounded-full border px-2 sm:px-3 py-1 text-sm whitespace-nowrap"
+              className="rounded-full border px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap"
             >
               <span className="sm:hidden" aria-hidden>
                 🛒
