@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { useCart } from "@/lib/cartStore";
@@ -51,6 +51,33 @@ export function ProductCard({ product }: { product: Product }) {
       .catch(() => {});
   }, [product.id]);
 
+  // Fire a Meta "ViewContent" once when this product scrolls into view.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const viewedRef = useRef(false);
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !viewedRef.current) {
+          viewedRef.current = true;
+          fbTrack("ViewContent", {
+            content_name: product.name,
+            content_ids: [product.id],
+            content_type: "product",
+            value: convertCents(product.priceCents, currency) / 100,
+            currency,
+          });
+          io.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
+
   const isOut = (variant: string) =>
     stockMap != null && variant in stockMap && stockMap[variant] <= 0;
   const productSoldOut = needsSize
@@ -63,6 +90,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <div
+      ref={cardRef}
       className="rounded-2xl p-4 flex flex-col gap-3"
       style={{ background: "var(--card)" }}
     >
