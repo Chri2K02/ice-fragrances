@@ -4,6 +4,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { orders, orderItems, inventory } from "@/lib/db/schema";
 import { getProduct } from "@/lib/products";
+import { sendCapiEvent } from "@/lib/capi";
 import type { CartItem } from "@/lib/cartStore";
 
 export async function POST(req: Request) {
@@ -77,6 +78,27 @@ export async function POST(req: Request) {
             )
           );
       }
+
+      // Server-side Purchase to Meta (Conversions API) — reliable, immune to
+      // ad blockers. eventId = session.id matches the browser Purchase on
+      // /success, so Meta de-duplicates the two.
+      await sendCapiEvent({
+        eventName: "Purchase",
+        eventId: session.id,
+        eventSourceUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/success`,
+        userData: {
+          email,
+          fbp: session.metadata?.fbp ?? null,
+          fbc: session.metadata?.fbc ?? null,
+        },
+        customData: {
+          value: (session.amount_total ?? 0) / 100,
+          currency: (session.currency ?? "cad").toUpperCase(),
+          content_ids: items.map((i) => i.id),
+          content_type: "product",
+          num_items: items.reduce((n, i) => n + i.qty, 0),
+        },
+      });
     }
   }
 

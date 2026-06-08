@@ -36,11 +36,14 @@ export function CartDrawer({
       currency,
       num_items: items.reduce((n, i) => n + i.qty, 0),
     });
+    // Capture Meta browser cookies so the server-side Purchase can match the user.
+    const fbp = document.cookie.match(/(?:^|; )_fbp=([^;]+)/)?.[1];
+    const fbc = document.cookie.match(/(?:^|; )_fbc=([^;]+)/)?.[1];
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, address: addr, currency }),
+        body: JSON.stringify({ items, address: addr, currency, fbp, fbc }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;

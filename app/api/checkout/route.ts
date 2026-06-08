@@ -50,6 +50,8 @@ export async function POST(req: Request) {
       items: CartItem[];
       address?: unknown;
       currency?: string;
+      fbp?: string;
+      fbc?: string;
     };
     const currency: Currency = body.currency === "USD" ? "USD" : "CAD";
     const cur = stripeCurrency(currency);
@@ -87,6 +89,8 @@ export async function POST(req: Request) {
     const metadata = {
       items: JSON.stringify(body.items),
       userId: userId ?? "",
+      fbp: body.fbp ?? "",
+      fbc: body.fbc ?? "",
     };
 
     let session: Stripe.Checkout.Session;

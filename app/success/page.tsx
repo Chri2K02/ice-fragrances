@@ -39,7 +39,11 @@ export default async function SuccessPage({
         </Link>
       </div>
       {purchase && (
-        <PurchaseTracker value={purchase.value} currency={purchase.currency} />
+        <PurchaseTracker
+          value={purchase.value}
+          currency={purchase.currency}
+          eventId={session_id}
+        />
       )}
     </main>
   );
