@@ -1,7 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { UserProfile } from "@clerk/nextjs";
-import { desc, eq, inArray } from "drizzle-orm";
+import { desc, eq, inArray, or } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { orders, orderItems } from "@/lib/db/schema";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -9,12 +9,18 @@ import { SignOutButton } from "@/components/SignOutButton";
 export default async function AccountPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
+  const user = await currentUser();
+  const email = user?.primaryEmailAddress?.emailAddress ?? null;
 
   const db = getDb();
   const myOrders = await db
     .select()
     .from(orders)
-    .where(eq(orders.clerkUserId, userId))
+    .where(
+      email
+        ? or(eq(orders.clerkUserId, userId), eq(orders.email, email))
+        : eq(orders.clerkUserId, userId)
+    )
     .orderBy(desc(orders.createdAt));
 
   const orderIds = myOrders.map((o) => o.id);

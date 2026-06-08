@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, or } from "drizzle-orm";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { reviews, orders, orderItems } from "@/lib/db/schema";
@@ -7,14 +7,22 @@ import { getProduct } from "@/lib/products";
 
 type DB = ReturnType<typeof getDb>;
 
-async function hasPurchased(db: DB, userId: string, productId: string) {
+async function hasPurchased(
+  db: DB,
+  userId: string,
+  productId: string,
+  email: string | null
+) {
+  // Match the order to the buyer by their account OR the email they used at
+  // checkout — so guest purchases count once they sign up with that email.
+  const owner = email
+    ? or(eq(orders.clerkUserId, userId), eq(orders.email, email))
+    : eq(orders.clerkUserId, userId);
   const rows = await db
     .select({ id: orderItems.id })
     .from(orderItems)
     .innerJoin(orders, eq(orderItems.orderId, orders.id))
-    .where(
-      and(eq(orders.clerkUserId, userId), eq(orderItems.productId, productId))
-    )
+    .where(and(owner, eq(orderItems.productId, productId)))
     .limit(1);
   return rows.length > 0;
 }
@@ -41,13 +49,12 @@ export async function GET(req: Request) {
   let alreadyReviewed = false;
   let isAdmin = false;
   if (userId) {
+    const user = await currentUser();
+    const email = user?.primaryEmailAddress?.emailAddress ?? null;
     alreadyReviewed = list.some((r) => r.clerkUserId === userId);
-    canReview = !alreadyReviewed && (await hasPurchased(db, userId, productId));
-    if (count > 0 && process.env.ADMIN_EMAIL) {
-      const user = await currentUser();
-      isAdmin =
-        user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL;
-    }
+    canReview =
+      !alreadyReviewed && (await hasPurchased(db, userId, productId, email));
+    isAdmin = !!process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL;
   }
 
   return NextResponse.json({
@@ -106,7 +113,9 @@ export async function POST(req: Request) {
   }
 
   const db = getDb();
-  if (!(await hasPurchased(db, userId, productId))) {
+  const user = await currentUser();
+  const email = user?.primaryEmailAddress?.emailAddress ?? null;
+  if (!(await hasPurchased(db, userId, productId, email))) {
     return NextResponse.json(
       { error: "Only verified buyers can review this item" },
       { status: 403 }
@@ -124,17 +133,20 @@ export async function POST(req: Request) {
     );
   }
 
-  const user = await currentUser();
   let name =
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
     user?.fullName ||
     "";
   if (!name) {
-    // Fall back to the name entered at checkout (every reviewer is a buyer).
+    // Fall back to the name entered at checkout (matched by account or email).
     const ord = await db
       .select({ name: orders.name })
       .from(orders)
-      .where(eq(orders.clerkUserId, userId))
+      .where(
+        email
+          ? or(eq(orders.clerkUserId, userId), eq(orders.email, email))
+          : eq(orders.clerkUserId, userId)
+      )
       .orderBy(desc(orders.createdAt))
       .limit(1);
     name = ord[0]?.name ?? "";
