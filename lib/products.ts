@@ -93,6 +93,8 @@ export const PRODUCTS: Product[] = [
     name: "Half-Sleeve Tees",
     priceCents: 3800,
     sizes: ["L", "XL"],
+    tagline: "We might never make these again",
+    notes: "Limited cotton-poly half sleeve shirts",
     poster: "/media/tshirt-5.jpg",
     images: [
       "/media/tshirt-5.jpg",
@@ -107,6 +109,8 @@ export const PRODUCTS: Product[] = [
     name: "Nylon Dress Shirts",
     priceCents: 6800,
     sizes: ["M", "L", "XL"],
+    tagline: "We might never make these again",
+    notes: "Limited button-up collared shirts",
     poster: "/media/dress-shirt-2.jpg",
     images: ["/media/dress-shirt-2.jpg", "/media/dress-shirt-1.jpg"],
   },

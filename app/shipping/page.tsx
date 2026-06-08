@@ -18,6 +18,10 @@ export default function ShippingPage() {
         className={`${glacialRegular.className} space-y-5 text-base leading-relaxed`}
       >
         <li>Expect your order in a maximum of 10 days.</li>
+        <li>
+          Shipping is paid for on our end — any duties or import taxes incurred
+          are paid by the receiver.
+        </li>
         <li>If your item(s) are damaged, you&apos;re entitled to another.</li>
         <li>We DO NOT ship with DHL.</li>
         <li>
