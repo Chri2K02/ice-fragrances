@@ -12,6 +12,7 @@ export const orders = pgTable("orders", {
   stripeSessionId: text("stripe_session_id").notNull().unique(),
   clerkUserId: text("clerk_user_id"),
   email: text("email"),
+  name: text("name"),
   totalCents: integer("total_cents").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

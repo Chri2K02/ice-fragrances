@@ -44,6 +44,9 @@ export async function GET(req: Request) {
     CONSTRAINT inventory_product_size UNIQUE (product_id, size)
   )`;
 
+  // Customer name from checkout — used as a reliable fallback for review names.
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS name text`;
+
   return NextResponse.json({
     ok: true,
     tables: ["orders", "order_items", "reviews", "inventory"],

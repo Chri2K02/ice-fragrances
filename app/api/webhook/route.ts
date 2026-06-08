@@ -62,6 +62,7 @@ export async function POST(req: Request) {
           stripeSessionId: session.id,
           clerkUserId,
           email,
+          name: session.customer_details?.name ?? null,
           totalCents: session.amount_total ?? 0,
         })
         .returning({ id: orders.id });

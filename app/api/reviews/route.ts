@@ -125,11 +125,21 @@ export async function POST(req: Request) {
   }
 
   const user = await currentUser();
-  const name =
+  let name =
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
     user?.fullName ||
-    user?.username ||
-    "Customer";
+    "";
+  if (!name) {
+    // Fall back to the name entered at checkout (every reviewer is a buyer).
+    const ord = await db
+      .select({ name: orders.name })
+      .from(orders)
+      .where(eq(orders.clerkUserId, userId))
+      .orderBy(desc(orders.createdAt))
+      .limit(1);
+    name = ord[0]?.name ?? "";
+  }
+  name = name || user?.username || "Customer";
 
   await db.insert(reviews).values({
     productId,
