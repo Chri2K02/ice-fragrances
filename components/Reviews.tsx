@@ -105,10 +105,17 @@ export function Reviews({ productId }: { productId: string }) {
               key={r.id}
               className="border-t border-black/10 dark:border-white/10 pt-2"
             >
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-start gap-2">
                 <Stars value={r.rating} />
-                <span className="opacity-60 text-xs flex items-center gap-2">
-                  {r.authorName}
+                <span className="text-xs flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
+                  <span className="font-medium">{r.authorName}</span>
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-black whitespace-nowrap"
+                    style={{ background: "var(--accent)" }}
+                    title="Purchased this product"
+                  >
+                    ✓ Verified Buyer
+                  </span>
                   {data.isAdmin && (
                     <button
                       type="button"

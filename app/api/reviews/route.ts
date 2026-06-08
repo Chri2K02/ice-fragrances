@@ -126,9 +126,8 @@ export async function POST(req: Request) {
 
   const user = await currentUser();
   const name =
-    [user?.firstName, user?.lastName ? user.lastName[0] + "." : ""]
-      .filter(Boolean)
-      .join(" ") ||
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    user?.fullName ||
     user?.username ||
     "Customer";
 
