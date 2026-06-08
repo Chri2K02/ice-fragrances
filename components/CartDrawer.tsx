@@ -16,7 +16,7 @@ export function CartDrawer({
   open: boolean;
   onClose: () => void;
 }) {
-  const { items, remove, totalCents } = useCart();
+  const { items, add, decrement, remove, totalCents } = useCart();
   const [step, setStep] = useState<"cart" | "address">("cart");
   const [addr, setAddr] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
@@ -96,13 +96,34 @@ export function CartDrawer({
                   return (
                     <li
                       key={i.id + (i.size ?? "")}
-                      className="flex justify-between items-center"
+                      className="flex justify-between items-center gap-2"
                     >
-                      <span>
-                        {p.name}
-                        {i.size ? ` (${i.size})` : ""} × {i.qty}
-                      </span>
-                      <span className="flex items-center gap-3">
+                      <div className="min-w-0">
+                        <div className="truncate">
+                          {p.name}
+                          {i.size ? ` (${i.size})` : ""}
+                        </div>
+                        <div className="mt-1 inline-flex items-center rounded-full border border-black/20 dark:border-white/25">
+                          <button
+                            type="button"
+                            onClick={() => decrement(i.id, i.size)}
+                            aria-label={`Decrease ${p.name} quantity`}
+                            className="w-7 h-7 grid place-items-center text-base hover:opacity-70"
+                          >
+                            −
+                          </button>
+                          <span className="w-6 text-center text-sm">{i.qty}</span>
+                          <button
+                            type="button"
+                            onClick={() => add(i.id, i.size)}
+                            aria-label={`Increase ${p.name} quantity`}
+                            className="w-7 h-7 grid place-items-center text-base hover:opacity-70"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                      <span className="flex items-center gap-3 shrink-0">
                         {formatPrice(p.priceCents * i.qty, currency)}
                         <button
                           type="button"

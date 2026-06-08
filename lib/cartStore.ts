@@ -7,6 +7,7 @@ export type CartItem = { id: string; size?: string; qty: number };
 type CartState = {
   items: CartItem[];
   add: (id: string, size?: string) => void;
+  decrement: (id: string, size?: string) => void;
   remove: (id: string, size?: string) => void;
   clear: () => void;
   count: () => number;
@@ -31,6 +32,15 @@ export const useCart = create<CartState>()(
           }
           return { items: [...state.items, { id, size, qty: 1 }] };
         }),
+      decrement: (id, size) =>
+        set((state) => ({
+          // Drop quantity by one; remove the line if it hits zero.
+          items: state.items
+            .map((i) =>
+              i.id === id && i.size === size ? { ...i, qty: i.qty - 1 } : i
+            )
+            .filter((i) => i.qty > 0),
+        })),
       remove: (id, size) =>
         set((state) => ({
           items: state.items.filter((i) => !(i.id === id && i.size === size)),

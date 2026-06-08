@@ -25,6 +25,15 @@ describe("cartStore", () => {
     expect(useCart.getState().items).toEqual([]);
   });
 
+  it("decrements quantity, removing the line when it hits zero", () => {
+    useCart.getState().add("humidifier");
+    useCart.getState().add("humidifier"); // qty 2
+    useCart.getState().decrement("humidifier"); // qty 1
+    expect(useCart.getState().items).toEqual([{ id: "humidifier", qty: 1 }]);
+    useCart.getState().decrement("humidifier"); // qty 0 -> removed
+    expect(useCart.getState().items).toEqual([]);
+  });
+
   it("counts total quantity", () => {
     useCart.getState().add("frost-mind");
     useCart.getState().add("humidifier");
