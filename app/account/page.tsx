@@ -4,6 +4,7 @@ import { UserProfile } from "@clerk/nextjs";
 import { desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { orders, orderItems } from "@/lib/db/schema";
+import { SignOutButton } from "@/components/SignOutButton";
 
 export default async function AccountPage() {
   const { userId } = await auth();
@@ -34,7 +35,10 @@ export default async function AccountPage() {
   return (
     <main className="px-4 py-12 max-w-3xl mx-auto min-h-[70vh] space-y-12">
       <section>
-        <h1 className="text-2xl font-semibold mb-6">Your orders</h1>
+        <div className="flex items-center justify-between mb-6 gap-3">
+          <h1 className="text-2xl font-semibold">Your orders</h1>
+          <SignOutButton />
+        </div>
         {myOrders.length === 0 ? (
           <p className="opacity-70">No orders yet.</p>
         ) : (

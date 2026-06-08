@@ -18,6 +18,16 @@ type Data = {
   isAdmin: boolean;
 };
 
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 function Stars({ value }: { value: number }) {
   const full = Math.round(value);
   return (
@@ -127,6 +137,11 @@ export function Reviews({ productId }: { productId: string }) {
                   )}
                 </span>
               </div>
+              {r.createdAt && (
+                <p className="opacity-50 text-xs mt-0.5">
+                  Reviewed {formatDate(r.createdAt)}
+                </p>
+              )}
               {r.body && <p className="opacity-80 mt-1">{r.body}</p>}
             </div>
           ))}
