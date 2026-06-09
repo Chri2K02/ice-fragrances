@@ -122,8 +122,8 @@ export const PRODUCTS: Product[] = [
     poster: "/media/humidifier.jpg",
     images: [
       "/media/humidifier.jpg",
-      "/media/humidifier-1.jpg",
-      "/media/humidifier-2.jpg",
+      "/media/humidifier-oil-1.jpg",
+      "/media/humidifier-oil-2.jpg",
     ],
     tagline: "Freshen your world",
     notes: "A water & oil based scented humidifier order comes with an oil base",
