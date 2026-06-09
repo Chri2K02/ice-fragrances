@@ -23,7 +23,11 @@ export async function sendEmail(opts: {
       },
       body: JSON.stringify({
         from: EMAIL_FROM,
-        to: opts.to,
+        // Supports a comma-separated list of recipients.
+        to: opts.to
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
         subject: opts.subject,
         html: opts.html,
         reply_to: opts.replyTo,
