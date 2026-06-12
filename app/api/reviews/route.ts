@@ -65,6 +65,8 @@ export async function GET(req: Request) {
       authorName: r.authorName,
       rating: r.rating,
       body: r.body,
+      adminReply: r.adminReply,
+      repliedAt: r.repliedAt,
       createdAt: r.createdAt,
     })),
     signedIn: !!userId,
@@ -74,16 +76,19 @@ export async function GET(req: Request) {
   });
 }
 
-export async function DELETE(req: Request) {
+// Returns true once the signed-in user matches the configured admin email.
+async function isAdmin(): Promise<boolean> {
   const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!userId) return false;
   const user = await currentUser();
-  if (
-    !process.env.ADMIN_EMAIL ||
-    user?.primaryEmailAddress?.emailAddress !== process.env.ADMIN_EMAIL
-  ) {
+  return (
+    !!process.env.ADMIN_EMAIL &&
+    user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL
+  );
+}
+
+export async function DELETE(req: Request) {
+  if (!(await isAdmin())) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const id = Number(new URL(req.url).searchParams.get("id"));
@@ -92,6 +97,26 @@ export async function DELETE(req: Request) {
   }
   await getDb().delete(reviews).where(eq(reviews.id, id));
   return NextResponse.json({ ok: true });
+}
+
+// Admin posts (or clears) the store's public reply to a review.
+export async function PATCH(req: Request) {
+  if (!(await isAdmin())) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const { id, reply } = (await req.json()) as { id?: number; reply?: string };
+  if (!Number.isInteger(id) || (id ?? 0) <= 0) {
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+  }
+  const text = (reply ?? "").toString().trim().slice(0, 2000);
+  await getDb()
+    .update(reviews)
+    .set({
+      adminReply: text || null,
+      repliedAt: text ? new Date() : null,
+    })
+    .where(eq(reviews.id, id!));
+  return NextResponse.json({ ok: true, reply: text || null });
 }
 
 export async function POST(req: Request) {

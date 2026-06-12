@@ -25,8 +25,8 @@ export function Products() {
 
       {/* Two gendered columns with vertical divider lines and space between */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20">
-        {/* Women — left */}
-        <div className="md:border-r md:border-black/15 dark:md:border-white/15 md:pr-10">
+        {/* Women — left on desktop, second on mobile */}
+        <div className="order-2 md:order-none md:border-r md:border-black/15 dark:md:border-white/15 md:pr-10">
           <h3 className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.3em] opacity-80">
             Women&apos;s
           </h3>
@@ -37,8 +37,8 @@ export function Products() {
           </div>
         </div>
 
-        {/* Men — right */}
-        <div className="md:border-l md:border-black/15 dark:md:border-white/15 md:pl-10">
+        {/* Men — right on desktop, first on mobile */}
+        <div className="order-1 md:order-none md:border-l md:border-black/15 dark:md:border-white/15 md:pl-10">
           <h3 className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.3em] opacity-80">
             Men&apos;s
           </h3>

@@ -1,5 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { inventory } from "@/lib/db/schema";
 import { PRODUCTS } from "@/lib/products";
@@ -35,7 +36,12 @@ export default async function AdminPage() {
 
   return (
     <main className="px-4 py-12 max-w-2xl mx-auto min-h-[70vh]">
-      <h1 className="text-2xl font-semibold mb-2">Stock</h1>
+      <div className="flex items-center justify-between mb-2 gap-3">
+        <h1 className="text-2xl font-semibold">Stock</h1>
+        <Link href="/admin/reviews" className="text-sm underline opacity-70">
+          Reviews →
+        </Link>
+      </div>
       <p className="opacity-70 text-sm mb-6">
         Enter a number to track stock — it drops automatically on each sale, and
         the product shows <strong>Sold Out</strong> at 0. Leave blank to keep an

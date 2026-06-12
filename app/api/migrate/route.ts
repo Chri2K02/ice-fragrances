@@ -47,6 +47,10 @@ export async function GET(req: Request) {
   // Customer name from checkout — used as a reliable fallback for review names.
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS name text`;
 
+  // Store's public reply to a review ("Response from Ice Fragrances").
+  await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS admin_reply text`;
+  await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS replied_at timestamp`;
+
   return NextResponse.json({
     ok: true,
     tables: ["orders", "order_items", "reviews", "inventory"],

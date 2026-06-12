@@ -45,5 +45,7 @@ export const reviews = pgTable("reviews", {
   authorName: text("author_name").notNull(),
   rating: integer("rating").notNull(),
   body: text("body").notNull().default(""),
+  adminReply: text("admin_reply"),
+  repliedAt: timestamp("replied_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

@@ -6,6 +6,8 @@ type ReviewItem = {
   authorName: string;
   rating: number;
   body: string;
+  adminReply: string | null;
+  repliedAt: string | null;
   createdAt: string;
 };
 type Data = {
@@ -26,6 +28,120 @@ function formatDate(iso: string): string {
     month: "long",
     day: "numeric",
   });
+}
+
+// The store's public reply to a single review. Everyone sees an existing
+// reply; the admin gets inline controls to write, edit, or remove it.
+function ReplyBlock({
+  reviewId,
+  reply,
+  isAdmin,
+  onChanged,
+}: {
+  reviewId: number;
+  reply: string | null;
+  isAdmin: boolean;
+  onChanged: () => void | Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(reply ?? "");
+  const [saving, setSaving] = useState(false);
+
+  async function save(value: string) {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: reviewId, reply: value }),
+      });
+      if (res.ok) {
+        setEditing(false);
+        await onChanged();
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <div className="mt-2 ml-4 space-y-2">
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Write a public response…"
+          rows={2}
+          className="w-full rounded-lg border border-black/15 dark:border-white/20 bg-transparent px-3 py-2"
+        />
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => save(draft)}
+            className="rounded-full px-3 py-1 text-xs font-medium text-black border-2 border-black disabled:opacity-40"
+            style={{ background: "var(--accent)" }}
+          >
+            {saving ? "Saving…" : "Save reply"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(reply ?? "");
+              setEditing(false);
+            }}
+            className="text-xs underline opacity-60"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (reply) {
+    return (
+      <div
+        className="mt-2 ml-4 border-l-2 pl-3 py-1"
+        style={{ borderColor: "var(--accent)" }}
+      >
+        <p className="text-xs font-semibold">Response from Ice Fragrances</p>
+        <p className="opacity-80 mt-0.5">{reply}</p>
+        {isAdmin && (
+          <div className="flex items-center gap-3 mt-1">
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="text-xs underline opacity-60"
+            >
+              Edit reply
+            </button>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => save("")}
+              className="text-xs underline opacity-60 disabled:opacity-30"
+            >
+              Remove reply
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (!isAdmin) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      className="text-xs underline opacity-60 mt-1 ml-4"
+    >
+      Reply as Ice Fragrances
+    </button>
+  );
 }
 
 function Stars({ value }: { value: number }) {
@@ -143,6 +259,12 @@ export function Reviews({ productId }: { productId: string }) {
                 </p>
               )}
               {r.body && <p className="opacity-80 mt-1">{r.body}</p>}
+              <ReplyBlock
+                reviewId={r.id}
+                reply={r.adminReply}
+                isAdmin={data.isAdmin}
+                onChanged={load}
+              />
             </div>
           ))}
 
