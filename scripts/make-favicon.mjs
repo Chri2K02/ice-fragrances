@@ -48,6 +48,7 @@ async function centered(size, contentRatio = 0.78) {
       right: size - inner - pad,
       background: WHITE,
     })
+    .ensureAlpha() // Turbopack's .ico decoder requires embedded PNGs to be RGBA
     .png()
     .toBuffer();
 }
