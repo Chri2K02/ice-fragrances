@@ -5,7 +5,7 @@ import { getDb } from "@/lib/db";
 import { orders, orderItems, inventory } from "@/lib/db/schema";
 import { getProduct } from "@/lib/products";
 import { sendCapiEvent } from "@/lib/capi";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, customerConfirmationHtml } from "@/lib/email";
 import type { CartItem } from "@/lib/cartStore";
 
 function formatAddress(a: Stripe.Address | null | undefined): string {
@@ -154,6 +154,24 @@ export async function POST(req: Request) {
           <p style="color:#888;font-size:12px">Stripe session: ${session.id}</p>
         `,
       });
+
+      // Send the customer their branded order confirmation. Replies route to
+      // the store inbox. Guarded by `email` so we never send into the void.
+      if (email) {
+        const customerItems = items.map(
+          (i) =>
+            `${getProduct(i.id)?.name ?? i.id}${i.size ? ` (${i.size})` : ""} × ${i.qty}`
+        );
+        await sendEmail({
+          to: email,
+          replyTo: orderEmail,
+          subject: "Your Ice Fragrances order is confirmed ❄️",
+          html: customerConfirmationHtml(
+            session.customer_details?.name ?? null,
+            customerItems
+          ),
+        });
+      }
     }
   }
 
