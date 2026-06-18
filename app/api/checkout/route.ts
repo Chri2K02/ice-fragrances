@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { auth } from "@clerk/nextjs/server";
-import { buildLineItems } from "@/lib/checkout";
+import { buildLineItems, tariffLineItem } from "@/lib/checkout";
 import {
   cartNeedsShipping,
   shippingRateCents,
@@ -56,6 +56,10 @@ export async function POST(req: Request) {
     const currency: Currency = body.currency === "USD" ? "USD" : "CAD";
     const cur = stripeCurrency(currency);
     const lineItems = buildLineItems(body.items, currency);
+
+    // US buyers (USD orders) pay a flat import tariff, added to every order type.
+    const tariff = tariffLineItem(currency);
+    if (tariff) lineItems.push(tariff);
 
     // Reject if any tracked variant is sold out / short on stock.
     const db = getDb();

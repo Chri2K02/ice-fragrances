@@ -4,6 +4,7 @@ import { useCart } from "@/lib/cartStore";
 import { getProduct } from "@/lib/products";
 import { regionsFor, cartNeedsShipping, type Country } from "@/lib/shipping";
 import { formatPrice, convertCents } from "@/lib/currency";
+import { US_TARIFF_CENTS } from "@/lib/checkout";
 import { useDisplayCurrency } from "@/lib/currencyStore";
 import { fbTrack } from "@/lib/fbpixel";
 
@@ -142,6 +143,12 @@ export function CartDrawer({
               <span>Subtotal</span>
               <span>{total}</span>
             </div>
+            {currency === "USD" && items.length > 0 && (
+              <div className="mt-2 flex justify-between text-sm opacity-80">
+                <span>US import tariff</span>
+                <span>US${(US_TARIFF_CENTS / 100).toFixed(2)}</span>
+              </div>
+            )}
             {error && <p className="text-sm text-red-500 mt-3">{error}</p>}
             <button
               type="button"

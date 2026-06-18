@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildLineItems } from "@/lib/checkout";
+import { buildLineItems, tariffLineItem, US_TARIFF_CENTS } from "@/lib/checkout";
 
 describe("buildLineItems", () => {
   it("builds Stripe line items from valid cart items", () => {
@@ -27,5 +27,24 @@ describe("buildLineItems", () => {
 
   it("throws on an empty cart", () => {
     expect(() => buildLineItems([])).toThrow();
+  });
+});
+
+describe("tariffLineItem", () => {
+  it("adds a flat $11 USD tariff for USD orders", () => {
+    expect(US_TARIFF_CENTS).toBe(1100);
+    expect(tariffLineItem("USD")).toEqual({
+      quantity: 1,
+      price_data: {
+        currency: "usd",
+        unit_amount: 1100,
+        tax_behavior: "exclusive",
+        product_data: { name: "US Import Tariff", tax_code: "txcd_99999999" },
+      },
+    });
+  });
+
+  it("charges no tariff for CAD orders", () => {
+    expect(tariffLineItem("CAD")).toBeNull();
   });
 });
