@@ -29,7 +29,7 @@ export default async function Image() {
           justifyContent: "center",
           gap: 56,
           background:
-            "radial-gradient(circle at 50% 35%, #11212b 0%, #060606 72%)",
+            "radial-gradient(circle at 50% 20%, #41414b 0%, #060606 72%)",
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
