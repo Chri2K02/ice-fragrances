@@ -52,3 +52,66 @@ a {
     transform: translateY(0);
   }
 }
+
+/* ─── View Transitions ──────────────────────────────
+ * Route navigations animate the routed page (named "page-content" in
+ * app/template.tsx) with a quick exit + a gentler, delayed enter: blur→sharp
+ * crossfade plus a subtle slide-up. Static chrome (site-header / site-footer,
+ * named on the <header>/<footer> roots in components/Header.tsx and
+ * components/Footer.tsx) holds still via `animation: none`. */
+
+::view-transition-old(page-content) {
+  animation:
+    150ms ease-in both vt-fade reverse,
+    150ms ease-in both vt-slide-y reverse;
+}
+
+::view-transition-new(page-content) {
+  animation:
+    210ms ease-out 150ms both vt-fade,
+    400ms ease-in-out both vt-slide-y;
+}
+
+@keyframes vt-fade {
+  from {
+    filter: blur(3px);
+    opacity: 0;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+@keyframes vt-slide-y {
+  from {
+    transform: translateY(10px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Persistent chrome — never re-animate header/footer across navigations. */
+::view-transition-group(site-header),
+::view-transition-group(site-footer) {
+  animation: none;
+}
+::view-transition-old(site-header),
+::view-transition-old(site-footer) {
+  display: none;
+}
+::view-transition-new(site-header),
+::view-transition-new(site-footer) {
+  animation: none;
+}
+
+/* Respect users who ask for less motion: zero out all transition timing. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

@@ -17,7 +17,12 @@ export function Header() {
     <>
       <header
         className="sticky top-0 z-40 backdrop-blur-md border-b border-black/10 dark:border-white/10"
-        style={{ background: "color-mix(in srgb, var(--bg) 80%, transparent)" }}
+        style={{
+          background: "color-mix(in srgb, var(--bg) 80%, transparent)",
+          // Persist the sticky header across route navigations so only the
+          // routed page crossfades (see app/globals.css view-transition rules).
+          viewTransitionName: "site-header",
+        }}
       >
         <div className="max-w-6xl mx-auto px-4 py-5 relative flex items-center justify-center">
           <nav className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm">
