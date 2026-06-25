@@ -57,7 +57,8 @@ a {
  * Route navigations animate the routed page (named "page-content" in
  * app/template.tsx) with a quick exit + a gentler, delayed enter: blur→sharp
  * crossfade plus a subtle slide-up. Static chrome (site-header / site-footer,
- * named in app/layout.tsx) holds still via `animation: none`. */
+ * named on the <header>/<footer> roots in components/Header.tsx and
+ * components/Footer.tsx) holds still via `animation: none`. */
 
 ::view-transition-old(page-content) {
   animation:
