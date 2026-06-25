@@ -15,6 +15,7 @@
     ],
     "tagline": "Takes you to a \"different state of mind\" (Kid Bloom)",
     "notes": "Showcases vanilla, amber, pink pepper, nutmeg, red rose and white rose with supreme elegance",
+    "description": "Frost is a women's fragrance that showcases vanilla, amber, pink pepper, nutmeg, red rose and white rose with supreme elegance. Built on an 18% oil concentration, it takes you to a different state of mind. A premium, timeless fragrance from Ice Fragrances.",
     "oil": "18%"
   },
   {
@@ -34,6 +35,7 @@
     ],
     "tagline": "Feels like \"insomnia relief\" during \"after hours\" (The Weeknd)",
     "notes": "Features grapefruit, elderwood, cedarwood, neroli, lavender and blood orange in an infinitely timeless manner",
+    "description": "Glacier is a men's fragrance featuring grapefruit, elderwood, cedarwood, neroli, lavender and blood orange in an infinitely timeless manner. With an 18% oil concentration, it feels like insomnia relief during after hours. A premium, timeless fragrance from Ice Fragrances.",
     "oil": "18%"
   },
   {
@@ -52,6 +54,7 @@
     ],
     "tagline": "Smells like an absolute \"wildflower\" (Beach House)",
     "notes": "Hallmarks jasmine, coriander, incense, cloves, tonka bean, red rose and clementine with a spice to the scent overall",
+    "description": "Hailstone is a women's fragrance that hallmarks jasmine, coriander, incense, cloves, tonka bean, red rose and clementine, with a spice to the scent overall. At a 13% oil concentration, it smells like an absolute wildflower. A premium, timeless fragrance from Ice Fragrances.",
     "oil": "13%"
   },
   {
@@ -72,6 +75,7 @@
     ],
     "tagline": "Makes the world \"embrace\" (Pastel Ghost)",
     "notes": "Highlights bergamot, eucalyptus, mint, pomelo and rosemary boldly without being overpowering",
+    "description": "Iceberg is a men's fragrance that highlights bergamot, eucalyptus, mint, pomelo and rosemary boldly without being overpowering. With a 13% oil concentration, it makes the world embrace. A premium, timeless fragrance from Ice Fragrances.",
     "oil": "13%"
   },
   {
@@ -82,6 +86,7 @@
     "sizes": ["L", "XL"],
     "tagline": "We might never make these again",
     "notes": "Limited cotton-poly half sleeve shirts",
+    "description": "Limited cotton-poly half-sleeve shirts from Ice Fragrances, available in sizes L and XL. We might never make these again.",
     "poster": "/media/tshirt-5.jpg",
     "images": [
       "/media/tshirt-5.jpg",
@@ -99,6 +104,7 @@
     "sizes": ["M", "L", "XL"],
     "tagline": "We might never make these again",
     "notes": "Limited button-up collared shirts",
+    "description": "Limited button-up collared nylon dress shirts from Ice Fragrances, available in sizes M, L and XL. We might never make these again.",
     "poster": "/media/dress-shirt-2.jpg",
     "images": ["/media/dress-shirt-2.jpg", "/media/dress-shirt-1.jpg"]
   },
@@ -115,7 +121,8 @@
       "/media/humidifier-oil-2.jpg"
     ],
     "tagline": "Freshen your world",
-    "notes": "A water & oil based scented humidifier order comes with an oil base"
+    "notes": "A water & oil based scented humidifier order comes with an oil base",
+    "description": "A water- and oil-based scented humidifier from Ice Fragrances — every order comes with an oil base. Freshen your world."
   },
   {
     "id": "air-freshener",
@@ -125,6 +132,7 @@
     "poster": "/media/air-freshener-2.jpg",
     "images": ["/media/air-freshener-2.jpg", "/media/air-freshener.jpg"],
     "tagline": "Light, tangy, and cleanses your car with a spring-fresh scent",
-    "notes": "70 fresheners per order, plus 3 free ones with every order"
+    "notes": "70 fresheners per order, plus 3 free ones with every order",
+    "description": "Light, tangy car fresheners that cleanse your car with a spring-fresh scent. Each order from Ice Fragrances includes 70 fresheners, plus 3 free ones with every order."
   }
 ]

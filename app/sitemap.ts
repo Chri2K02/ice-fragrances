@@ -1,13 +1,20 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
+import { PRODUCTS } from "@/lib/products";
 
-// Public, indexable routes only. Products are anchors on the home page (there
-// are no per-product routes), so the catalog is covered by the home entry —
-// when per-product pages exist, map PRODUCTS into entries here.
+// Public, indexable routes only: the home page, each statically-generated
+// product page (/products/<id>), and the policy pages.
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
+  const products: MetadataRoute.Sitemap = PRODUCTS.map((p) => ({
+    url: `${SITE_URL}/products/${p.id}`,
+    lastModified,
+    changeFrequency: "weekly",
+    priority: 0.8,
+  }));
   return [
     { url: `${SITE_URL}/`, lastModified, changeFrequency: "weekly", priority: 1 },
+    ...products,
     {
       url: `${SITE_URL}/shipping`,
       lastModified,

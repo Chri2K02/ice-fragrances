@@ -19,6 +19,7 @@ export type Product = {
   images?: string[]; // photo gallery, e.g. apparel
   tagline?: string; // evocative line under the title
   notes?: string; // scent notes / description
+  description?: string; // longer crawlable copy for the product page (SEO)
   oil?: string; // oil concentration, e.g. "18%"
   freeShipping?: boolean; // true = always free shipping (colognes)
   sizes?: string[]; // apparel size options
