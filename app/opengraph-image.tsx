@@ -6,7 +6,7 @@ import { join } from "node:path";
 // tagline in the logo's sky-blue accent (#34b6f5 from globals.css), set in the
 // store's display face (Glacial Indifference Bold). Statically generated at
 // build time. twitter-image.tsx re-exports this so both cards stay in sync.
-export const alt = "Ice Fragrances — Premium Cold-Weather Colognes";
+export const alt = "Ice Fragrances — Premium, Timeless Fragrances";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -43,7 +43,7 @@ export default async function Image() {
             textTransform: "uppercase",
           }}
         >
-          Premium Cold-Weather Colognes
+          Premium, Timeless Fragrances
         </div>
       </div>
     ),
