@@ -16,8 +16,8 @@ export const SITE_URL = (
 
 export const SITE = {
   name: "Ice Fragrances",
-  title: "Ice Fragrances — Premium Cold-Weather Colognes",
-  description: "Premium cold-weather colognes. Free shipping to US & Canada.",
+  title: "Ice Fragrances — Premium, Timeless Fragrances",
+  description: "Premium, Timeless Fragrances. Free shipping to US & Canada.",
   url: SITE_URL,
   locale: "en_US",
   email: "icefragrances@icefragrances.com",
