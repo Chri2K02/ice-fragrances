@@ -16,7 +16,17 @@ type Slide =
   | { type: "image"; src: string }
   | { type: "video"; src: string; poster: string };
 
-export function ProductCard({ product }: { product: Product }) {
+// `compact` strips the textual product info (name/price row, tagline/notes/oil,
+// and the self-referential "More details" link) so the card can be embedded on
+// the product page — where that copy is already server-rendered in the page
+// header — as a pure gallery + buy box + reviews. Defaults off for the grid.
+export function ProductCard({
+  product,
+  compact = false,
+}: {
+  product: Product;
+  compact?: boolean;
+}) {
   const add = useCart((s) => s.add);
   const show = useToast((s) => s.show);
   const currency = useDisplayCurrency();
@@ -144,39 +154,45 @@ export function ProductCard({ product }: { product: Product }) {
         )}
       </div>
 
-      <div className="flex items-center justify-between">
-        {/* Title links to the product page; App Router <Link> prefetches the
-            route on viewport/hover so the (statically hydrated) page opens
-            instantly. */}
-        <h3 className="text-lg font-medium">
+      {!compact && (
+        <>
+          <div className="flex items-center justify-between">
+            {/* Title links to the product page; App Router <Link> prefetches the
+                route on viewport/hover so the (statically hydrated) page opens
+                instantly. */}
+            <h3 className="text-lg font-medium">
+              <Link
+                href={`/products/${product.id}`}
+                prefetch
+                className="hover:opacity-70 transition-opacity"
+              >
+                {product.name}
+              </Link>
+            </h3>
+            <span className="font-semibold">{price}</span>
+          </div>
+
+          {(product.tagline || product.notes || product.oil) && (
+            <div
+              className={`${glacialRegular.className} text-sm opacity-70 space-y-1`}
+            >
+              {product.tagline && <p className="italic">{product.tagline}</p>}
+              {product.notes && <p>{product.notes}</p>}
+              {product.oil && <p>Oil concentration: {product.oil}</p>}
+            </div>
+          )}
+
+          {/* Explicit affordance to the full product page (additive — cart/gallery
+              interactions below are unchanged). Prefetched like the title link. */}
           <Link
             href={`/products/${product.id}`}
             prefetch
-            className="hover:opacity-70 transition-opacity"
+            className={`${glacialRegular.className} w-fit text-sm underline underline-offset-4 opacity-70 hover:opacity-100 transition-opacity normal-case`}
           >
-            {product.name}
+            More details →
           </Link>
-        </h3>
-        <span className="font-semibold">{price}</span>
-      </div>
-
-      {(product.tagline || product.notes || product.oil) && (
-        <div className={`${glacialRegular.className} text-sm opacity-70 space-y-1`}>
-          {product.tagline && <p className="italic">{product.tagline}</p>}
-          {product.notes && <p>{product.notes}</p>}
-          {product.oil && <p>Oil concentration: {product.oil}</p>}
-        </div>
+        </>
       )}
-
-      {/* Explicit affordance to the full product page (additive — cart/gallery
-          interactions below are unchanged). Prefetched like the title link. */}
-      <Link
-        href={`/products/${product.id}`}
-        prefetch
-        className={`${glacialRegular.className} w-fit text-sm underline underline-offset-4 opacity-70 hover:opacity-100 transition-opacity normal-case`}
-      >
-        More details →
-      </Link>
 
       <div className="mt-auto flex flex-col gap-3">
         {needsSize && (
