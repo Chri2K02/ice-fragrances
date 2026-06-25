@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { useCart } from "@/lib/cartStore";
 import type { Product } from "@/lib/products";
@@ -144,7 +145,18 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
 
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">{product.name}</h3>
+        {/* Title links to the product page; App Router <Link> prefetches the
+            route on viewport/hover so the (statically hydrated) page opens
+            instantly. */}
+        <h3 className="text-lg font-medium">
+          <Link
+            href={`/products/${product.id}`}
+            prefetch
+            className="hover:opacity-70 transition-opacity"
+          >
+            {product.name}
+          </Link>
+        </h3>
         <span className="font-semibold">{price}</span>
       </div>
 
@@ -155,6 +167,16 @@ export function ProductCard({ product }: { product: Product }) {
           {product.oil && <p>Oil concentration: {product.oil}</p>}
         </div>
       )}
+
+      {/* Explicit affordance to the full product page (additive — cart/gallery
+          interactions below are unchanged). Prefetched like the title link. */}
+      <Link
+        href={`/products/${product.id}`}
+        prefetch
+        className={`${glacialRegular.className} w-fit text-sm underline underline-offset-4 opacity-70 hover:opacity-100 transition-opacity normal-case`}
+      >
+        More details →
+      </Link>
 
       <div className="mt-auto flex flex-col gap-3">
         {needsSize && (
