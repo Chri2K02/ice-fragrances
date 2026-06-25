@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cartStore";
 import { getProduct } from "@/lib/products";
 import { regionsFor, cartNeedsShipping, type Country } from "@/lib/shipping";
-import { formatPrice, convertCents } from "@/lib/currency";
+import { formatPrice } from "@/lib/currency";
 import { US_TARIFF_CENTS } from "@/lib/checkout";
 import { useDisplayCurrency } from "@/lib/currencyStore";
-import { fbTrack } from "@/lib/fbpixel";
+import { useCheckoutDraft } from "@/lib/checkoutStore";
 
 const EMPTY = { name: "", country: "CA" as Country, state: "", line1: "", city: "", postal: "" };
 
@@ -25,35 +26,21 @@ export function CartDrawer({
   const currency = useDisplayCurrency();
   const total = formatPrice(totalCents(), currency);
   const needsAddress = cartNeedsShipping(items);
+  const router = useRouter();
+  const setDraftAddress = useCheckoutDraft((s) => s.setAddress);
 
   const canSubmit =
     addr.name && addr.state && addr.line1 && addr.city && addr.postal;
 
-  async function payNow() {
+  // Hand off to the embedded /checkout page instead of redirecting to Stripe.
+  // Apparel/accessories carry the collected address (used for the shipping zone);
+  // colognes ship free and let Stripe collect the address, so we clear any draft.
+  function goToCheckout() {
     setLoading(true);
     setError(null);
-    fbTrack("InitiateCheckout", {
-      value: convertCents(totalCents(), currency) / 100,
-      currency,
-      num_items: items.reduce((n, i) => n + i.qty, 0),
-    });
-    // Capture Meta browser cookies so the server-side Purchase can match the user.
-    const fbp = document.cookie.match(/(?:^|; )_fbp=([^;]+)/)?.[1];
-    const fbc = document.cookie.match(/(?:^|; )_fbc=([^;]+)/)?.[1];
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, address: addr, currency, fbp, fbc }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else setError(data.error ?? "Checkout failed");
-    } catch {
-      setError("Checkout failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    setDraftAddress(needsAddress ? addr : null);
+    onClose();
+    router.push("/checkout");
   }
 
   const field =
@@ -153,11 +140,11 @@ export function CartDrawer({
             <button
               type="button"
               disabled={items.length === 0 || loading}
-              onClick={() => (needsAddress ? setStep("address") : payNow())}
+              onClick={() => (needsAddress ? setStep("address") : goToCheckout())}
               className="mt-4 w-full rounded-full px-4 py-3 font-medium text-black border-2 border-black disabled:opacity-40"
               style={{ background: "var(--accent)" }}
             >
-              {loading ? "Redirecting…" : "Checkout"}
+              {loading ? "Loading…" : "Checkout"}
             </button>
             <p className="text-xs opacity-60 mt-2 text-center">
               {needsAddress
@@ -228,11 +215,11 @@ export function CartDrawer({
             <button
               type="button"
               disabled={!canSubmit || loading}
-              onClick={payNow}
+              onClick={goToCheckout}
               className="mt-1 w-full rounded-full px-4 py-3 font-medium text-black border-2 border-black disabled:opacity-40"
               style={{ background: "var(--accent)" }}
             >
-              {loading ? "Redirecting…" : "Continue to payment"}
+              {loading ? "Loading…" : "Continue to payment"}
             </button>
             <button
               type="button"

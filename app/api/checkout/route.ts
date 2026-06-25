@@ -83,9 +83,13 @@ export async function POST(req: Request) {
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-    const urls = {
-      success_url: `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/`,
+    // Embedded Checkout renders on our own /checkout page (no redirect to
+    // checkout.stripe.com). After payment, Stripe redirects the top window to
+    // this return_url. /success retrieves the session by id for the receipt +
+    // Purchase pixel. Embedded sessions take a single return_url (no cancel_url).
+    const embedded = {
+      ui_mode: "embedded_page" as const,
+      return_url: `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
     };
 
     // Attach the cart + signed-in user so the webhook can record the order.
@@ -131,7 +135,7 @@ export async function POST(req: Request) {
             },
           },
         ],
-        ...urls,
+        ...embedded,
       });
     } else {
       // All colognes: free shipping, let Stripe collect the address.
@@ -151,11 +155,11 @@ export async function POST(req: Request) {
             },
           },
         ],
-        ...urls,
+        ...embedded,
       });
     }
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ client_secret: session.client_secret });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Checkout failed";
     return NextResponse.json({ error: message }, { status: 400 });
