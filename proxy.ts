@@ -1,5 +1,7 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 
+// Next 16 renamed the `middleware` file convention to `proxy`. Clerk's handler
+// is the proxy's default export; the matcher is unchanged.
 export default clerkMiddleware();
 
 export const config = {

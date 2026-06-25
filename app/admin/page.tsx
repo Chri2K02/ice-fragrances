@@ -5,6 +5,12 @@ import { getDb } from "@/lib/db";
 import { inventory } from "@/lib/db/schema";
 import { PRODUCTS } from "@/lib/products";
 import { StockEditor } from "@/components/StockEditor";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin",
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminPage() {
   const { userId } = await auth();

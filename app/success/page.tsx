@@ -1,6 +1,12 @@
 import Link from "next/link";
 import Stripe from "stripe";
+import type { Metadata } from "next";
 import { PurchaseTracker } from "@/components/PurchaseTracker";
+
+export const metadata: Metadata = {
+  title: "Order Confirmed",
+  robots: { index: false, follow: false },
+};
 
 export default async function SuccessPage({
   searchParams,

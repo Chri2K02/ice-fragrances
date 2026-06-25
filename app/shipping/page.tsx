@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { glacial, glacialRegular } from "@/lib/fonts";
 
 export const metadata: Metadata = {
-  title: "Shipping — Ice Fragrances",
+  title: "Shipping",
   description: "Shipping information for Ice Fragrances.",
+  alternates: { canonical: "/shipping" },
 };
 
 export default function ShippingPage() {

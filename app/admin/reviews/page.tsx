@@ -6,6 +6,12 @@ import { getDb } from "@/lib/db";
 import { reviews } from "@/lib/db/schema";
 import { getProduct } from "@/lib/products";
 import { AdminReviewList } from "@/components/AdminReviewList";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin — Reviews",
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminReviewsPage() {
   const { userId } = await auth();

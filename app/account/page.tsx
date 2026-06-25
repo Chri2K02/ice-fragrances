@@ -5,6 +5,12 @@ import { desc, eq, inArray, or } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { orders, orderItems } from "@/lib/db/schema";
 import { SignOutButton } from "@/components/SignOutButton";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Your Account",
+  robots: { index: false, follow: false },
+};
 
 export default async function AccountPage() {
   const { userId } = await auth();
