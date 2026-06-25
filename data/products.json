@@ -1,0 +1,130 @@
+[
+  {
+    "id": "frost-mind",
+    "name": "Frost",
+    "category": "womens",
+    "priceCents": 10800,
+    "freeShipping": true,
+    "video": "/media/frost-mind.mp4",
+    "poster": "/media/frost-mind.jpg",
+    "images": [
+      "/media/frost-mind.jpg",
+      "/media/frost-1.jpg",
+      "/media/frost-2.jpg",
+      "/media/frost-3.jpg"
+    ],
+    "tagline": "Takes you to a \"different state of mind\" (Kid Bloom)",
+    "notes": "Showcases vanilla, amber, pink pepper, nutmeg, red rose and white rose with supreme elegance",
+    "oil": "18%"
+  },
+  {
+    "id": "glacier-hours",
+    "name": "Glacier",
+    "category": "mens",
+    "priceCents": 10800,
+    "freeShipping": true,
+    "video": "/media/glacier-hours.mp4",
+    "poster": "/media/glacier-hours.jpg",
+    "images": [
+      "/media/glacier-hours.jpg",
+      "/media/glacier-1.jpg",
+      "/media/glacier-2.jpg",
+      "/media/glacier-3.jpg",
+      "/media/glacier-4.jpg"
+    ],
+    "tagline": "Feels like \"insomnia relief\" during \"after hours\" (The Weeknd)",
+    "notes": "Features grapefruit, elderwood, cedarwood, neroli, lavender and blood orange in an infinitely timeless manner",
+    "oil": "18%"
+  },
+  {
+    "id": "hailstone-wildflower",
+    "name": "Hailstone",
+    "category": "womens",
+    "priceCents": 10800,
+    "freeShipping": true,
+    "video": "/media/hailstone-wildflower.mp4",
+    "poster": "/media/hailstone-wildflower.jpg",
+    "images": [
+      "/media/hailstone-wildflower.jpg",
+      "/media/hailstone-1.jpg",
+      "/media/hailstone-2.jpg",
+      "/media/hailstone-3.jpg"
+    ],
+    "tagline": "Smells like an absolute \"wildflower\" (Beach House)",
+    "notes": "Hallmarks jasmine, coriander, incense, cloves, tonka bean, red rose and clementine with a spice to the scent overall",
+    "oil": "13%"
+  },
+  {
+    "id": "iceberg-embrace",
+    "name": "Iceberg",
+    "category": "mens",
+    "priceCents": 10800,
+    "freeShipping": true,
+    "video": "/media/iceberg-embrace.mp4",
+    "poster": "/media/iceberg-embrace.jpg",
+    "images": [
+      "/media/iceberg-embrace.jpg",
+      "/media/iceberg-1.jpg",
+      "/media/iceberg-2.jpg",
+      "/media/iceberg-3.jpg",
+      "/media/iceberg-4.jpg",
+      "/media/iceberg-5.jpg"
+    ],
+    "tagline": "Makes the world \"embrace\" (Pastel Ghost)",
+    "notes": "Highlights bergamot, eucalyptus, mint, pomelo and rosemary boldly without being overpowering",
+    "oil": "13%"
+  },
+  {
+    "id": "tshirt",
+    "name": "Half-Sleeve Tees",
+    "category": "apparel",
+    "priceCents": 3800,
+    "sizes": ["L", "XL"],
+    "tagline": "We might never make these again",
+    "notes": "Limited cotton-poly half sleeve shirts",
+    "poster": "/media/tshirt-5.jpg",
+    "images": [
+      "/media/tshirt-5.jpg",
+      "/media/tshirt-1.jpg",
+      "/media/tshirt-2.jpg",
+      "/media/tshirt-3.jpg",
+      "/media/tshirt-4.jpg"
+    ]
+  },
+  {
+    "id": "dress-shirt",
+    "name": "Nylon Dress Shirts",
+    "category": "apparel",
+    "priceCents": 6800,
+    "sizes": ["M", "L", "XL"],
+    "tagline": "We might never make these again",
+    "notes": "Limited button-up collared shirts",
+    "poster": "/media/dress-shirt-2.jpg",
+    "images": ["/media/dress-shirt-2.jpg", "/media/dress-shirt-1.jpg"]
+  },
+  {
+    "id": "humidifier",
+    "name": "Humidifier",
+    "category": "accessories",
+    "priceCents": 3800,
+    "video": "/media/humidifier.mp4",
+    "poster": "/media/humidifier.jpg",
+    "images": [
+      "/media/humidifier.jpg",
+      "/media/humidifier-oil-1.jpg",
+      "/media/humidifier-oil-2.jpg"
+    ],
+    "tagline": "Freshen your world",
+    "notes": "A water & oil based scented humidifier order comes with an oil base"
+  },
+  {
+    "id": "air-freshener",
+    "name": "Car Freshener's",
+    "category": "accessories",
+    "priceCents": 3800,
+    "poster": "/media/air-freshener-2.jpg",
+    "images": ["/media/air-freshener-2.jpg", "/media/air-freshener.jpg"],
+    "tagline": "Light, tangy, and cleanses your car with a spring-fresh scent",
+    "notes": "70 fresheners per order, plus 3 free ones with every order"
+  }
+]

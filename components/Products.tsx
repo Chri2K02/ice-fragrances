@@ -1,20 +1,14 @@
-import { getProduct, type Product } from "@/lib/products";
+import { productsByCategory } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { glacial } from "@/lib/fonts";
 
-const WOMEN_IDS = ["frost-mind", "hailstone-wildflower"];
-const MEN_IDS = ["glacier-hours", "iceberg-embrace"];
-const APPAREL_IDS = ["tshirt", "dress-shirt"];
-
-function pick(ids: string[]): Product[] {
-  return ids.map(getProduct).filter((p): p is Product => Boolean(p));
-}
-
 export function Products() {
-  const women = pick(WOMEN_IDS);
-  const men = pick(MEN_IDS);
-  const apparel = pick(APPAREL_IDS);
-  const accessories = pick(["humidifier", "air-freshener"]);
+  // Section membership now comes from each product's `category` in the data,
+  // not from id lists hardcoded here.
+  const women = productsByCategory("womens");
+  const men = productsByCategory("mens");
+  const apparel = productsByCategory("apparel");
+  const accessories = productsByCategory("accessories");
 
   return (
     <section
