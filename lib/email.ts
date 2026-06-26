@@ -39,6 +39,31 @@ export function customerConfirmationHtml(
   </div>`;
 }
 
+// One-time passcode email for Better Auth's emailOTP plugin (sign-in,
+// email verification, password reset). Branded to match the order email.
+export function otpEmailHtml(otp: string): string {
+  const code = otp.replace(/[^0-9A-Za-z]/g, "");
+  return `
+  <div style="background:#0a0a0a;padding:32px 0;font-family:Helvetica,Arial,sans-serif">
+    <div style="max-width:480px;margin:0 auto;background:#111;border:1px solid #1f1f1f;border-radius:16px;overflow:hidden">
+      <div style="padding:28px 32px;border-bottom:1px solid #1f1f1f">
+        <h1 style="margin:0;color:#fff;font-size:20px;letter-spacing:0.18em;text-transform:uppercase">Ice&nbsp;Fragrances</h1>
+      </div>
+      <div style="padding:28px 32px;color:#e8e8e8;font-size:15px;line-height:1.6">
+        <p style="margin:0 0 16px">Use this code to continue:</p>
+        <p style="margin:0 0 20px;text-align:center">
+          <span style="display:inline-block;font-size:32px;font-weight:bold;letter-spacing:0.32em;color:${ACCENT};background:#0a0a0a;border:1px solid #1f1f1f;border-radius:12px;padding:16px 24px">${code}</span>
+        </p>
+        <p style="margin:0 0 16px">This code expires in <strong style="color:${ACCENT}">5 minutes</strong>. If you didn't request it, you can safely ignore this email.</p>
+        <p style="margin:0;color:#9a9a9a">Stay cool,<br/>The Ice Fragrances team</p>
+      </div>
+      <div style="padding:18px 32px;border-top:1px solid #1f1f1f;color:#5f5f5f;font-size:12px">
+        icefragrances.com
+      </div>
+    </div>
+  </div>`;
+}
+
 // Sends an email via Resend. No-op until RESEND_API_KEY is configured.
 // Never throws — email must never break the webhook.
 export async function sendEmail(opts: {
