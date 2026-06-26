@@ -47,7 +47,8 @@ export async function POST(req: Request) {
     }
     const email =
       session.customer_details?.email ?? session.customer_email ?? null;
-    const clerkUserId = session.metadata?.userId || null;
+    // Better Auth user id passed through checkout metadata (empty for guests).
+    const userId = session.metadata?.userId || null;
 
     const db = getDb();
     const existing = await db
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
         .insert(orders)
         .values({
           stripeSessionId: session.id,
-          clerkUserId,
+          userId,
           email,
           name: session.customer_details?.name ?? null,
           totalCents: session.amount_total ?? 0,

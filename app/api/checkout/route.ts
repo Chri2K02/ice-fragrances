@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { auth } from "@clerk/nextjs/server";
+import { getSession } from "@/lib/session";
 import { buildLineItems, tariffLineItem } from "@/lib/checkout";
 import {
   cartNeedsShipping,
@@ -118,7 +118,8 @@ export async function POST(req: Request) {
     };
 
     // Attach the cart + signed-in user so the webhook can record the order.
-    const { userId } = await auth();
+    const authSession = await getSession();
+    const userId = authSession?.user.id ?? null;
     const metadata = {
       items: JSON.stringify(body.items),
       userId: userId ?? "",

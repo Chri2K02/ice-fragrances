@@ -51,6 +51,17 @@ export async function GET(req: Request) {
   await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS admin_reply text`;
   await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS replied_at timestamp`;
 
+  // ── A2 cutover: Better Auth user id on orders/reviews ─────────────────
+  // Additive: add user_id (holds the Better Auth user.id), and relax the old
+  // NOT NULL on reviews.clerk_user_id so new reviews can write user_id only.
+  // A4 backfills user_id for legacy rows; clerk_user_id is dropped later
+  // (lead-gated) once every row has a user_id.
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id text`;
+  await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS user_id text`;
+  await sql`ALTER TABLE reviews ALTER COLUMN clerk_user_id DROP NOT NULL`;
+  await sql`CREATE INDEX IF NOT EXISTS orders_user_id_idx ON orders (user_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS reviews_user_id_idx ON reviews (user_id)`;
+
   // ── Better Auth core tables (additive alongside Clerk) ────────────────
   // Mirrors lib/auth-schema.ts. "user" is a reserved word — must be quoted.
   await sql`CREATE TABLE IF NOT EXISTS "user" (

@@ -80,10 +80,13 @@ export const auth = betterAuth({
   },
 
   // Single host — simple static list (skip zcanon's private-IP/relay machinery).
+  // localhost/127.0.0.1 use a port wildcard so dev on any port passes the CSRF
+  // origin check, mirroring baseURL.allowedHosts above (fixes the :3000-only gap).
   trustedOrigins: [
     "https://www.icefragrances.com",
     "https://icefragrances.com",
-    "http://localhost:3000",
+    "http://localhost:*",
+    "http://127.0.0.1:*",
   ],
 
   plugins: [
