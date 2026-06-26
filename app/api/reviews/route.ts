@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { and, desc, eq, or } from "drizzle-orm";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { getSession } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { reviews, orders, orderItems } from "@/lib/db/schema";
 import { getProduct } from "@/lib/products";
@@ -15,9 +15,11 @@ async function hasPurchased(
 ) {
   // Match the order to the buyer by their account OR the email they used at
   // checkout — so guest purchases count once they sign up with that email.
+  // Matching by email also covers legacy orders whose user_id isn't backfilled
+  // yet (A4), since they still carry the checkout email.
   const owner = email
-    ? or(eq(orders.clerkUserId, userId), eq(orders.email, email))
-    : eq(orders.clerkUserId, userId);
+    ? or(eq(orders.userId, userId), eq(orders.email, email))
+    : eq(orders.userId, userId);
   const rows = await db
     .select({ id: orderItems.id })
     .from(orderItems)
@@ -44,14 +46,14 @@ export async function GET(req: Request) {
     ? list.reduce((s, r) => s + r.rating, 0) / count
     : 0;
 
-  const { userId } = await auth();
+  const session = await getSession();
+  const userId = session?.user.id ?? null;
+  const email = session?.user.email ?? null;
   let canReview = false;
   let alreadyReviewed = false;
   let isAdmin = false;
   if (userId) {
-    const user = await currentUser();
-    const email = user?.primaryEmailAddress?.emailAddress ?? null;
-    alreadyReviewed = list.some((r) => r.clerkUserId === userId);
+    alreadyReviewed = list.some((r) => r.userId === userId);
     canReview =
       !alreadyReviewed && (await hasPurchased(db, userId, productId, email));
     isAdmin = !!process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL;
@@ -78,13 +80,9 @@ export async function GET(req: Request) {
 
 // Returns true once the signed-in user matches the configured admin email.
 async function isAdmin(): Promise<boolean> {
-  const { userId } = await auth();
-  if (!userId) return false;
-  const user = await currentUser();
-  return (
-    !!process.env.ADMIN_EMAIL &&
-    user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL
-  );
+  const session = await getSession();
+  const email = session?.user.email ?? null;
+  return !!process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL;
 }
 
 export async function DELETE(req: Request) {
@@ -120,7 +118,8 @@ export async function PATCH(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const { userId } = await auth();
+  const session = await getSession();
+  const userId = session?.user.id ?? null;
   if (!userId) {
     return NextResponse.json({ error: "Sign in to review" }, { status: 401 });
   }
@@ -138,8 +137,7 @@ export async function POST(req: Request) {
   }
 
   const db = getDb();
-  const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress ?? null;
+  const email = session?.user.email ?? null;
   if (!(await hasPurchased(db, userId, productId, email))) {
     return NextResponse.json(
       { error: "Only verified buyers can review this item" },
@@ -149,7 +147,7 @@ export async function POST(req: Request) {
   const existing = await db
     .select({ id: reviews.id })
     .from(reviews)
-    .where(and(eq(reviews.productId, productId), eq(reviews.clerkUserId, userId)))
+    .where(and(eq(reviews.productId, productId), eq(reviews.userId, userId)))
     .limit(1);
   if (existing.length) {
     return NextResponse.json(
@@ -158,29 +156,26 @@ export async function POST(req: Request) {
     );
   }
 
-  let name =
-    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-    user?.fullName ||
-    "";
+  // Prefer the Better Auth profile name; fall back to the checkout name.
+  let name = session?.user.name ?? "";
   if (!name) {
-    // Fall back to the name entered at checkout (matched by account or email).
     const ord = await db
       .select({ name: orders.name })
       .from(orders)
       .where(
         email
-          ? or(eq(orders.clerkUserId, userId), eq(orders.email, email))
-          : eq(orders.clerkUserId, userId)
+          ? or(eq(orders.userId, userId), eq(orders.email, email))
+          : eq(orders.userId, userId)
       )
       .orderBy(desc(orders.createdAt))
       .limit(1);
     name = ord[0]?.name ?? "";
   }
-  name = name || user?.username || "Customer";
+  name = name || "Customer";
 
   await db.insert(reviews).values({
     productId,
-    clerkUserId: userId,
+    userId,
     authorName: name,
     rating: r,
     body: (body ?? "").toString().slice(0, 2000),

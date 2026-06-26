@@ -1,6 +1,6 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { getSession } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { inventory } from "@/lib/db/schema";
 import { PRODUCTS } from "@/lib/products";
@@ -13,12 +13,11 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminPage() {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-  const user = await currentUser();
+  const session = await getSession();
+  if (!session) redirect("/sign-in");
   if (
     !process.env.ADMIN_EMAIL ||
-    user?.primaryEmailAddress?.emailAddress !== process.env.ADMIN_EMAIL
+    session.user.email !== process.env.ADMIN_EMAIL
   ) {
     redirect("/");
   }

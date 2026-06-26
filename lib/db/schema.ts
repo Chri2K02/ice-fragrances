@@ -10,6 +10,9 @@ import {
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   stripeSessionId: text("stripe_session_id").notNull().unique(),
+  // Better Auth user id (post-cutover). Legacy clerk_user_id is kept until the
+  // A4 backfill populates user_id for every row, then dropped (lead-gated).
+  userId: text("user_id"),
   clerkUserId: text("clerk_user_id"),
   email: text("email"),
   name: text("name"),
@@ -41,7 +44,11 @@ export const inventory = pgTable(
 export const reviews = pgTable("reviews", {
   id: serial("id").primaryKey(),
   productId: text("product_id").notNull(),
-  clerkUserId: text("clerk_user_id").notNull(),
+  // Better Auth user id (post-cutover). clerk_user_id is now nullable — new
+  // reviews write user_id only; A4 backfills it for legacy rows before the
+  // column is dropped (lead-gated).
+  userId: text("user_id"),
+  clerkUserId: text("clerk_user_id"),
   authorName: text("author_name").notNull(),
   rating: integer("rating").notNull(),
   body: text("body").notNull().default(""),

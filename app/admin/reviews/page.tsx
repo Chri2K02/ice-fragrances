@@ -1,7 +1,7 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { desc } from "drizzle-orm";
+import { getSession } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { reviews } from "@/lib/db/schema";
 import { getProduct } from "@/lib/products";
@@ -14,12 +14,11 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminReviewsPage() {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-  const user = await currentUser();
+  const session = await getSession();
+  if (!session) redirect("/sign-in");
   if (
     !process.env.ADMIN_EMAIL ||
-    user?.primaryEmailAddress?.emailAddress !== process.env.ADMIN_EMAIL
+    session.user.email !== process.env.ADMIN_EMAIL
   ) {
     redirect("/");
   }

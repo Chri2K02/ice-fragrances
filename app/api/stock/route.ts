@@ -1,18 +1,14 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { getSession } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { inventory } from "@/lib/db/schema";
 import { getProduct } from "@/lib/products";
 
 async function isAdmin() {
-  const { userId } = await auth();
-  if (!userId) return false;
-  const user = await currentUser();
-  return (
-    !!process.env.ADMIN_EMAIL &&
-    user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL
-  );
+  const session = await getSession();
+  const email = session?.user.email ?? null;
+  return !!process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL;
 }
 
 // Public: stock map { [sizeOrEmpty]: number } for tracked variants of a product.

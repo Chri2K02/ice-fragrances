@@ -1,7 +1,6 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { UserProfile } from "@clerk/nextjs";
 import { desc, eq, inArray, or } from "drizzle-orm";
+import { getSession } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { orders, orderItems } from "@/lib/db/schema";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -13,20 +12,18 @@ export const metadata: Metadata = {
 };
 
 export default async function AccountPage() {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-  const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress ?? null;
+  const session = await getSession();
+  if (!session) redirect("/sign-in");
+  const userId = session.user.id;
+  const email = session.user.email;
 
   const db = getDb();
+  // Match orders by Better Auth id OR the checkout email — the email arm also
+  // covers legacy/guest orders whose user_id isn't backfilled yet (A4).
   const myOrders = await db
     .select()
     .from(orders)
-    .where(
-      email
-        ? or(eq(orders.clerkUserId, userId), eq(orders.email, email))
-        : eq(orders.clerkUserId, userId)
-    )
+    .where(or(eq(orders.userId, userId), eq(orders.email, email)))
     .orderBy(desc(orders.createdAt));
 
   const orderIds = myOrders.map((o) => o.id);
@@ -48,7 +45,10 @@ export default async function AccountPage() {
     <main className="px-4 py-12 max-w-3xl mx-auto min-h-[70vh] space-y-12">
       <section>
         <div className="flex items-center justify-between mb-6 gap-3">
-          <h1 className="text-2xl font-semibold">Your orders</h1>
+          <div>
+            <h1 className="text-2xl font-semibold">Your orders</h1>
+            <p className="opacity-70 text-sm mt-1">{email}</p>
+          </div>
           <SignOutButton />
         </div>
         {myOrders.length === 0 ? (
@@ -76,10 +76,6 @@ export default async function AccountPage() {
             ))}
           </ul>
         )}
-      </section>
-
-      <section className="grid place-items-center">
-        <UserProfile routing="hash" />
       </section>
     </main>
   );
