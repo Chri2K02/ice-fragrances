@@ -44,20 +44,45 @@ function validateAddress(a: unknown): Address {
   };
 }
 
+function validateCountry(c: unknown): Country {
+  if (c === "US" || c === "CA") return c;
+  throw new Error("Please choose a shipping destination (US or Canada).");
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as {
       items: CartItem[];
       address?: unknown;
+      country?: unknown;
       currency?: string;
       fbp?: string;
       fbc?: string;
     };
-    const currency: Currency = body.currency === "USD" ? "USD" : "CAD";
+
+    // Determine the authoritative shipping destination, then derive currency
+    // and the US import tariff from THAT — never from a client-controlled
+    // currency toggle. Apparel carts collect a full address on-site; cologne
+    // carts collect only the country here and let Stripe collect the address
+    // (locked to this country below). This is what makes US orders always pay
+    // the tariff: there's no way to ship to the US without selecting "US".
+    const cartNeeds = cartNeedsShipping(body.items);
+    const address = cartNeeds ? validateAddress(body.address) : null;
+    // Stale clients (mid-session on old JS right after a deploy) don't send a
+    // country — fall back to their currency so their checkout never hard-fails;
+    // a fresh load gets the enforced country selector.
+    const country: Country = address
+      ? address.country
+      : body.country === "US" || body.country === "CA"
+        ? body.country
+        : validateCountry(body.currency === "USD" ? "US" : "CA");
+    const currency: Currency = country === "US" ? "USD" : "CAD";
     const cur = stripeCurrency(currency);
+
     const lineItems = buildLineItems(body.items, currency);
 
-    // US buyers (USD orders) pay a flat import tariff, added to every order type.
+    // US destinations pay a flat import tariff (currency now follows country, so
+    // this is gated on the real destination, not a toggle).
     const tariff = tariffLineItem(currency);
     if (tariff) lineItems.push(tariff);
 
@@ -103,9 +128,8 @@ export async function POST(req: Request) {
 
     let session: Stripe.Checkout.Session;
 
-    if (cartNeedsShipping(body.items)) {
+    if (address) {
       // Apparel/accessories: address collected on our site -> compute zone rate.
-      const address = validateAddress(body.address);
       const shipping = shippingRateCents(address.country, address.state);
       const stripeAddress = {
         line1: address.line1,
@@ -138,13 +162,14 @@ export async function POST(req: Request) {
         ...embedded,
       });
     } else {
-      // All colognes: free shipping, let Stripe collect the address.
+      // All colognes: free shipping. Stripe collects the address, but locked to
+      // the chosen destination so the tariff (or lack of it) can't be dodged.
       session = await stripe.checkout.sessions.create({
         mode: "payment",
         line_items: lineItems,
         metadata,
         automatic_tax: { enabled: true },
-        shipping_address_collection: { allowed_countries: ["US", "CA"] },
+        shipping_address_collection: { allowed_countries: [country] },
         shipping_options: [
           {
             shipping_rate_data: {

@@ -6,7 +6,7 @@ import { getProduct } from "@/lib/products";
 import { regionsFor, cartNeedsShipping, type Country } from "@/lib/shipping";
 import { formatPrice, convertCents } from "@/lib/currency";
 import { US_TARIFF_CENTS } from "@/lib/checkout";
-import { useDisplayCurrency } from "@/lib/currencyStore";
+import { useCurrency, useDisplayCurrency } from "@/lib/currencyStore";
 import { useCheckoutDraft } from "@/lib/checkoutStore";
 import { prefetchCheckoutSession } from "@/lib/checkoutSession";
 import { fbTrack } from "@/lib/fbpixel";
@@ -30,6 +30,20 @@ export function CartDrawer({
   const needsAddress = cartNeedsShipping(items);
   const router = useRouter();
   const setDraftAddress = useCheckoutDraft((s) => s.setAddress);
+  const setCurrency = useCurrency((s) => s.setCurrency);
+
+  // The ship-to country is the single region choice: it drives the display
+  // currency, the US import tariff, and which addresses Stripe will accept. The
+  // server re-derives currency + tariff from this, so the toggle can't dodge it.
+  const shipTo: Country = currency === "USD" ? "US" : "CA";
+  function setShipTo(c: Country) {
+    setCurrency(c === "US" ? "USD" : "CAD");
+  }
+
+  // Keep the apparel address country aligned with the ship-to choice.
+  useEffect(() => {
+    setAddr((a) => (a.country === shipTo ? a : { ...a, country: shipTo, state: "" }));
+  }, [shipTo]);
 
   // The drawer lives in the persistent layout, so it does NOT unmount when we
   // navigate to /checkout. Clear the stale "loading" flag (and prefetch the
@@ -60,7 +74,7 @@ export function CartDrawer({
   function goToCheckout() {
     setLoading(true);
     setError(null);
-    const address = needsAddress ? addr : undefined;
+    const address = needsAddress ? { ...addr, country: shipTo } : undefined;
     fbTrack("InitiateCheckout", {
       value: convertCents(totalCents(), currency) / 100,
       currency,
@@ -70,8 +84,9 @@ export function CartDrawer({
     const fbp = document.cookie.match(/(?:^|; )_fbp=([^;]+)/)?.[1];
     const fbc = document.cookie.match(/(?:^|; )_fbc=([^;]+)/)?.[1];
     // Start the Stripe session NOW so it runs in parallel with the navigation —
-    // /checkout consumes the result instead of waiting on a fresh request.
-    prefetchCheckoutSession({ items, address, currency, fbp, fbc });
+    // /checkout consumes the result instead of waiting on a fresh request. The
+    // ship-to country is what the server uses to set currency + the US tariff.
+    prefetchCheckoutSession({ items, address, country: shipTo, fbp, fbc });
     setDraftAddress(address ?? null);
     onClose();
     router.push("/checkout");
@@ -160,7 +175,22 @@ export function CartDrawer({
               </ul>
             )}
 
-            <div className="mt-6 border-t pt-4 flex justify-between font-semibold">
+            {items.length > 0 && (
+              <div className="mt-5 flex items-center justify-between gap-3">
+                <span className="text-sm opacity-80">Ship to</span>
+                <select
+                  className="rounded-lg border border-black/15 dark:border-white/20 bg-transparent px-3 py-2 text-sm"
+                  value={shipTo}
+                  onChange={(e) => setShipTo(e.target.value as Country)}
+                  aria-label="Shipping destination"
+                >
+                  <option value="CA">🇨🇦 Canada (CAD)</option>
+                  <option value="US">🇺🇸 United States (USD)</option>
+                </select>
+              </div>
+            )}
+
+            <div className="mt-4 border-t pt-4 flex justify-between font-semibold">
               <span>Subtotal</span>
               <span>{total}</span>
             </div>
@@ -191,7 +221,8 @@ export function CartDrawer({
         {step === "address" && (
           <div className="flex flex-col gap-3">
             <p className="text-sm opacity-70">
-              Enter your shipping address to calculate shipping &amp; taxes.
+              Shipping to {addr.country === "CA" ? "🇨🇦 Canada" : "🇺🇸 United States"}{" "}
+              (change in cart). Enter your address to calculate shipping &amp; taxes.
             </p>
             <input
               className={field}
@@ -211,32 +242,20 @@ export function CartDrawer({
               value={addr.city}
               onChange={(e) => setAddr({ ...addr, city: e.target.value })}
             />
-            <div className="flex gap-3">
-              <select
-                className={field}
-                value={addr.country}
-                onChange={(e) =>
-                  setAddr({ ...addr, country: e.target.value as Country, state: "" })
-                }
-              >
-                <option value="CA">Canada</option>
-                <option value="US">United States</option>
-              </select>
-              <select
-                className={field}
-                value={addr.state}
-                onChange={(e) => setAddr({ ...addr, state: e.target.value })}
-              >
-                <option value="">
-                  {addr.country === "CA" ? "Province" : "State"}
+            <select
+              className={field}
+              value={addr.state}
+              onChange={(e) => setAddr({ ...addr, state: e.target.value })}
+            >
+              <option value="">
+                {addr.country === "CA" ? "Province" : "State"}
+              </option>
+              {regionsFor(addr.country).map(([code, label]) => (
+                <option key={code} value={code}>
+                  {label}
                 </option>
-                {regionsFor(addr.country).map(([code, label]) => (
-                  <option key={code} value={code}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
+              ))}
+            </select>
             <input
               className={field}
               placeholder={addr.country === "CA" ? "Postal code" : "ZIP code"}

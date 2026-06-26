@@ -77,7 +77,9 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           items,
           address: address ?? undefined,
-          currency,
+          // Apparel address carries its own country; colognes fall back to the
+          // region implied by the (ship-to-driven) display currency.
+          country: address?.country ?? (currency === "USD" ? "US" : "CA"),
           fbp,
           fbc,
         }),

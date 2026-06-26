@@ -1,11 +1,14 @@
 import type { CartItem } from "@/lib/cartStore";
-import type { Currency } from "@/lib/currency";
+import type { Country } from "@/lib/shipping";
 import type { CheckoutAddress } from "@/lib/checkoutStore";
 
 type Payload = {
   items: CartItem[];
+  // Cologne carts send the chosen ship-to country; apparel carts send the full
+  // address (its country is authoritative). The server derives currency + the
+  // US tariff from this, so the client currency toggle can't be used to dodge it.
   address?: CheckoutAddress;
-  currency: Currency;
+  country?: Country;
   fbp?: string;
   fbc?: string;
 };
