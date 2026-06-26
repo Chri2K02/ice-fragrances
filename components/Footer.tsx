@@ -13,6 +13,9 @@ export function Footer() {
           <Link href="/privacy" className="underline">
             Privacy
           </Link>
+          <Link href="/terms" className="underline">
+            Terms
+          </Link>
           <a
             href="mailto:icefragrances@icefragrances.com"
             className="underline"
