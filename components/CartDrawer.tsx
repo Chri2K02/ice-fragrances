@@ -6,7 +6,8 @@ import { getProduct } from "@/lib/products";
 import { regionsFor, cartNeedsShipping, type Country } from "@/lib/shipping";
 import { formatPrice, convertCents, type Currency } from "@/lib/currency";
 import { US_TARIFF_CENTS } from "@/lib/checkout";
-import { useShipTo, useShipToStore } from "@/lib/shipToStore";
+import { useDisplayCurrency } from "@/lib/currencyStore";
+import { useShipToStore, effectiveShipTo } from "@/lib/shipToStore";
 import { useCheckoutDraft } from "@/lib/checkoutStore";
 import { prefetchCheckoutSession } from "@/lib/checkoutSession";
 import { fbTrack } from "@/lib/fbpixel";
@@ -26,9 +27,12 @@ export function CartDrawer({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Ship-to country drives the CHARGE currency + US tariff, independent of the
-  // header browse-currency toggle. A Canadian viewing USD still ships to Canada
-  // in CAD with no tariff; the cart total below reflects the real charge.
-  const shipTo = useShipTo();
+  // header browse-currency toggle — but it DEFAULTS to the browse region so what
+  // you see is what you get (USD -> US), while a Canadian viewing USD can still
+  // switch to Canada. The cart total below reflects the real charge currency.
+  const browse = useDisplayCurrency();
+  const explicitShipTo = useShipToStore((s) => s.country);
+  const shipTo = effectiveShipTo(explicitShipTo, browse);
   const setShipTo = useShipToStore((s) => s.setCountry);
   const currency: Currency = shipTo === "US" ? "USD" : "CAD";
   const total = formatPrice(totalCents(), currency);
@@ -90,6 +94,10 @@ export function CartDrawer({
 
   const field =
     "w-full rounded-lg border border-black/15 dark:border-white/20 bg-transparent px-3 py-2 text-sm";
+  // Native <select> needs a solid bg + explicit text color, or the option list
+  // renders white-on-white in dark mode (options inherit the page colors).
+  const selectField =
+    "w-full rounded-lg border border-black/15 dark:border-white/20 bg-white text-black dark:bg-neutral-900 dark:text-white px-3 py-2 text-sm";
 
   return (
     <div
@@ -175,7 +183,7 @@ export function CartDrawer({
               <div className="mt-5 flex items-center justify-between gap-3">
                 <span className="text-sm opacity-80">Ship to</span>
                 <select
-                  className="rounded-lg border border-black/15 dark:border-white/20 bg-transparent px-3 py-2 text-sm"
+                  className="rounded-lg border border-black/15 dark:border-white/20 bg-white text-black dark:bg-neutral-900 dark:text-white px-3 py-2 text-sm"
                   value={shipTo}
                   onChange={(e) => setShipTo(e.target.value as Country)}
                   aria-label="Shipping destination"
@@ -239,7 +247,7 @@ export function CartDrawer({
               onChange={(e) => setAddr({ ...addr, city: e.target.value })}
             />
             <select
-              className={field}
+              className={selectField}
               value={addr.state}
               onChange={(e) => setAddr({ ...addr, state: e.target.value })}
             >

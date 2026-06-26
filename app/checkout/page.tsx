@@ -9,7 +9,8 @@ import {
 import { useCart } from "@/lib/cartStore";
 import { useCheckoutDraft } from "@/lib/checkoutStore";
 import { takeCheckoutSession } from "@/lib/checkoutSession";
-import { useShipTo } from "@/lib/shipToStore";
+import { useDisplayCurrency } from "@/lib/currencyStore";
+import { useShipToStore, effectiveShipTo } from "@/lib/shipToStore";
 import { getProduct } from "@/lib/products";
 import { cartNeedsShipping } from "@/lib/shipping";
 import { formatPrice, convertCents, type Currency } from "@/lib/currency";
@@ -30,8 +31,10 @@ export default function CheckoutPage() {
   const { items } = useCart();
   const address = useCheckoutDraft((s) => s.address);
   // Charge currency follows the ship-to country (matches what Stripe charges),
-  // not the header browse-currency toggle.
-  const shipTo = useShipTo();
+  // defaulting to the browse region when not explicitly chosen.
+  const browse = useDisplayCurrency();
+  const explicitShipTo = useShipToStore((s) => s.country);
+  const shipTo = effectiveShipTo(explicitShipTo, browse);
   const currency: Currency = shipTo === "US" ? "USD" : "CAD";
 
   // Persisted cart/currency only exist after client hydration; wait for it so we
