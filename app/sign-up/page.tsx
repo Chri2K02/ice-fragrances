@@ -1,5 +1,5 @@
-import { SignUp } from "@clerk/nextjs";
 import type { Metadata } from "next";
+import { AuthForm } from "@/components/AuthForm";
 
 export const metadata: Metadata = {
   title: "Sign Up",
@@ -9,7 +9,12 @@ export const metadata: Metadata = {
 export default function SignUpPage() {
   return (
     <main className="grid place-items-center px-4 py-16 min-h-[70vh]">
-      <SignUp />
+      <div className="w-full max-w-sm">
+        <h1 className="text-3xl font-semibold mb-6 text-center">
+          Create your account
+        </h1>
+        <AuthForm mode="signup" />
+      </div>
     </main>
   );
 }
