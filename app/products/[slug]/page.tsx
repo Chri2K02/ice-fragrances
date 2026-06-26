@@ -172,10 +172,11 @@ export default async function ProductPage({
         )}
       </header>
 
-      {/* Interactive island: gallery, currency-aware price, size/stock,
-          add-to-cart, and the Reviews thread — reused from the storefront. */}
+      {/* Interactive island: gallery, size/stock, add-to-cart, and the Reviews
+          thread — reused from the storefront in `compact` mode so the name,
+          tagline and price (already in the header above) aren't duplicated. */}
       <div className="max-w-md">
-        <ProductCard product={product} />
+        <ProductCard product={product} compact />
       </div>
     </main>
   );
