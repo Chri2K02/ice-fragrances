@@ -1,0 +1,23 @@
+# Pin the build target to Next.js's documented modern default
+# (https://nextjs.org/docs/architecture/supported-browsers). This is a
+# REGRESSION-GUARD + SELF-DOC, not a bundle-size win:
+#
+#   * Next/SWC already defaults to exactly these targets, so this file does
+#     not change the build output by a single byte. Its job is to stop a
+#     future dependency or edit from silently *loosening* the target — a
+#     looser target would make SWC transpile our first-party code and inject
+#     extra core-js polyfills.
+#
+#   * It does NOT remove the "legacy JavaScript" PageSpeed flag. That ~112 KB
+#     chunk is Next's own framework polyfill (next/dist/build/polyfills/
+#     polyfill-nomodule.js, core-js v3.38.1). It is emitted as
+#     `<script ... noModule>`, so every ES-module-capable browser
+#     (Chrome 111+/Safari 16.4+ — essentially all real traffic) skips
+#     downloading it. It is framework-level and unconditional: tightening
+#     this target does not strip it (and an ultra-modern target instead
+#     breaks `next/font/local`). Removing it would require patching Next.
+
+chrome 111
+edge 111
+firefox 111
+safari 16.4
