@@ -1,5 +1,5 @@
-import { SignIn } from "@clerk/nextjs";
 import type { Metadata } from "next";
+import { AuthForm } from "@/components/AuthForm";
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -9,7 +9,10 @@ export const metadata: Metadata = {
 export default function SignInPage() {
   return (
     <main className="grid place-items-center px-4 py-16 min-h-[70vh]">
-      <SignIn />
+      <div className="w-full max-w-sm">
+        <h1 className="text-3xl font-semibold mb-6 text-center">Sign in</h1>
+        <AuthForm mode="signin" />
+      </div>
     </main>
   );
 }

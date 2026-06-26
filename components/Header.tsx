@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { authClient } from "@/lib/auth-client";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CurrencyToggle } from "@/components/CurrencyToggle";
@@ -10,7 +10,10 @@ import { useCart } from "@/lib/cartStore";
 
 export function Header() {
   const count = useCart((s) => s.count());
-  const { isSignedIn } = useAuth();
+  // Better Auth's useSession is store-based (no provider needed); !!session
+  // toggles the Account vs Sign-in link.
+  const { data: session } = authClient.useSession();
+  const isSignedIn = !!session;
   const [cartOpen, setCartOpen] = useState(false);
 
   return (
