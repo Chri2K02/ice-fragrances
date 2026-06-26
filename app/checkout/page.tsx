@@ -174,15 +174,20 @@ export default function CheckoutPage() {
           </Link>
         </section>
 
-        {/* Embedded Stripe payment form */}
+        {/* Embedded Stripe payment form. Stripe's prebuilt form renders light and
+            can't follow our dark mode, so we frame it in an intentional white
+            "payment card" — reads as deliberate (not a broken white box) on the
+            dark page, and stays clean in light mode too. */}
         <section>
           {stripePromise ? (
-            <EmbeddedCheckoutProvider
-              stripe={stripePromise}
-              options={{ fetchClientSecret }}
-            >
-              <EmbeddedCheckout />
-            </EmbeddedCheckoutProvider>
+            <div className="rounded-2xl bg-white p-4 sm:p-6 shadow-xl ring-1 ring-black/10">
+              <EmbeddedCheckoutProvider
+                stripe={stripePromise}
+                options={{ fetchClientSecret }}
+              >
+                <EmbeddedCheckout />
+              </EmbeddedCheckoutProvider>
+            </div>
           ) : (
             <p className="text-sm text-red-500">
               Payments are temporarily unavailable. Please try again shortly.
