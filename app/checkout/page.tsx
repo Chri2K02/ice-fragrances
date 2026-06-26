@@ -9,10 +9,10 @@ import {
 import { useCart } from "@/lib/cartStore";
 import { useCheckoutDraft } from "@/lib/checkoutStore";
 import { takeCheckoutSession } from "@/lib/checkoutSession";
-import { useDisplayCurrency } from "@/lib/currencyStore";
+import { useShipTo } from "@/lib/shipToStore";
 import { getProduct } from "@/lib/products";
 import { cartNeedsShipping } from "@/lib/shipping";
-import { formatPrice, convertCents } from "@/lib/currency";
+import { formatPrice, convertCents, type Currency } from "@/lib/currency";
 import { US_TARIFF_CENTS } from "@/lib/checkout";
 import { fbTrack } from "@/lib/fbpixel";
 
@@ -29,7 +29,10 @@ const CARD =
 export default function CheckoutPage() {
   const { items } = useCart();
   const address = useCheckoutDraft((s) => s.address);
-  const currency = useDisplayCurrency();
+  // Charge currency follows the ship-to country (matches what Stripe charges),
+  // not the header browse-currency toggle.
+  const shipTo = useShipTo();
+  const currency: Currency = shipTo === "US" ? "USD" : "CAD";
 
   // Persisted cart/currency only exist after client hydration; wait for it so we
   // don't create a session from an empty server-rendered cart or mismatch HTML.
@@ -77,9 +80,8 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           items,
           address: address ?? undefined,
-          // Apparel address carries its own country; colognes fall back to the
-          // region implied by the (ship-to-driven) display currency.
-          country: address?.country ?? (currency === "USD" ? "US" : "CA"),
+          // Apparel address carries its own country; colognes use the ship-to.
+          country: address?.country ?? shipTo,
           fbp,
           fbc,
         }),

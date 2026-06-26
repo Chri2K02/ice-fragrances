@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cartStore";
 import { getProduct } from "@/lib/products";
 import { regionsFor, cartNeedsShipping, type Country } from "@/lib/shipping";
-import { formatPrice, convertCents } from "@/lib/currency";
+import { formatPrice, convertCents, type Currency } from "@/lib/currency";
 import { US_TARIFF_CENTS } from "@/lib/checkout";
-import { useCurrency, useDisplayCurrency } from "@/lib/currencyStore";
+import { useShipTo, useShipToStore } from "@/lib/shipToStore";
 import { useCheckoutDraft } from "@/lib/checkoutStore";
 import { prefetchCheckoutSession } from "@/lib/checkoutSession";
 import { fbTrack } from "@/lib/fbpixel";
@@ -25,20 +25,16 @@ export function CartDrawer({
   const [addr, setAddr] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const currency = useDisplayCurrency();
+  // Ship-to country drives the CHARGE currency + US tariff, independent of the
+  // header browse-currency toggle. A Canadian viewing USD still ships to Canada
+  // in CAD with no tariff; the cart total below reflects the real charge.
+  const shipTo = useShipTo();
+  const setShipTo = useShipToStore((s) => s.setCountry);
+  const currency: Currency = shipTo === "US" ? "USD" : "CAD";
   const total = formatPrice(totalCents(), currency);
   const needsAddress = cartNeedsShipping(items);
   const router = useRouter();
   const setDraftAddress = useCheckoutDraft((s) => s.setAddress);
-  const setCurrency = useCurrency((s) => s.setCurrency);
-
-  // The ship-to country is the single region choice: it drives the display
-  // currency, the US import tariff, and which addresses Stripe will accept. The
-  // server re-derives currency + tariff from this, so the toggle can't dodge it.
-  const shipTo: Country = currency === "USD" ? "US" : "CA";
-  function setShipTo(c: Country) {
-    setCurrency(c === "US" ? "USD" : "CAD");
-  }
 
   // Keep the apparel address country aligned with the ship-to choice.
   useEffect(() => {
