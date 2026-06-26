@@ -37,8 +37,10 @@ export default function CheckoutPage() {
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [formReady, setFormReady] = useState(false);
   const requested = useRef(false);
   const initiated = useRef(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const needsAddress = cartNeedsShipping(items);
   const missingAddress = needsAddress && !address;
@@ -48,6 +50,7 @@ export default function CheckoutPage() {
   const startCheckout = useCallback(async () => {
     setError(null);
     setClientSecret(null);
+    setFormReady(false);
     if (!initiated.current) {
       initiated.current = true;
       fbTrack("InitiateCheckout", {
@@ -98,6 +101,37 @@ export default function CheckoutPage() {
     () => Promise.resolve(clientSecret as string),
     [clientSecret]
   );
+
+  // Keep the spinner up until Stripe's iframe actually loads, not just until we
+  // have the session — otherwise the card flashes blank white while the iframe
+  // boots. Watch for the iframe Stripe injects and reveal on its load event,
+  // with a safety timeout so the spinner can never get stuck.
+  useEffect(() => {
+    if (!clientSecret) return;
+    const host = cardRef.current;
+    if (!host) return;
+    let done = false;
+    const reveal = () => {
+      if (!done) {
+        done = true;
+        setFormReady(true);
+      }
+    };
+    const watch = (iframe: HTMLIFrameElement) =>
+      iframe.addEventListener("load", reveal, { once: true });
+    const existing = host.querySelector("iframe");
+    if (existing) watch(existing);
+    const obs = new MutationObserver(() => {
+      const iframe = host.querySelector("iframe");
+      if (iframe) watch(iframe);
+    });
+    obs.observe(host, { childList: true, subtree: true });
+    const safety = setTimeout(reveal, 5000);
+    return () => {
+      obs.disconnect();
+      clearTimeout(safety);
+    };
+  }, [clientSecret]);
 
   const subtotal = items.reduce((sum, i) => {
     const p = getProduct(i.id);
@@ -213,7 +247,7 @@ export default function CheckoutPage() {
         {/* Embedded Stripe payment form, framed in a white card (Stripe renders
             light and can't follow our dark mode). Spinner -> form swaps in place. */}
         <section>
-          <div className={CARD}>
+          <div className={CARD} ref={cardRef}>
             {!stripePromise || error ? (
               <div className="p-8 grid place-items-center min-h-[460px] text-center">
                 <div>
@@ -239,16 +273,21 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               </div>
-            ) : clientSecret ? (
-              <EmbeddedCheckoutProvider
-                stripe={stripePromise}
-                options={{ fetchClientSecret }}
-              >
-                <EmbeddedCheckout />
-              </EmbeddedCheckoutProvider>
             ) : (
-              <div className="p-10 grid place-items-center min-h-[460px]">
-                <Spinner label="Loading secure checkout…" dark />
+              <div className="relative min-h-[460px]">
+                {clientSecret && (
+                  <EmbeddedCheckoutProvider
+                    stripe={stripePromise}
+                    options={{ fetchClientSecret }}
+                  >
+                    <EmbeddedCheckout />
+                  </EmbeddedCheckoutProvider>
+                )}
+                {!formReady && (
+                  <div className="absolute inset-0 bg-white grid place-items-center p-10">
+                    <Spinner label="Loading secure checkout…" dark />
+                  </div>
+                )}
               </div>
             )}
           </div>
