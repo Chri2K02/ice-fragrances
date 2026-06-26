@@ -60,6 +60,28 @@ describe("orderAccess", () => {
     expect(ids[ids.length - 1]).toBe(60);
   });
 
+  it("fails closed in production when no secret is configured", () => {
+    const prevNode = process.env.NODE_ENV;
+    const prevSecret = process.env.BETTER_AUTH_SECRET;
+    try {
+      // @ts-expect-error NODE_ENV is typed readonly; override for the test
+      process.env.NODE_ENV = "production";
+      delete process.env.BETTER_AUTH_SECRET;
+      // No secret + prod + no BETTER_AUTH_SECRET → throw, never sign with a
+      // predictable fallback.
+      expect(() => signOrderAccess([1])).toThrow(/BETTER_AUTH_SECRET/);
+      // An explicitly injected secret still works even in production.
+      expect(verifyOrderAccess(signOrderAccess([1], SECRET), SECRET)).toEqual([
+        1,
+      ]);
+    } finally {
+      // @ts-expect-error restore
+      process.env.NODE_ENV = prevNode;
+      if (prevSecret === undefined) delete process.env.BETTER_AUTH_SECRET;
+      else process.env.BETTER_AUTH_SECRET = prevSecret;
+    }
+  });
+
   it("hasOrderAccess reflects membership", () => {
     const cookie = signOrderAccess([100, 200], SECRET);
     expect(hasOrderAccess(cookie, 100, SECRET)).toBe(true);

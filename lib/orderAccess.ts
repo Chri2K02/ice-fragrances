@@ -1,10 +1,10 @@
+import "server-only";
 import { createHmac, timingSafeEqual } from "crypto";
 
-// Server-only module: uses node:crypto and the app HMAC secret, so it must
-// never reach a client bundle. (We don't `import "server-only"` here because
-// this primitive is unit-tested in isolation and that guard throws outside a
-// React Server Component; the success-page wiring that consumes it stays
-// server-side.)
+// Server-only: uses node:crypto and the app HMAC secret, so it must never reach
+// a client bundle. The `server-only` guard above turns an accidental client
+// import into a build error (a comment wouldn't). Tests alias `server-only` to
+// an empty stub (see vitest.config.ts) so the primitive stays unit-testable.
 //
 // Signed `order-access` cookie primitive (Phase-B groundwork for goal 3).
 //
@@ -36,10 +36,21 @@ export const ORDER_ACCESS_COOKIE_OPTIONS = {
 const MAX_IDS = 50;
 
 // Secret seam: callers (and tests) may inject a secret; runtime defaults to the
-// app's HMAC secret. The dev fallback keeps non-configured local/test runs from
-// throwing — real deployments set BETTER_AUTH_SECRET.
+// app's HMAC secret. Fails CLOSED in production — if BETTER_AUTH_SECRET is unset
+// there, signing/verifying with a predictable "dev-secret" would make the
+// order-access cookie forgeable (anyone could view any order), so we throw loud
+// instead. The dev fallback only applies outside production for local runs.
 function resolveSecret(secret?: string): string {
-  return secret ?? process.env.BETTER_AUTH_SECRET ?? "dev-secret";
+  if (secret) return secret;
+  const envSecret = process.env.BETTER_AUTH_SECRET;
+  if (envSecret) return envSecret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "BETTER_AUTH_SECRET is not set — refusing to sign/verify order-access " +
+        "cookies with a predictable fallback secret in production."
+    );
+  }
+  return "dev-secret";
 }
 
 function hmac(data: string, secret: string): string {
