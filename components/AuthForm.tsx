@@ -78,17 +78,34 @@ export function AuthForm({ mode }: { mode: Mode }) {
     setError(null);
     setLoading(true);
     try {
-      const { error } = await authClient.emailOtp.verifyEmail({ email, otp });
-      if (error) {
-        setError(error.message ?? "Invalid or expired code.");
-      } else {
-        window.location.href = "/";
+      const { error: verifyError } = await authClient.emailOtp.verifyEmail({
+        email,
+        otp,
+      });
+      if (verifyError) {
+        setError(verifyError.message ?? "Invalid or expired code.");
+        setLoading(false);
         return;
       }
+      // verifyEmail only establishes a session when the auth config sets
+      // emailVerification.autoSignInAfterVerification — ours doesn't — so the
+      // user would otherwise land logged out. Explicitly sign in with the
+      // password we still hold (now permitted: requireEmailVerification is
+      // satisfied because the email was just verified).
+      const { error: signInError } = await authClient.signIn.email({
+        email,
+        password,
+      });
+      if (signInError) {
+        // Verified but auto sign-in failed — send them to sign in manually.
+        window.location.href = "/sign-in";
+        return;
+      }
+      window.location.href = "/";
     } catch {
       setError("Something went wrong. Please try again.");
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   if (isSignup && step === "verify") {
