@@ -17,6 +17,9 @@ import crypto from "node:crypto";
 //   3. Burns after a single successful use (best-effort; see note below).
 //   4. no-store / noindex / attachment; values are never logged.
 //
+// Route: GET /api/oneshot-env-export?key=...  — must NOT live under a `_folder`;
+// underscore-prefixed path segments are private and excluded from routing.
+//
 // NOTE on "burn": Vercel functions are stateless, so the in-memory flag only
 // holds within a warm instance — a cold start could reset it. The real
 // guarantee is deleting this route right after the single download.
