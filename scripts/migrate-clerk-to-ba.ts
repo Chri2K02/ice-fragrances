@@ -9,8 +9,10 @@
  *   3. Backfills `reviews.user_id` (via clerk_user_id → user.id) and
  *      `orders.user_id` (via email → user.id, falling back to clerk_user_id).
  *
- * Then it REPORTS how many reviews/orders rows still have a NULL user_id — that
- * remainder is lead's gate for the eventual `DROP COLUMN clerk_user_id`.
+ * Then it REPORTS how many CLERK-LINKED rows are still unmigrated
+ * (clerk_user_id IS NOT NULL AND user_id IS NULL) — that remainder is lead's
+ * gate for the eventual `DROP COLUMN clerk_user_id`. Guest orders (no
+ * clerk_user_id) legitimately keep user_id NULL and are excluded from the gate.
  *
  * This is a SCRIPT, not a route: lead runs it once on prod with .env.local
  * (CLERK_SECRET_KEY + DATABASE_URL). It is safe to re-run — every write is
@@ -202,18 +204,25 @@ async function main() {
     }
   }
 
-  // ── 6. Report — the NULL remainder is lead's DROP-COLUMN gate ──────────────
+  // ── 6. Report — the DROP-COLUMN gate ───────────────────────────────────────
+  // The gate is "clerk-linked but unmigrated": clerk_user_id IS NOT NULL AND
+  // user_id IS NULL. We must NOT count guest orders (clerk_user_id NULL — never
+  // had an account, legitimately stay user_id NULL forever); counting those
+  // would keep the gate above 0 and block the DROP permanently. For reviews the
+  // extra clause is a no-op (clerk_user_id was NOT NULL) but kept for symmetry.
   const reviewsNull = await countNull(
-    sql`SELECT count(*)::int AS n FROM reviews WHERE user_id IS NULL`
+    sql`SELECT count(*)::int AS n FROM reviews WHERE clerk_user_id IS NOT NULL AND user_id IS NULL`
   );
   const ordersNull = await countNull(
-    sql`SELECT count(*)::int AS n FROM orders WHERE user_id IS NULL`
+    sql`SELECT count(*)::int AS n FROM orders WHERE clerk_user_id IS NOT NULL AND user_id IS NULL`
   );
   const unmappedReviews = (await sql`
-    SELECT id, clerk_user_id FROM reviews WHERE user_id IS NULL ORDER BY id LIMIT 20
+    SELECT id, clerk_user_id FROM reviews
+    WHERE clerk_user_id IS NOT NULL AND user_id IS NULL ORDER BY id LIMIT 20
   `) as { id: number; clerk_user_id: string }[];
   const unmappedOrders = (await sql`
-    SELECT id, email, clerk_user_id FROM orders WHERE user_id IS NULL ORDER BY id LIMIT 20
+    SELECT id, email, clerk_user_id FROM orders
+    WHERE clerk_user_id IS NOT NULL AND user_id IS NULL ORDER BY id LIMIT 20
   `) as { id: number; email: string | null; clerk_user_id: string | null }[];
 
   console.log("\n──────── Summary ────────");
@@ -225,13 +234,14 @@ async function main() {
   console.log(`google accounts made: ${accountsCreated}`);
   console.log(`reviews backfilled:   ${reviewsBackfilled}`);
   console.log(`orders backfilled:    ${ordersBackfilled}`);
-  console.log("\n──────── DROP-COLUMN gate ────────");
-  console.log(`reviews still NULL user_id: ${reviewsNull}`);
-  console.log(`orders  still NULL user_id: ${ordersNull}`);
+  console.log("\n──────── DROP-COLUMN gate (clerk-linked but unmigrated) ────────");
+  console.log(`reviews clerk-linked & NULL user_id: ${reviewsNull}`);
+  console.log(`orders  clerk-linked & NULL user_id: ${ordersNull}`);
+  console.log("(guest orders with no clerk_user_id are excluded — they stay NULL by design)");
   if (reviewsNull === 0 && ordersNull === 0) {
-    console.log("✓ All rows mapped — safe to DROP clerk_user_id later.");
+    console.log("✓ Every clerk-linked row mapped — safe to DROP clerk_user_id later.");
   } else {
-    console.log("✗ Unmapped rows remain — do NOT drop clerk_user_id yet.");
+    console.log("✗ Clerk-linked rows remain unmigrated — do NOT drop clerk_user_id yet.");
     if (unmappedReviews.length) {
       console.log("  unmapped reviews (id → clerk_user_id):");
       for (const r of unmappedReviews)
