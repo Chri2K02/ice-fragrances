@@ -23,5 +23,7 @@ export default function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/account/:path*", "/admin/:path*"],
+  // Bare paths listed explicitly alongside the wildcards so the cheap redirect
+  // fires on /account and /admin themselves, not just their sub-paths.
+  matcher: ["/account", "/account/:path*", "/admin", "/admin/:path*"],
 };
