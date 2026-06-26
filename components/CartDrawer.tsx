@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cartStore";
 import { getProduct } from "@/lib/products";
@@ -28,6 +28,18 @@ export function CartDrawer({
   const needsAddress = cartNeedsShipping(items);
   const router = useRouter();
   const setDraftAddress = useCheckoutDraft((s) => s.setAddress);
+
+  // The drawer lives in the persistent layout, so it does NOT unmount when we
+  // navigate to /checkout. Clear the stale "loading" flag (and prefetch the
+  // checkout route) every time the cart reopens — otherwise the button stays
+  // stuck on "Loading…" after a checkout -> back -> reopen.
+  useEffect(() => {
+    if (open) {
+      setLoading(false);
+      setError(null);
+      router.prefetch("/checkout");
+    }
+  }, [open, router]);
 
   const canSubmit =
     addr.name && addr.state && addr.line1 && addr.city && addr.postal;

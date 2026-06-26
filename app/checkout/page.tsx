@@ -20,6 +20,11 @@ import { fbTrack } from "@/lib/fbpixel";
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
+// Reused frame so the spinner, error, and the live form all look identical and
+// swap in place without a layout jump. min-height reserves the form's space.
+const CARD =
+  "overflow-hidden rounded-2xl border border-[#34b6f5] bg-white text-black shadow-2xl shadow-[#34b6f5]/20 min-h-[460px]";
+
 export default function CheckoutPage() {
   const { items } = useCart();
   const address = useCheckoutDraft((s) => s.address);
@@ -30,20 +35,30 @@ export default function CheckoutPage() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const requested = useRef(false);
   const initiated = useRef(false);
 
-  const fetchClientSecret = useCallback(async () => {
-    // Fire InitiateCheckout once, mirroring the old cart-drawer behaviour.
+  const needsAddress = cartNeedsShipping(items);
+  const missingAddress = needsAddress && !address;
+
+  // Create the Checkout Session up front so we can show a spinner while it loads
+  // (instead of a blank card) and surface a real error if it fails.
+  const startCheckout = useCallback(async () => {
+    setError(null);
+    setClientSecret(null);
     if (!initiated.current) {
       initiated.current = true;
       fbTrack("InitiateCheckout", {
-        value: convertCents(
-          items.reduce((sum, i) => {
-            const p = getProduct(i.id);
-            return sum + (p ? p.priceCents * i.qty : 0);
-          }, 0),
-          currency
-        ) / 100,
+        value:
+          convertCents(
+            items.reduce((sum, i) => {
+              const p = getProduct(i.id);
+              return sum + (p ? p.priceCents * i.qty : 0);
+            }, 0),
+            currency
+          ) / 100,
         currency,
         num_items: items.reduce((n, i) => n + i.qty, 0),
       });
@@ -51,37 +66,53 @@ export default function CheckoutPage() {
     // Meta browser cookies so the server-side Purchase event can match the user.
     const fbp = document.cookie.match(/(?:^|; )_fbp=([^;]+)/)?.[1];
     const fbc = document.cookie.match(/(?:^|; )_fbc=([^;]+)/)?.[1];
-
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        items,
-        address: address ?? undefined,
-        currency,
-        fbp,
-        fbc,
-      }),
-    });
-    const data = await res.json();
-    if (!data.client_secret) {
-      throw new Error(data.error ?? "Checkout failed");
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items,
+          address: address ?? undefined,
+          currency,
+          fbp,
+          fbc,
+        }),
+      });
+      const data = await res.json();
+      if (data.client_secret) setClientSecret(data.client_secret as string);
+      else setError(data.error ?? "Checkout failed. Please try again.");
+    } catch {
+      setError("Couldn't reach checkout — check your connection and try again.");
     }
-    return data.client_secret as string;
   }, [items, address, currency]);
+
+  // Kick it off once, as soon as we have a hydrated, valid cart.
+  useEffect(() => {
+    if (!mounted || requested.current) return;
+    if (items.length === 0 || missingAddress) return;
+    requested.current = true;
+    startCheckout();
+  }, [mounted, items.length, missingAddress, startCheckout]);
+
+  const fetchClientSecret = useCallback(
+    () => Promise.resolve(clientSecret as string),
+    [clientSecret]
+  );
 
   const subtotal = items.reduce((sum, i) => {
     const p = getProduct(i.id);
     return sum + (p ? p.priceCents * i.qty : 0);
   }, 0);
 
-  const needsAddress = cartNeedsShipping(items);
-  const missingAddress = needsAddress && !address;
+  function retry() {
+    requested.current = true;
+    startCheckout();
+  }
 
   if (!mounted) {
     return (
       <main className="min-h-screen grid place-items-center px-4">
-        <p className="opacity-60">Loading checkout…</p>
+        <Spinner label="Loading checkout…" />
       </main>
     );
   }
@@ -126,6 +157,11 @@ export default function CheckoutPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
+      {/* Warm up the connection to Stripe so the form's assets load sooner. */}
+      <link rel="preconnect" href="https://js.stripe.com" />
+      <link rel="preconnect" href="https://api.stripe.com" />
+      <link rel="preconnect" href="https://m.stripe.network" />
+
       <h1 className="text-2xl font-semibold mb-8">Checkout</h1>
       <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         {/* Order summary */}
@@ -174,28 +210,63 @@ export default function CheckoutPage() {
           </Link>
         </section>
 
-        {/* Embedded Stripe payment form. Stripe's prebuilt form renders light and
-            can't follow our dark mode, so we frame it: a black border with the
-            white form clipped flush inside (overflow-hidden + rounded). Reads as a
-            deliberate, tidy payment card on the dark page and stays clean in light
-            mode too — only the form area is white. */}
+        {/* Embedded Stripe payment form, framed in a white card (Stripe renders
+            light and can't follow our dark mode). Spinner -> form swaps in place. */}
         <section>
-          {stripePromise ? (
-            <div className="overflow-hidden rounded-2xl border border-[#34b6f5] bg-white shadow-2xl shadow-[#34b6f5]/20">
+          <div className={CARD}>
+            {!stripePromise || error ? (
+              <div className="p-8 grid place-items-center min-h-[460px] text-center">
+                <div>
+                  <p className="text-sm text-red-600">
+                    {!stripePromise
+                      ? "Payments are temporarily unavailable. Please try again shortly."
+                      : error}
+                  </p>
+                  {stripePromise && (
+                    <button
+                      type="button"
+                      onClick={retry}
+                      className="mt-4 rounded-full px-5 py-2 text-sm font-medium text-black"
+                      style={{ background: "var(--accent)" }}
+                    >
+                      Try again
+                    </button>
+                  )}
+                  <div className="mt-3">
+                    <Link href="/" className="text-sm text-black/60 hover:text-black">
+                      ‹ Back to cart
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ) : clientSecret ? (
               <EmbeddedCheckoutProvider
                 stripe={stripePromise}
                 options={{ fetchClientSecret }}
               >
                 <EmbeddedCheckout />
               </EmbeddedCheckoutProvider>
-            </div>
-          ) : (
-            <p className="text-sm text-red-500">
-              Payments are temporarily unavailable. Please try again shortly.
-            </p>
-          )}
+            ) : (
+              <div className="p-10 grid place-items-center min-h-[460px]">
+                <Spinner label="Loading secure checkout…" dark />
+              </div>
+            )}
+          </div>
         </section>
       </div>
     </main>
+  );
+}
+
+function Spinner({ label, dark }: { label: string; dark?: boolean }) {
+  return (
+    <div
+      className={`flex flex-col items-center gap-3 ${
+        dark ? "text-black/60" : "opacity-60"
+      }`}
+    >
+      <div className="h-8 w-8 rounded-full border-2 border-[#34b6f5] border-t-transparent animate-spin" />
+      <span className="text-sm">{label}</span>
+    </div>
   );
 }
