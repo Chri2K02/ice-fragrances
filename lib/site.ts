@@ -2,7 +2,10 @@
 // sitemap, robots, manifest, JSON-LD, and the OG/Twitter images. Mirrors the
 // catalog's single-source ethos (lib/products.ts): one place to change a fact.
 
-const PRODUCTION_URL = "https://icefragrances.com";
+// www is the canonical host: the apex 301-redirects to www, and the Google
+// OAuth redirect URIs are registered against www, so canonical/sitemap/OG must
+// match the served host to avoid a redirect hop and OAuth state loss.
+const PRODUCTION_URL = "https://www.icefragrances.com";
 
 /**
  * The canonical origin for this deployment, with any trailing slash stripped.
