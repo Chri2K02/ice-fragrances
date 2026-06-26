@@ -181,7 +181,7 @@ export default function CheckoutPage() {
             mode too — only the form area is white. */}
         <section>
           {stripePromise ? (
-            <div className="overflow-hidden rounded-2xl border-2 border-black bg-white shadow-xl">
+            <div className="overflow-hidden rounded-2xl border border-[#34b6f5] bg-white shadow-2xl shadow-[#34b6f5]/20">
               <EmbeddedCheckoutProvider
                 stripe={stripePromise}
                 options={{ fetchClientSecret }}
