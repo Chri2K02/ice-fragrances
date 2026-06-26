@@ -49,3 +49,8 @@ export const reviews = pgTable("reviews", {
   repliedAt: timestamp("replied_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// Better Auth core tables live in lib/auth-schema.ts. Re-export them here so
+// the app's Drizzle instance (lib/db) and drizzle.config.ts (which points at
+// this file) both see them. Additive alongside Clerk — see lib/auth.ts.
+export * from "../auth-schema";
