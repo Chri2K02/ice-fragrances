@@ -4,10 +4,12 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cartStore";
 import { getProduct } from "@/lib/products";
 import { regionsFor, cartNeedsShipping, type Country } from "@/lib/shipping";
-import { formatPrice } from "@/lib/currency";
+import { formatPrice, convertCents } from "@/lib/currency";
 import { US_TARIFF_CENTS } from "@/lib/checkout";
 import { useDisplayCurrency } from "@/lib/currencyStore";
 import { useCheckoutDraft } from "@/lib/checkoutStore";
+import { prefetchCheckoutSession } from "@/lib/checkoutSession";
+import { fbTrack } from "@/lib/fbpixel";
 
 const EMPTY = { name: "", country: "CA" as Country, state: "", line1: "", city: "", postal: "" };
 
@@ -38,6 +40,14 @@ export function CartDrawer({
       setLoading(false);
       setError(null);
       router.prefetch("/checkout");
+      // Warm Stripe.js (code-split, so it stays out of the main bundle) so the
+      // embedded form renders sooner once we reach /checkout.
+      const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+      if (key) {
+        import("@stripe/stripe-js")
+          .then((m) => m.loadStripe(key))
+          .catch(() => {});
+      }
     }
   }, [open, router]);
 
@@ -50,7 +60,19 @@ export function CartDrawer({
   function goToCheckout() {
     setLoading(true);
     setError(null);
-    setDraftAddress(needsAddress ? addr : null);
+    const address = needsAddress ? addr : undefined;
+    fbTrack("InitiateCheckout", {
+      value: convertCents(totalCents(), currency) / 100,
+      currency,
+      num_items: items.reduce((n, i) => n + i.qty, 0),
+    });
+    // Capture Meta browser cookies so the server-side Purchase can match the user.
+    const fbp = document.cookie.match(/(?:^|; )_fbp=([^;]+)/)?.[1];
+    const fbc = document.cookie.match(/(?:^|; )_fbc=([^;]+)/)?.[1];
+    // Start the Stripe session NOW so it runs in parallel with the navigation —
+    // /checkout consumes the result instead of waiting on a fresh request.
+    prefetchCheckoutSession({ items, address, currency, fbp, fbc });
+    setDraftAddress(address ?? null);
     onClose();
     router.push("/checkout");
   }

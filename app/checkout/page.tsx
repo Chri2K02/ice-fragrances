@@ -8,6 +8,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { useCart } from "@/lib/cartStore";
 import { useCheckoutDraft } from "@/lib/checkoutStore";
+import { takeCheckoutSession } from "@/lib/checkoutSession";
 import { useDisplayCurrency } from "@/lib/currencyStore";
 import { getProduct } from "@/lib/products";
 import { cartNeedsShipping } from "@/lib/shipping";
@@ -89,12 +90,25 @@ export default function CheckoutPage() {
     }
   }, [items, address, currency]);
 
-  // Kick it off once, as soon as we have a hydrated, valid cart.
+  // Prefer the session the cart drawer already started (overlapped with the
+  // navigation) so the form is ready immediately; fall back to creating one here
+  // if the user landed on /checkout directly.
   useEffect(() => {
     if (!mounted || requested.current) return;
     if (items.length === 0 || missingAddress) return;
     requested.current = true;
-    startCheckout();
+    const pending = takeCheckoutSession();
+    if (pending) {
+      pending
+        .then((cs) => setClientSecret(cs))
+        .catch((e: unknown) =>
+          setError(
+            e instanceof Error ? e.message : "Checkout failed. Please try again."
+          )
+        );
+    } else {
+      startCheckout();
+    }
   }, [mounted, items.length, missingAddress, startCheckout]);
 
   const fetchClientSecret = useCallback(
