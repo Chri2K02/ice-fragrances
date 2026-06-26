@@ -175,12 +175,13 @@ export default function CheckoutPage() {
         </section>
 
         {/* Embedded Stripe payment form. Stripe's prebuilt form renders light and
-            can't follow our dark mode, so we frame it in an intentional white
-            "payment card" — reads as deliberate (not a broken white box) on the
-            dark page, and stays clean in light mode too. */}
+            can't follow our dark mode, so we frame it: a black border with the
+            white form clipped flush inside (overflow-hidden + rounded). Reads as a
+            deliberate, tidy payment card on the dark page and stays clean in light
+            mode too — only the form area is white. */}
         <section>
           {stripePromise ? (
-            <div className="rounded-2xl bg-white p-4 sm:p-6 shadow-xl ring-1 ring-black/10">
+            <div className="overflow-hidden rounded-2xl border-2 border-black bg-white shadow-xl">
               <EmbeddedCheckoutProvider
                 stripe={stripePromise}
                 options={{ fetchClientSecret }}
