@@ -57,7 +57,9 @@ The Clerk→Better Auth migration left `clerk_user_id` on `orders` + `reviews`. 
 > **Partially DONE 2026-07-02** against the live prod deploy (`1c44889`).
 > ✅ Automated + verified: apex→www redirect, www 200, canonical=www, robots disallows private routes, sitemap=www, `/account` + `/admin` redirect to `/sign-in` when signed out, `/success?orderNumber=1` shows the blurred placeholder + sign-up CTA (no real summary).
 > ✅ **Email/password + OTP demonstrated end-to-end**: sign-up → OTP delivered to a real Gmail **inbox** (not spam) → verify → `emailVerified:true`; test user then deleted. Confirms `BETTER_AUTH_SECRET` works + Resend inbox deliverability.
-> ⚠️ Still needs a human: **Google sign-in** (Google blocks automated browsers — manual click-test after §2), and **live checkout** (Stripe keys are LIVE — completing an order is a real charge; place a real test order or verify page-load only).
+> ✅ **Checkout backend verified (no charge)**: `POST /api/checkout` for a real cart returned a live `cs_live_…` client_secret — session creation, line items, US tariff, shipping, and inventory checks all work against the LIVE Stripe key. A Checkout Session doesn't charge; it expires unused.
+> ✅ Legal routes `/privacy`, `/terms`, `/shipping` all 200, linked from Footer, content reviewed + dated July 2026.
+> ⚠️ Still needs a human: **Google sign-in** (Google blocks automated browsers — manual click-test after §2 consent-screen check), and optionally a **real end-to-end paid order** (only a live card completes payment; the backend is already proven above).
 
 After §1–§3 are live and a fresh prod deploy is up:
 - [ ] **Auth:** Google sign-in; email/password sign-up → OTP email → verify → signed in; sign-out; session gating redirects on `/account` + `/admin` (admin = `ADMIN_EMAIL`).
