@@ -65,7 +65,11 @@ export default function PrivacyPage() {
               <strong>Stripe</strong> — payment processing and tax calculation.
             </li>
             <li>
-              <strong>Clerk</strong> — account sign-in and management.
+              <strong>Google</strong> — optional account sign-in (OAuth).
+            </li>
+            <li>
+              <strong>Resend</strong> — sending transactional email such as
+              order confirmations and sign-in codes.
             </li>
             <li>
               <strong>Meta (Facebook/Instagram)</strong> — advertising and

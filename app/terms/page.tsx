@@ -92,7 +92,8 @@ export default function TermsPage() {
           <p>
             If you create an account, you are responsible for keeping your
             credentials secure and for activity that occurs under your account.
-            Account sign-in is handled by Clerk. See our{" "}
+            Account sign-in is handled through our own authentication system,
+            with the option to sign in with Google. See our{" "}
             <Link href="/privacy" className="underline">
               Privacy Policy
             </Link>{" "}

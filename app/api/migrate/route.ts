@@ -12,7 +12,6 @@ export async function GET(req: Request) {
   await sql`CREATE TABLE IF NOT EXISTS orders (
     id serial PRIMARY KEY,
     stripe_session_id text NOT NULL UNIQUE,
-    clerk_user_id text,
     email text,
     total_cents integer NOT NULL DEFAULT 0,
     created_at timestamp NOT NULL DEFAULT now()
@@ -29,7 +28,6 @@ export async function GET(req: Request) {
   await sql`CREATE TABLE IF NOT EXISTS reviews (
     id serial PRIMARY KEY,
     product_id text NOT NULL,
-    clerk_user_id text NOT NULL,
     author_name text NOT NULL,
     rating integer NOT NULL,
     body text NOT NULL DEFAULT '',
@@ -51,14 +49,11 @@ export async function GET(req: Request) {
   await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS admin_reply text`;
   await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS replied_at timestamp`;
 
-  // ── A2 cutover: Better Auth user id on orders/reviews ─────────────────
-  // Additive: add user_id (holds the Better Auth user.id), and relax the old
-  // NOT NULL on reviews.clerk_user_id so new reviews can write user_id only.
-  // A4 backfills user_id for legacy rows; clerk_user_id is dropped later
-  // (lead-gated) once every row has a user_id.
+  // ── Better Auth user id on orders/reviews ─────────────────────────────
+  // user_id holds the Better Auth user.id. Legacy clerk_user_id has been
+  // dropped (go-live §5); on a fresh DB these tables are created without it.
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id text`;
   await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS user_id text`;
-  await sql`ALTER TABLE reviews ALTER COLUMN clerk_user_id DROP NOT NULL`;
   await sql`CREATE INDEX IF NOT EXISTS orders_user_id_idx ON orders (user_id)`;
   await sql`CREATE INDEX IF NOT EXISTS reviews_user_id_idx ON reviews (user_id)`;
 
