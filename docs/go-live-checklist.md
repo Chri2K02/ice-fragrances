@@ -54,6 +54,11 @@ The Clerk→Better Auth migration left `clerk_user_id` on `orders` + `reviews`. 
 - [ ] `ALTER TABLE orders DROP COLUMN clerk_user_id;` · `ALTER TABLE reviews DROP COLUMN clerk_user_id;` (+ remove from `lib/db/schema.ts`).
 
 ## 6. Post-deploy verification (live e2e)  [team]
+> **Partially DONE 2026-07-02** against the live prod deploy (`1c44889`).
+> ✅ Automated + verified: apex→www redirect, www 200, canonical=www, robots disallows private routes, sitemap=www, `/account` + `/admin` redirect to `/sign-in` when signed out, `/success?orderNumber=1` shows the blurred placeholder + sign-up CTA (no real summary).
+> ✅ **Email/password + OTP demonstrated end-to-end**: sign-up → OTP delivered to a real Gmail **inbox** (not spam) → verify → `emailVerified:true`; test user then deleted. Confirms `BETTER_AUTH_SECRET` works + Resend inbox deliverability.
+> ⚠️ Still needs a human: **Google sign-in** (Google blocks automated browsers — manual click-test after §2), and **live checkout** (Stripe keys are LIVE — completing an order is a real charge; place a real test order or verify page-load only).
+
 After §1–§3 are live and a fresh prod deploy is up:
 - [ ] **Auth:** Google sign-in; email/password sign-up → OTP email → verify → signed in; sign-out; session gating redirects on `/account` + `/admin` (admin = `ADMIN_EMAIL`).
 - [ ] **Checkout:** place a test-card order; embedded Stripe completes; webhook records the order; confirmation email arrives.
