@@ -53,9 +53,10 @@ export async function GET(req: Request) {
   let alreadyReviewed = false;
   let isAdmin = false;
   if (userId) {
+    // Any signed-in account can post a review (verification is a badge, not a
+    // gate); they just can't review the same product twice.
     alreadyReviewed = list.some((r) => r.userId === userId);
-    canReview =
-      !alreadyReviewed && (await hasPurchased(db, userId, productId, email));
+    canReview = !alreadyReviewed;
     isAdmin = !!process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL;
   }
 
@@ -64,10 +65,15 @@ export async function GET(req: Request) {
     average,
     reviews: list.map((r) => ({
       id: r.id,
-      authorName: r.authorName,
+      // Anonymous reviews never expose the stored real name to the client.
+      authorName: r.anonymous ? "Anonymous" : r.authorName,
+      anonymous: r.anonymous,
+      // Frozen at post time; drives the "Verified Buyer" badge.
+      verified: r.verified,
       rating: r.rating,
       body: r.body,
       adminReply: r.adminReply,
+      // replied_by is omitted: the public reply face is always Ice Fragrances.
       repliedAt: r.repliedAt,
       createdAt: r.createdAt,
     })),
@@ -99,7 +105,9 @@ export async function DELETE(req: Request) {
 
 // Admin posts (or clears) the store's public reply to a review.
 export async function PATCH(req: Request) {
-  if (!(await isAdmin())) {
+  const session = await getSession();
+  const email = session?.user.email ?? null;
+  if (!email || !process.env.ADMIN_EMAIL || email !== process.env.ADMIN_EMAIL) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const { id, reply } = (await req.json()) as { id?: number; reply?: string };
@@ -111,6 +119,8 @@ export async function PATCH(req: Request) {
     .update(reviews)
     .set({
       adminReply: text || null,
+      // Internal record of which admin replied; never surfaced publicly.
+      repliedBy: text ? email : null,
       repliedAt: text ? new Date() : null,
     })
     .where(eq(reviews.id, id!));
@@ -123,10 +133,11 @@ export async function POST(req: Request) {
   if (!userId) {
     return NextResponse.json({ error: "Sign in to review" }, { status: 401 });
   }
-  const { productId, rating, body } = (await req.json()) as {
+  const { productId, rating, body, anonymous } = (await req.json()) as {
     productId?: string;
     rating?: number;
     body?: string;
+    anonymous?: boolean;
   };
   if (!productId || !getProduct(productId)) {
     return NextResponse.json({ error: "Invalid product" }, { status: 400 });
@@ -138,12 +149,8 @@ export async function POST(req: Request) {
 
   const db = getDb();
   const email = session?.user.email ?? null;
-  if (!(await hasPurchased(db, userId, productId, email))) {
-    return NextResponse.json(
-      { error: "Only verified buyers can review this item" },
-      { status: 403 }
-    );
-  }
+
+  // One review per account per product.
   const existing = await db
     .select({ id: reviews.id })
     .from(reviews)
@@ -156,7 +163,13 @@ export async function POST(req: Request) {
     );
   }
 
-  // Prefer the Better Auth profile name; fall back to the checkout name.
+  // Verified is FROZEN here: whether this account owns an order containing the
+  // product AT POST TIME. Stored and never recomputed, so it stays stable if
+  // orders change, and lets seeded reviews be verified without a real order.
+  const verified = await hasPurchased(db, userId, productId, email);
+
+  // Prefer the Better Auth profile name; fall back to the checkout name. The
+  // real name is always stored; the `anonymous` flag controls public display.
   let name = session?.user.name ?? "";
   if (!name) {
     const ord = await db
@@ -179,7 +192,9 @@ export async function POST(req: Request) {
     authorName: name,
     rating: r,
     body: (body ?? "").toString().slice(0, 2000),
+    verified,
+    anonymous: !!anonymous,
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, verified });
 }

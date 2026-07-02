@@ -5,6 +5,8 @@ type AdminReview = {
   id: number;
   productName: string;
   authorName: string;
+  anonymous: boolean;
+  verified: boolean;
   rating: number;
   body: string;
   adminReply: string | null;
@@ -94,7 +96,10 @@ export function AdminReviewList({ reviews }: { reviews: AdminReview[] }) {
                 <span className="opacity-25">{"★".repeat(5 - r.rating)}</span>
               </p>
               <p className="text-sm opacity-70">
-                {r.authorName} · {formatDate(r.createdAt)}
+                {r.authorName}
+                {r.anonymous && " (shown anonymously)"} ·{" "}
+                {r.verified ? "Verified buyer" : "Unverified"} ·{" "}
+                {formatDate(r.createdAt)}
               </p>
             </div>
             <button

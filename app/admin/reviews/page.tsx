@@ -29,6 +29,8 @@ export default async function AdminReviewsPage() {
     id: r.id,
     productName: getProduct(r.productId)?.name ?? r.productId,
     authorName: r.authorName,
+    anonymous: r.anonymous,
+    verified: r.verified,
     rating: r.rating,
     body: r.body,
     adminReply: r.adminReply,

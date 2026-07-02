@@ -3,6 +3,7 @@ import {
   serial,
   text,
   integer,
+  boolean,
   timestamp,
   unique,
 } from "drizzle-orm/pg-core";
@@ -49,7 +50,17 @@ export const reviews = pgTable("reviews", {
   authorName: text("author_name").notNull(),
   rating: integer("rating").notNull(),
   body: text("body").notNull().default(""),
+  // Verified-purchase status FROZEN at post time (see app/api/reviews), so it
+  // is decoupled from live order state: seeds can read verified, and legacy
+  // purchases never silently un-verify.
+  verified: boolean("verified").notNull().default(false),
+  // Hide the author's name publicly (rendered as "Anonymous"); the real name
+  // is still stored for internal/admin use.
+  anonymous: boolean("anonymous").notNull().default(false),
   adminReply: text("admin_reply"),
+  // Internal-only: which admin wrote the reply. Never exposed — the external
+  // face of every reply is always "Ice Fragrances".
+  repliedBy: text("replied_by"),
   repliedAt: timestamp("replied_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

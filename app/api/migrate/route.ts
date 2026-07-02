@@ -54,6 +54,12 @@ export async function GET(req: Request) {
   // dropped (go-live §5); on a fresh DB these tables are created without it.
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id text`;
   await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS user_id text`;
+  // Reviews: any account can post; `verified` is FROZEN at post time (see
+  // app/api/reviews). `anonymous` hides the name publicly; `replied_by` is the
+  // internal reply author (never shown; public face is always Ice Fragrances).
+  await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS verified boolean NOT NULL DEFAULT false`;
+  await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS anonymous boolean NOT NULL DEFAULT false`;
+  await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS replied_by text`;
   await sql`CREATE INDEX IF NOT EXISTS orders_user_id_idx ON orders (user_id)`;
   await sql`CREATE INDEX IF NOT EXISTS reviews_user_id_idx ON reviews (user_id)`;
 

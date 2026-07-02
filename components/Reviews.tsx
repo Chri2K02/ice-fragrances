@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 type ReviewItem = {
   id: number;
   authorName: string;
+  anonymous: boolean;
+  verified: boolean;
   rating: number;
   body: string;
   adminReply: string | null;
@@ -159,6 +161,7 @@ export function Reviews({ productId }: { productId: string }) {
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(5);
   const [body, setBody] = useState("");
+  const [anonymous, setAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -182,7 +185,7 @@ export function Reviews({ productId }: { productId: string }) {
       const res = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, rating, body }),
+        body: JSON.stringify({ productId, rating, body, anonymous }),
       });
       const d = await res.json();
       if (d.ok) {
@@ -235,13 +238,15 @@ export function Reviews({ productId }: { productId: string }) {
                 <Stars value={r.rating} />
                 <span className="text-xs flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
                   <span className="font-medium">{r.authorName}</span>
-                  <span
-                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-black whitespace-nowrap"
-                    style={{ background: "var(--accent)" }}
-                    title="Purchased this product"
-                  >
-                    ✓ Verified Buyer
-                  </span>
+                  {r.verified && (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-black whitespace-nowrap"
+                      style={{ background: "var(--accent)" }}
+                      title="Purchased this product"
+                    >
+                      ✓ Verified Buyer
+                    </span>
+                  )}
                   {data.isAdmin && (
                     <button
                       type="button"
@@ -271,18 +276,15 @@ export function Reviews({ productId }: { productId: string }) {
           <div className="border-t border-black/10 dark:border-white/10 pt-3">
             {!data.signedIn && (
               <p className="opacity-70">
-                Purchased this?{" "}
                 <a href="/sign-in" className="underline">
                   Sign in
                 </a>{" "}
-                to leave a review.
+                to leave a review. You&apos;ll show as a verified buyer only if
+                this product is on one of your orders.
               </p>
             )}
             {data.signedIn && data.alreadyReviewed && (
               <p className="opacity-70">You&apos;ve reviewed this item.</p>
-            )}
-            {data.signedIn && !data.alreadyReviewed && !data.canReview && (
-              <p className="opacity-70">Only verified buyers can review this item.</p>
             )}
             {data.canReview && (
               <div className="space-y-2">
@@ -307,6 +309,14 @@ export function Reviews({ productId }: { productId: string }) {
                   rows={3}
                   className="w-full rounded-lg border border-black/15 dark:border-white/20 bg-transparent px-3 py-2"
                 />
+                <label className="flex items-center gap-2 opacity-80 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={anonymous}
+                    onChange={(e) => setAnonymous(e.target.checked)}
+                  />
+                  Post anonymously (hide my name)
+                </label>
                 {error && <p className="text-red-500">{error}</p>}
                 <button
                   type="button"
