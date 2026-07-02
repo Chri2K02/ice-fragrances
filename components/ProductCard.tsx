@@ -43,10 +43,12 @@ export function ProductCard({
   product,
   compact = false,
   rating,
+  audio,
 }: {
   product: Product;
   compact?: boolean;
   rating?: { count: number; average: number };
+  audio?: { muted: boolean; volume: number };
 }) {
   const add = useCart((s) => s.add);
   const show = useToast((s) => s.show);
@@ -172,6 +174,8 @@ export function ProductCard({
             poster={current.poster}
             label={product.name}
             onReady={() => setVideoReady(true)}
+            startMuted={audio?.muted ?? true}
+            volume={audio?.volume ?? 100}
           />
         )}
 

@@ -42,6 +42,9 @@ export default async function AdminPage() {
       <div className="flex items-center justify-between mb-2 gap-3">
         <h1 className="text-2xl font-semibold">Stock</h1>
         <nav className="flex items-center gap-4 text-sm">
+          <Link href="/admin/catalog" className="underline opacity-70">
+            Catalog →
+          </Link>
           <Link href="/admin/reviews" className="underline opacity-70">
             Reviews →
           </Link>

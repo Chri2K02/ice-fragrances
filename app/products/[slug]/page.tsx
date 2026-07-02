@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PRODUCTS, getProduct } from "@/lib/products";
+import { getProductView } from "@/lib/catalog";
 import { ProductCard } from "@/components/ProductCard";
 import { getReviewAggregate, getProductSoldOut } from "@/lib/productStats";
 import { SITE, SITE_URL } from "@/lib/site";
@@ -36,7 +37,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProductView(slug);
   if (!product) return {};
 
   const description = productCopy(product);
@@ -79,7 +80,7 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProductView(slug);
   if (!product) notFound();
 
   const [agg, soldOut] = await Promise.all([
@@ -176,7 +177,7 @@ export default async function ProductPage({
           thread — reused from the storefront in `compact` mode so the name,
           tagline and price (already in the header above) aren't duplicated. */}
       <div className="max-w-md">
-        <ProductCard product={product} compact />
+        <ProductCard product={product} compact audio={product.audio} />
       </div>
     </main>
   );

@@ -136,6 +136,22 @@ export async function GET(req: Request) {
       ON CONFLICT (email) DO NOTHING`;
   }
 
+  // Editable catalog content overlay (copy/media/audio) merged over
+  // data/products.json at request time. See lib/catalog.ts.
+  await sql`CREATE TABLE IF NOT EXISTS product_content (
+    product_id text PRIMARY KEY,
+    tagline text,
+    notes text,
+    description text,
+    oil text,
+    poster text,
+    video text,
+    images jsonb,
+    audio_muted boolean NOT NULL DEFAULT true,
+    audio_volume integer NOT NULL DEFAULT 100,
+    updated_at timestamp NOT NULL DEFAULT now()
+  )`;
+
   return NextResponse.json({
     ok: true,
     tables: [
@@ -149,6 +165,7 @@ export async function GET(req: Request) {
       "verification",
       "rate_limit",
       "admins",
+      "product_content",
     ],
   });
 }

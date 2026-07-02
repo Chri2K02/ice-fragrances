@@ -6,11 +6,22 @@ type Props = {
   poster: string;
   label: string;
   onReady?: () => void;
+  // Per-video audio, configured admin-side. `startMuted` is muted-by-default;
+  // `volume` is 0-100. Viewers can still toggle mute.
+  startMuted?: boolean;
+  volume?: number;
 };
 
-export function VideoPlayer({ src, poster, label, onReady }: Props) {
+export function VideoPlayer({
+  src,
+  poster,
+  label,
+  onReady,
+  startMuted = true,
+  volume = 100,
+}: Props) {
   const ref = useRef<HTMLVideoElement>(null);
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(startMuted);
 
   // Keep the DOM element's muted property in sync BEFORE paint, so the browser
   // sees a muted element and does not block autoplay (React's `muted` attribute
@@ -18,6 +29,13 @@ export function VideoPlayer({ src, poster, label, onReady }: Props) {
   useLayoutEffect(() => {
     if (ref.current) ref.current.muted = muted;
   }, [muted]);
+
+  // Apply the admin-configured volume (0-100 -> 0-1).
+  useLayoutEffect(() => {
+    if (ref.current) {
+      ref.current.volume = Math.min(1, Math.max(0, volume / 100));
+    }
+  }, [volume]);
 
   // Play only while on screen
   useEffect(() => {

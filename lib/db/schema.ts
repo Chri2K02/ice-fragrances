@@ -78,6 +78,28 @@ export const admins = pgTable("admins", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Editable content OVERLAY for the catalog. Product IDENTITY (id, name, price,
+// category, sizes, freeShipping) stays in data/products.json — versioned and
+// safe to read synchronously on the client (cart/checkout) and server-trusted
+// for the charge. Everything an admin edits — copy, media, and per-video audio
+// — lives here, keyed by product id, and is merged over the JSON base at request
+// time (see lib/catalog.ts). A missing row or null field means "use the JSON
+// default".
+export const productContent = pgTable("product_content", {
+  productId: text("product_id").primaryKey(),
+  tagline: text("tagline"),
+  notes: text("notes"),
+  description: text("description"),
+  oil: text("oil"),
+  poster: text("poster"),
+  video: text("video"),
+  images: jsonb("images").$type<string[]>(),
+  // Per-video audio, tunable admin-side: muted-by-default + 0-100 volume.
+  audioMuted: boolean("audio_muted").notNull().default(true),
+  audioVolume: integer("audio_volume").notNull().default(100),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Better Auth core tables live in lib/auth-schema.ts. Re-export them here so
 // the app's Drizzle instance (lib/db) and drizzle.config.ts (which points at
 // this file) both see them. Additive alongside Clerk — see lib/auth.ts.
