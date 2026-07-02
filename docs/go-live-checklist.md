@@ -59,7 +59,7 @@ The Clerk→Better Auth migration left `clerk_user_id` on `orders` + `reviews`. 
 > ✅ **Email/password + OTP demonstrated end-to-end**: sign-up → OTP delivered to a real Gmail **inbox** (not spam) → verify → `emailVerified:true`; test user then deleted. Confirms `BETTER_AUTH_SECRET` works + Resend inbox deliverability.
 > ✅ **Checkout backend verified (no charge)**: `POST /api/checkout` for a real cart returned a live `cs_live_…` client_secret — session creation, line items, US tariff, shipping, and inventory checks all work against the LIVE Stripe key. A Checkout Session doesn't charge; it expires unused.
 > ✅ Legal routes `/privacy`, `/terms`, `/shipping` all 200, linked from Footer, content reviewed + dated July 2026.
-> ⚠️ Still needs a human: **Google sign-in** (Google blocks automated browsers — manual click-test after §2 consent-screen check), and optionally a **real end-to-end paid order** (only a live card completes payment; the backend is already proven above).
+> ✅ **Google sign-in confirmed working** by the operator (2026-07-02). Only optional item left: a real end-to-end **paid order** (backend already proven above; only a live card completes payment).
 
 After §1–§3 are live and a fresh prod deploy is up:
 - [ ] **Auth:** Google sign-in; email/password sign-up → OTP email → verify → signed in; sign-out; session gating redirects on `/account` + `/admin` (admin = `ADMIN_EMAIL`).
