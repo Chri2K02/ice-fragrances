@@ -12,7 +12,7 @@ export default function TermsPage() {
   return (
     <main className="max-w-2xl mx-auto px-4 py-16 min-h-[60vh] text-sm leading-relaxed">
       <h1 className="text-3xl font-semibold mb-2">Terms of Service</h1>
-      <p className="opacity-60 mb-8">Last updated: June 2026</p>
+      <p className="opacity-60 mb-8">Last updated: July 2026</p>
 
       <div className="space-y-6 opacity-90">
         <p>
