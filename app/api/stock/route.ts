@@ -4,11 +4,11 @@ import { getSession } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { inventory } from "@/lib/db/schema";
 import { getProduct } from "@/lib/products";
+import { isAdminEmail } from "@/lib/admin";
 
 async function isAdmin() {
   const session = await getSession();
-  const email = session?.user.email ?? null;
-  return !!process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL;
+  return isAdminEmail(session?.user.email ?? null);
 }
 
 // Public: stock map { [sizeOrEmpty]: number } for tracked variants of a product.

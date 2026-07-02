@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/session";
+import { isAdminEmail } from "@/lib/admin";
 import { getDb } from "@/lib/db";
 import { inventory } from "@/lib/db/schema";
 import { PRODUCTS } from "@/lib/products";
@@ -15,10 +16,7 @@ export const metadata: Metadata = {
 export default async function AdminPage() {
   const session = await getSession();
   if (!session) redirect("/sign-in");
-  if (
-    !process.env.ADMIN_EMAIL ||
-    session.user.email !== process.env.ADMIN_EMAIL
-  ) {
+  if (!(await isAdminEmail(session.user.email))) {
     redirect("/");
   }
 
@@ -43,9 +41,14 @@ export default async function AdminPage() {
     <main className="px-4 py-12 max-w-2xl mx-auto min-h-[70vh]">
       <div className="flex items-center justify-between mb-2 gap-3">
         <h1 className="text-2xl font-semibold">Stock</h1>
-        <Link href="/admin/reviews" className="text-sm underline opacity-70">
-          Reviews →
-        </Link>
+        <nav className="flex items-center gap-4 text-sm">
+          <Link href="/admin/reviews" className="underline opacity-70">
+            Reviews →
+          </Link>
+          <Link href="/admin/settings" className="underline opacity-70">
+            Team →
+          </Link>
+        </nav>
       </div>
       <p className="opacity-70 text-sm mb-6">
         Enter a number to track stock — it drops automatically on each sale, and

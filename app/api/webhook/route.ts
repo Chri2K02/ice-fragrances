@@ -6,6 +6,7 @@ import { orders, orderItems, inventory } from "@/lib/db/schema";
 import { getProduct } from "@/lib/products";
 import { sendCapiEvent } from "@/lib/capi";
 import { sendEmail, customerConfirmationHtml } from "@/lib/email";
+import { recipientsFor } from "@/lib/admin";
 import type { CartItem } from "@/lib/cartStore";
 
 function formatAddress(a: Stripe.Address | null | undefined): string {
@@ -136,12 +137,14 @@ export async function POST(req: Request) {
             } &times; ${i.qty}</li>`
         )
         .join("");
-      const orderEmail =
-        process.env.ORDER_NOTIFICATION_EMAIL ??
-        process.env.ADMIN_EMAIL ??
-        "icefragrances@icefragrances.com";
+      // Recipients come from the notification surface (admins with "orders"
+      // on); falls back to the bootstrap owner. Keep one stable store address
+      // for the customer email's reply-to.
+      const orderRecipients = await recipientsFor("orders");
+      const storeReplyTo =
+        orderRecipients[0] ?? "icefragrances@icefragrances.com";
       await sendEmail({
-        to: orderEmail,
+        to: orderRecipients.join(", "),
         replyTo: email ?? undefined,
         subject: `New order — Ice Fragrances (${totalStr})`,
         html: `
@@ -165,7 +168,7 @@ export async function POST(req: Request) {
         );
         await sendEmail({
           to: email,
-          replyTo: orderEmail,
+          replyTo: storeReplyTo,
           subject: "Your Ice Fragrances order is confirmed ❄️",
           html: customerConfirmationHtml(
             session.customer_details?.name ?? null,

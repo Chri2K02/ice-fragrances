@@ -121,6 +121,21 @@ export async function GET(req: Request) {
     last_request bigint NOT NULL
   )`;
 
+  // Store admins + the notification surface (see lib/admin.ts,
+  // lib/notifications.ts). Rows are admin emails; `notify` holds per-type
+  // toggles (missing key = on).
+  await sql`CREATE TABLE IF NOT EXISTS admins (
+    id serial PRIMARY KEY,
+    email text NOT NULL UNIQUE,
+    notify jsonb NOT NULL DEFAULT '{}'::jsonb,
+    created_at timestamp NOT NULL DEFAULT now()
+  )`;
+  // Seed the bootstrap owner so the team is never empty and can't lock out.
+  if (process.env.ADMIN_EMAIL) {
+    await sql`INSERT INTO admins (email) VALUES (${process.env.ADMIN_EMAIL})
+      ON CONFLICT (email) DO NOTHING`;
+  }
+
   return NextResponse.json({
     ok: true,
     tables: [
@@ -133,6 +148,7 @@ export async function GET(req: Request) {
       "account",
       "verification",
       "rate_limit",
+      "admins",
     ],
   });
 }

@@ -4,6 +4,8 @@ import { getSession } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { reviews, orders, orderItems } from "@/lib/db/schema";
 import { getProduct } from "@/lib/products";
+import { isAdminEmail, recipientsFor } from "@/lib/admin";
+import { sendEmail } from "@/lib/email";
 
 type DB = ReturnType<typeof getDb>;
 
@@ -57,7 +59,7 @@ export async function GET(req: Request) {
     // gate); they just can't review the same product twice.
     alreadyReviewed = list.some((r) => r.userId === userId);
     canReview = !alreadyReviewed;
-    isAdmin = !!process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL;
+    isAdmin = await isAdminEmail(email);
   }
 
   return NextResponse.json({
@@ -87,8 +89,7 @@ export async function GET(req: Request) {
 // Returns true once the signed-in user matches the configured admin email.
 async function isAdmin(): Promise<boolean> {
   const session = await getSession();
-  const email = session?.user.email ?? null;
-  return !!process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL;
+  return isAdminEmail(session?.user.email ?? null);
 }
 
 export async function DELETE(req: Request) {
@@ -107,7 +108,7 @@ export async function DELETE(req: Request) {
 export async function PATCH(req: Request) {
   const session = await getSession();
   const email = session?.user.email ?? null;
-  if (!email || !process.env.ADMIN_EMAIL || email !== process.env.ADMIN_EMAIL) {
+  if (!(await isAdminEmail(email))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const { id, reply } = (await req.json()) as { id?: number; reply?: string };
@@ -195,6 +196,22 @@ export async function POST(req: Request) {
     verified,
     anonymous: !!anonymous,
   });
+
+  // Notify the store (best-effort; sendEmail no-ops without RESEND_API_KEY and
+  // never throws). Recipients come from the notification surface.
+  const productName = getProduct(productId)?.name ?? productId;
+  const to = await recipientsFor("reviews");
+  if (to.length) {
+    await sendEmail({
+      to: to.join(", "),
+      subject: `New review — ${productName} (${r}★)`,
+      html: `
+        <h2 style="margin:0 0 8px">New ${r}★ review on ${productName}</h2>
+        <p><strong>By:</strong> ${name}${anonymous ? " (posted anonymously)" : ""}${verified ? " · verified buyer" : ""}</p>
+        ${body ? `<p>${(body as string).slice(0, 2000)}</p>` : ""}
+      `,
+    });
+  }
 
   return NextResponse.json({ ok: true, verified });
 }

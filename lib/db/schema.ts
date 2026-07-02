@@ -4,6 +4,7 @@ import {
   text,
   integer,
   boolean,
+  jsonb,
   timestamp,
   unique,
 } from "drizzle-orm/pg-core";
@@ -62,6 +63,18 @@ export const reviews = pgTable("reviews", {
   // face of every reply is always "Ice Fragrances".
   repliedBy: text("replied_by"),
   repliedAt: timestamp("replied_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Store admins + the notification surface in one table. Each admin email is a
+// ROW; `notify` holds the per-notification-type column toggles (missing key =
+// default on). Recipients for a notification type are the admins whose toggle
+// for it isn't explicitly false. The bootstrap ADMIN_EMAIL is seeded here and
+// is un-removable, so the store can never lock itself out. See lib/admin.ts.
+export const admins = pgTable("admins", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  notify: jsonb("notify").$type<Record<string, boolean>>().notNull().default({}),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
