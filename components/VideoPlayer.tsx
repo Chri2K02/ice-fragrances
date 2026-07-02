@@ -1,9 +1,14 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-type Props = { src: string; poster: string; label: string };
+type Props = {
+  src: string;
+  poster: string;
+  label: string;
+  onReady?: () => void;
+};
 
-export function VideoPlayer({ src, poster, label }: Props) {
+export function VideoPlayer({ src, poster, label, onReady }: Props) {
   const ref = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
 
@@ -41,6 +46,9 @@ export function VideoPlayer({ src, poster, label }: Props) {
         muted
         playsInline
         preload="metadata"
+        // Fires once the first frame is decoded; the carousel uses this to begin
+        // auto-advancing only after the video is actually ready to show.
+        onLoadedData={onReady}
         aria-label={label}
         className="w-full h-full object-cover rounded-2xl"
       />

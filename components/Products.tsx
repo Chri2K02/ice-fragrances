@@ -1,14 +1,25 @@
 import { productsByCategory } from "@/lib/products";
+import { getReviewAggregate } from "@/lib/productStats";
 import { ProductCard } from "@/components/ProductCard";
 import { glacial } from "@/lib/fonts";
 
-export function Products() {
+export async function Products() {
   // Section membership now comes from each product's `category` in the data,
   // not from id lists hardcoded here.
   const women = productsByCategory("womens");
   const men = productsByCategory("mens");
   const apparel = productsByCategory("apparel");
   const accessories = productsByCategory("accessories");
+
+  // Per-product review summary shown in each card footer. Server-side and
+  // cached (getReviewAggregate is unstable_cache'd), so the grid stays SSG/ISR.
+  const ratings = new Map(
+    await Promise.all(
+      [...women, ...men, ...apparel, ...accessories].map(
+        async (p) => [p.id, await getReviewAggregate(p.id)] as const
+      )
+    )
+  );
 
   return (
     <section
@@ -26,7 +37,7 @@ export function Products() {
           </h3>
           <div className="grid gap-8">
             {women.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} rating={ratings.get(p.id)} />
             ))}
           </div>
         </div>
@@ -38,7 +49,7 @@ export function Products() {
           </h3>
           <div className="grid gap-8">
             {men.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} rating={ratings.get(p.id)} />
             ))}
           </div>
         </div>
@@ -52,7 +63,7 @@ export function Products() {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto">
             {apparel.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} rating={ratings.get(p.id)} />
             ))}
           </div>
         </div>
@@ -66,7 +77,7 @@ export function Products() {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto">
             {accessories.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} rating={ratings.get(p.id)} />
             ))}
           </div>
         </div>

@@ -16,6 +16,25 @@ type Slide =
   | { type: "image"; src: string }
   | { type: "video"; src: string; poster: string };
 
+// Compact 5-star row for the card footer; fills to the rounded average.
+function MiniStars({ value }: { value: number }) {
+  const rounded = Math.round(value);
+  return (
+    <span aria-hidden="true" className="inline-flex leading-none">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <span
+          key={n}
+          style={{
+            color: n <= rounded ? "var(--accent)" : "rgba(128,128,128,0.35)",
+          }}
+        >
+          ★
+        </span>
+      ))}
+    </span>
+  );
+}
+
 // `compact` strips the textual product info (name/price row, tagline/notes/oil,
 // and the self-referential "More details" link) so the card can be embedded on
 // the product page — where that copy is already server-rendered in the page
@@ -23,9 +42,11 @@ type Slide =
 export function ProductCard({
   product,
   compact = false,
+  rating,
 }: {
   product: Product;
   compact?: boolean;
+  rating?: { count: number; average: number };
 }) {
   const add = useCart((s) => s.add);
   const show = useToast((s) => s.show);
@@ -50,6 +71,31 @@ export function ProductCard({
   const [idx, setIdx] = useState(0);
   const current = slides[idx];
   const multi = slides.length > 1;
+  const len = slides.length;
+  const videoIdx = slides.findIndex((s) => s.type === "video");
+
+  // Auto-advance the carousel. It cycles every few seconds but HOLDS on the
+  // video slide until the clip has loaded (videoReady), so the video actually
+  // gets a moment on screen instead of being skipped mid-load. Pauses on
+  // hover/focus, and respects prefers-reduced-motion.
+  const [videoReady, setVideoReady] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    if (!mq) return;
+    setReduceMotion(mq.matches);
+    const onChange = () => setReduceMotion(mq.matches);
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+  useEffect(() => {
+    if (!multi || paused || reduceMotion) return;
+    const t = setInterval(() => {
+      setIdx((i) => (i === videoIdx && !videoReady ? i : (i + 1) % len));
+    }, 4000);
+    return () => clearInterval(t);
+  }, [multi, paused, reduceMotion, videoReady, videoIdx, len]);
 
   const needsSize = (product.sizes?.length ?? 0) > 0;
   const [size, setSize] = useState("");
@@ -105,7 +151,13 @@ export function ProductCard({
       className="rounded-2xl p-4 flex flex-col gap-3"
       style={{ background: "var(--card)" }}
     >
-      <div className="relative aspect-[9/16] overflow-hidden rounded-2xl">
+      <div
+        className="relative aspect-[9/16] overflow-hidden rounded-2xl"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocusCapture={() => setPaused(true)}
+        onBlurCapture={() => setPaused(false)}
+      >
         {current.type === "image" ? (
           <Image
             src={current.src}
@@ -119,6 +171,7 @@ export function ProductCard({
             src={current.src}
             poster={current.poster}
             label={product.name}
+            onReady={() => setVideoReady(true)}
           />
         )}
 
@@ -182,15 +235,48 @@ export function ProductCard({
             </div>
           )}
 
-          {/* Explicit affordance to the full product page (additive — cart/gallery
-              interactions below are unchanged). Prefetched like the title link. */}
-          <Link
-            href={`/products/${product.id}`}
-            prefetch
-            className={`${glacialRegular.className} w-fit text-sm underline underline-offset-4 opacity-70 hover:opacity-100 transition-opacity normal-case`}
+          {/* Full product page link with an animated arrow, plus the review
+              summary on the right so the row reads as one balanced line and the
+              old dead space to the right of the link is now used. */}
+          <div
+            className={`${glacialRegular.className} flex items-center justify-between gap-3 normal-case`}
           >
-            More details →
-          </Link>
+            <Link
+              href={`/products/${product.id}`}
+              prefetch
+              className="group inline-flex items-center gap-1.5 text-sm underline underline-offset-4 opacity-70 hover:opacity-100 transition-opacity"
+            >
+              More details
+              <svg
+                viewBox="0 0 16 16"
+                aria-hidden="true"
+                className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M2.5 8h10M8.5 4l4 4-4 4" />
+              </svg>
+            </Link>
+            {rating && rating.count > 0 && (
+              <span
+                className="inline-flex items-center gap-1 text-sm opacity-80"
+                title={`${rating.average.toFixed(1)} out of 5 from ${rating.count} review${rating.count === 1 ? "" : "s"}`}
+              >
+                <MiniStars value={rating.average} />
+                <span className="tabular-nums">{rating.average.toFixed(1)}</span>
+                <span className="opacity-60 tabular-nums">
+                  ({rating.count})
+                </span>
+                <span className="sr-only">
+                  {rating.average.toFixed(1)} out of 5 stars from {rating.count}{" "}
+                  reviews
+                </span>
+              </span>
+            )}
+          </div>
         </>
       )}
 
