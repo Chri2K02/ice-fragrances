@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -15,6 +15,24 @@ export function Header() {
   const { data: session } = authClient.useSession();
   const isSignedIn = !!session;
   const [cartOpen, setCartOpen] = useState(false);
+  // Admins get an Admin link. Admin status is DB-backed, so it's resolved via a
+  // tiny server endpoint rather than anything the client could spoof.
+  const [isAdmin, setIsAdmin] = useState(false);
+  const email = session?.user?.email ?? null;
+  useEffect(() => {
+    if (!email) {
+      setIsAdmin(false);
+      return;
+    }
+    let alive = true;
+    fetch("/api/admin/me")
+      .then((r) => r.json())
+      .then((d) => alive && setIsAdmin(!!d.isAdmin))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [email]);
 
   return (
     <>
@@ -41,6 +59,15 @@ export function Header() {
             >
               {isSignedIn ? "Account" : "Sign in"}
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="hover:opacity-70 font-medium"
+                style={{ color: "var(--accent)" }}
+              >
+                Admin
+              </Link>
+            )}
             <a
               href="https://www.instagram.com/icefragrances/"
               target="_blank"
