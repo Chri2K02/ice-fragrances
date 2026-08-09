@@ -78,6 +78,9 @@ export const admins = pgTable("admins", {
   email: text("email").notNull().unique(),
   notify: jsonb("notify").$type<Record<string, boolean>>().notNull().default({}),
   perms: jsonb("perms").$type<Record<string, boolean>>().notNull().default({}),
+  // Opt-in to the reply-to list: every outbound Resend email carries the
+  // active opted-in admins as its reply-to (see lib/email.ts sendEmail).
+  replyTo: boolean("reply_to").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

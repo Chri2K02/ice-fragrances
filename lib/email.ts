@@ -74,6 +74,20 @@ export async function sendEmail(opts: {
 }): Promise<void> {
   if (!RESEND_API_KEY) return;
   try {
+    // Every outbound email carries the opted-in admins (Notifications page
+    // "Reply-to" column) after any per-call reply-to, deduped. Lazy import
+    // keeps this module dependency-free for callers that never send.
+    const { replyToList } = await import("@/lib/admin");
+    const replyTo = [
+      ...new Set(
+        [
+          ...(opts.replyTo ?? "").split(","),
+          ...(await replyToList()),
+        ]
+          .map((s) => s.trim())
+          .filter(Boolean)
+      ),
+    ];
     await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -89,7 +103,7 @@ export async function sendEmail(opts: {
           .filter(Boolean),
         subject: opts.subject,
         html: opts.html,
-        reply_to: opts.replyTo,
+        reply_to: replyTo.length ? replyTo : undefined,
       }),
     });
   } catch {

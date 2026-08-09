@@ -26,6 +26,7 @@ export default async function AdminNotificationsPage() {
   const list = rows.map((a) => ({
     email: a.email,
     notify: a.notify ?? {},
+    replyTo: a.replyTo,
     // Notifications are only honored while the row has admin access — the
     // matrix keeps revoked rows (prefs persist) but shows them dimmed.
     active:
@@ -37,8 +38,9 @@ export default async function AdminNotificationsPage() {
       <p className="opacity-70 text-sm mb-6">
         Each checkbox controls which emails that person receives while they
         have admin access. Unchecked means that notification type is muted for
-        them; dimmed rows have no access and receive nothing. Send test
-        delivers a sample email to that address.
+        them; dimmed rows have no access and receive nothing. Reply-to adds
+        the address to the reply-to list of every email the store sends.
+        Send test delivers a sample email to that address.
       </p>
       <AdminNotifications
         initial={list}

@@ -106,3 +106,28 @@ export async function recipientsFor(type: NotificationType): Promise<string[]> {
   const boot = bootstrapAdminEmail();
   return boot ? [boot] : [];
 }
+
+// The reply-to list: ACTIVE admins (at least one surface permission) who
+// opted in via the Notifications page. Every outbound Resend email carries
+// these as reply-to (see lib/email.ts sendEmail). Empty on a DB error or when
+// nobody opted in — sendEmail then keeps only its per-call reply-to.
+export async function replyToList(): Promise<string[]> {
+  try {
+    const rows = await getDb()
+      .select({ email: admins.email, perms: admins.perms, replyTo: admins.replyTo })
+      .from(admins);
+    return [
+      ...new Set(
+        rows
+          .filter(
+            (r) =>
+              r.replyTo &&
+              (hasAnyPerm(normalizePerms(r.perms)) || isBootstrapAdmin(r.email))
+          )
+          .map((r) => r.email)
+      ),
+    ];
+  } catch {
+    return [];
+  }
+}

@@ -29,6 +29,7 @@ export async function GET() {
       email: a.email,
       notify: a.notify ?? {},
       perms: normalizePerms(a.perms),
+      replyTo: a.replyTo,
       bootstrap: isBootstrapAdmin(a.email),
     })),
   });
@@ -49,17 +50,19 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   if (!(await requireTeamAdmin())) return forbidden();
-  const { email, notify, perms } = (await req.json()) as {
+  const { email, notify, perms, replyTo } = (await req.json()) as {
     email?: string;
     notify?: Record<string, boolean>;
     perms?: Record<string, boolean>;
+    replyTo?: boolean;
   };
   const e = (email ?? "").trim().toLowerCase();
   const hasNotify = notify && typeof notify === "object";
   const hasPerms = perms && typeof perms === "object";
-  if (!e || (!hasNotify && !hasPerms)) {
+  const hasReplyTo = typeof replyTo === "boolean";
+  if (!e || (!hasNotify && !hasPerms && !hasReplyTo)) {
     return NextResponse.json(
-      { error: "email and notify or perms required" },
+      { error: "email and notify, perms, or replyTo required" },
       { status: 400 }
     );
   }
@@ -73,6 +76,7 @@ export async function PATCH(req: Request) {
   const set: Partial<{
     notify: Record<string, boolean>;
     perms: Record<string, boolean>;
+    replyTo: boolean;
   }> = {};
   if (hasNotify) {
     const clean: Record<string, boolean> = {};
@@ -84,6 +88,7 @@ export async function PATCH(req: Request) {
     for (const k of PERMISSION_KEYS) if (k in perms) clean[k] = !!perms[k];
     set.perms = clean;
   }
+  if (hasReplyTo) set.replyTo = replyTo;
   await getDb().update(admins).set(set).where(eq(admins.email, e));
   return NextResponse.json({ ok: true, ...set });
 }

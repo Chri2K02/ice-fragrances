@@ -130,8 +130,12 @@ export async function GET(req: Request) {
     email text NOT NULL UNIQUE,
     notify jsonb NOT NULL DEFAULT '{}'::jsonb,
     perms jsonb NOT NULL DEFAULT '{}'::jsonb,
+    reply_to boolean NOT NULL DEFAULT false,
     created_at timestamp NOT NULL DEFAULT now()
   )`;
+  // Reply-to opt-in flag (see lib/email.ts). Off by default — no backfill
+  // needed, so a plain idempotent ALTER suffices.
+  await sql`ALTER TABLE admins ADD COLUMN IF NOT EXISTS reply_to boolean NOT NULL DEFAULT false`;
   // Adding `perms` to a pre-existing table must backfill existing rows with
   // full access exactly ONCE (they were unconditional admins before the column
   // existed). Guarded by a column-existence probe so re-running the migration

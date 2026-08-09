@@ -1,13 +1,19 @@
 "use client";
 import { useState } from "react";
 
-type Row = { email: string; notify: Record<string, boolean>; active: boolean };
+type Row = {
+  email: string;
+  notify: Record<string, boolean>;
+  replyTo: boolean;
+  active: boolean;
+};
 type Type = { key: string; label: string };
 
 // Per-admin notification matrix. Membership/access lives on the Team subroute
 // (components/AdminTeamMembers); rows without access are dimmed — their prefs
-// persist but no email is sent. "Send test" delivers a sample email so
-// delivery can be verified end-to-end.
+// persist but no email is sent. "Reply-to" opts the address into the reply-to
+// list every outbound store email carries (lib/email.ts). "Send test"
+// delivers a sample email so delivery can be verified end-to-end.
 export function AdminNotifications({
   initial,
   types,
@@ -31,6 +37,18 @@ export function AdminNotifications({
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: r.email, notify: next }),
+    }).catch(() => {});
+  }
+
+  async function toggleReplyTo(r: Row) {
+    const next = !r.replyTo;
+    setRows((l) =>
+      l.map((x) => (x.email === r.email ? { ...x, replyTo: next } : x))
+    );
+    await fetch("/api/admin/team", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: r.email, replyTo: next }),
     }).catch(() => {});
   }
 
@@ -70,6 +88,9 @@ export function AdminNotifications({
                 {t.label}
               </th>
             ))}
+            <th className="py-3 px-2 font-medium text-center border-l border-black/10 dark:border-white/10">
+              Reply-to
+            </th>
             <th className="py-3 px-4"></th>
           </tr>
         </thead>
@@ -96,6 +117,15 @@ export function AdminNotifications({
                   />
                 </td>
               ))}
+              <td className="py-3 px-2 text-center border-l border-black/10 dark:border-white/10">
+                <input
+                  type="checkbox"
+                  checked={r.replyTo}
+                  onChange={() => toggleReplyTo(r)}
+                  aria-label={`${r.email}: reply-to list`}
+                  className="h-4 w-4 cursor-pointer"
+                />
+              </td>
               <td className="py-3 px-4 text-right whitespace-nowrap">
                 <button
                   type="button"
