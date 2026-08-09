@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AdminTabs } from "@/components/AdminTabs";
+import { TabNav } from "@/components/TabNav";
 
 // Shared shell for every /admin page: one container width and the always-
 // visible section tabs. Auth stays in each page (layouts are cached across
@@ -10,6 +10,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+const TABS = [
+  { href: "/admin", label: "Stock" },
+  { href: "/admin/catalog", label: "Catalog" },
+  { href: "/admin/reviews", label: "Reviews" },
+  { href: "/admin/settings", label: "Settings" },
+];
+
 export default function AdminLayout({
   children,
 }: {
@@ -17,7 +24,7 @@ export default function AdminLayout({
 }) {
   return (
     <main className="px-4 py-12 max-w-3xl mx-auto min-h-[70vh]">
-      <AdminTabs />
+      <TabNav tabs={TABS} ariaLabel="Admin sections" />
       {children}
     </main>
   );
