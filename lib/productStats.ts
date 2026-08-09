@@ -1,6 +1,6 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { reviews, inventory } from "@/lib/db/schema";
 
@@ -33,6 +33,45 @@ export const getReviewAggregate = unstable_cache(
     }
   },
   ["product-review-aggregate"],
+  { tags: ["reviews"], revalidate: 3600 }
+);
+
+export type RecentReview = {
+  author: string;
+  rating: number;
+  body: string;
+  datePublished: string; // ISO date (YYYY-MM-DD)
+};
+
+// The most recent reviews for the product page's Review structured data —
+// already in their public shape: anonymous reviews are attributed to
+// "Anonymous" (the same face the Reviews UI shows), dates are date-only ISO.
+export const getRecentReviews = unstable_cache(
+  async (productId: string, limit = 5): Promise<RecentReview[]> => {
+    try {
+      const rows = await getDb()
+        .select({
+          authorName: reviews.authorName,
+          anonymous: reviews.anonymous,
+          rating: reviews.rating,
+          body: reviews.body,
+          createdAt: reviews.createdAt,
+        })
+        .from(reviews)
+        .where(eq(reviews.productId, productId))
+        .orderBy(desc(reviews.createdAt))
+        .limit(limit);
+      return rows.map((r) => ({
+        author: r.anonymous ? "Anonymous" : r.authorName,
+        rating: r.rating,
+        body: r.body,
+        datePublished: r.createdAt.toISOString().slice(0, 10),
+      }));
+    } catch {
+      return [];
+    }
+  },
+  ["product-recent-reviews"],
   { tags: ["reviews"], revalidate: 3600 }
 );
 

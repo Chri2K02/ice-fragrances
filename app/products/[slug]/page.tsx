@@ -4,8 +4,20 @@ import { notFound } from "next/navigation";
 import { PRODUCTS, getProduct } from "@/lib/products";
 import { getProductView } from "@/lib/catalog";
 import { ProductCard } from "@/components/ProductCard";
-import { getReviewAggregate, getProductSoldOut } from "@/lib/productStats";
+import {
+  getReviewAggregate,
+  getProductSoldOut,
+  getRecentReviews,
+} from "@/lib/productStats";
 import { SITE, SITE_URL } from "@/lib/site";
+import {
+  ORG_ID,
+  RETURN_POLICY,
+  SHIPPING_DETAILS,
+  VIDEO_UPLOAD_DATES,
+  CATEGORY_LABELS,
+  jsonLdString,
+} from "@/lib/structuredData";
 import { formatPrice } from "@/lib/currency";
 import { glacial, glacialRegular } from "@/lib/fonts";
 
@@ -83,52 +95,116 @@ export default async function ProductPage({
   const product = await getProductView(slug);
   if (!product) notFound();
 
-  const [agg, soldOut] = await Promise.all([
+  const [agg, soldOut, recentReviews] = await Promise.all([
     getReviewAggregate(product.id),
     getProductSoldOut(product.id, product.sizes ?? []),
+    getRecentReviews(product.id),
   ]);
 
   const description = productCopy(product);
   const canonical = `/products/${product.id}`;
+  const pageUrl = abs(canonical);
   const images = (
     product.images?.length ? product.images : [product.poster]
   ).map(abs);
 
+  // The video is only marked up when its publish date is known (catalog
+  // videos; an admin-overlaid video has no date, so it gets no VideoObject).
+  const videoUploadDate = product.video && VIDEO_UPLOAD_DATES[product.video];
+
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    image: images,
-    description,
-    brand: { "@type": "Brand", name: SITE.name },
-    offers: {
-      "@type": "Offer",
-      price: (product.priceCents / 100).toFixed(2),
-      priceCurrency: "CAD",
-      availability: soldOut
-        ? "https://schema.org/OutOfStock"
-        : "https://schema.org/InStock",
-      url: abs(canonical),
-    },
-    // Only assert a rating when real reviews exist — never emit empty stars.
-    ...(agg.count > 0
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: agg.average.toFixed(1),
-            reviewCount: agg.count,
-            bestRating: 5,
-            worstRating: 1,
+    "@graph": [
+      {
+        "@type": "Product",
+        "@id": `${pageUrl}#product`,
+        name: product.name,
+        sku: product.id,
+        image: images,
+        description,
+        category: CATEGORY_LABELS[product.category],
+        brand: { "@type": "Brand", name: SITE.name },
+        offers: {
+          "@type": "Offer",
+          price: (product.priceCents / 100).toFixed(2),
+          priceCurrency: "CAD",
+          availability: soldOut
+            ? "https://schema.org/OutOfStock"
+            : "https://schema.org/InStock",
+          itemCondition: "https://schema.org/NewCondition",
+          url: pageUrl,
+          seller: { "@id": ORG_ID },
+          shippingDetails: SHIPPING_DETAILS,
+          hasMerchantReturnPolicy: RETURN_POLICY,
+        },
+        // Only assert ratings/reviews when real ones exist — no empty stars.
+        ...(agg.count > 0
+          ? {
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: agg.average.toFixed(1),
+                reviewCount: agg.count,
+                bestRating: 5,
+                worstRating: 1,
+              },
+            }
+          : {}),
+        ...(recentReviews.length > 0
+          ? {
+              review: recentReviews.map((r) => ({
+                "@type": "Review",
+                author: { "@type": "Person", name: r.author },
+                reviewRating: {
+                  "@type": "Rating",
+                  ratingValue: r.rating,
+                  bestRating: 5,
+                  worstRating: 1,
+                },
+                ...(r.body ? { reviewBody: r.body } : {}),
+                datePublished: r.datePublished,
+              })),
+            }
+          : {}),
+        ...(videoUploadDate
+          ? { subjectOf: { "@id": `${pageUrl}#video` } }
+          : {}),
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${pageUrl}#breadcrumb`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: `${SITE_URL}/`,
           },
-        }
-      : {}),
+          // Final crumb carries no `item` — Google uses the page URL.
+          { "@type": "ListItem", position: 2, name: product.name },
+        ],
+      },
+      ...(videoUploadDate
+        ? [
+            {
+              "@type": "VideoObject",
+              "@id": `${pageUrl}#video`,
+              name: `${product.name} — ${SITE.name}`,
+              description,
+              thumbnailUrl: abs(product.poster),
+              contentUrl: abs(product.video!),
+              uploadDate: videoUploadDate,
+            },
+          ]
+        : []),
+    ],
   };
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-12 md:py-16 min-h-[60vh]">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // jsonLdString escapes `<` — review bodies are user-generated text.
+        dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }}
       />
 
       <nav className={`${glacialRegular.className} text-sm mb-8`}>
