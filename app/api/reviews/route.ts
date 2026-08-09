@@ -4,7 +4,7 @@ import { getSession } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { reviews, orders, orderItems } from "@/lib/db/schema";
 import { getProduct } from "@/lib/products";
-import { isAdminEmail, recipientsFor } from "@/lib/admin";
+import { hasAdminPerm, recipientsFor } from "@/lib/admin";
 import { sendEmail } from "@/lib/email";
 
 type DB = ReturnType<typeof getDb>;
@@ -59,7 +59,9 @@ export async function GET(req: Request) {
     // gate); they just can't review the same product twice.
     alreadyReviewed = list.some((r) => r.userId === userId);
     canReview = !alreadyReviewed;
-    isAdmin = await isAdminEmail(email);
+    // Drives the admin reply controls in the public review list, so it tracks
+    // the reviews surface permission specifically.
+    isAdmin = await hasAdminPerm(email, "reviews");
   }
 
   return NextResponse.json({
@@ -86,10 +88,10 @@ export async function GET(req: Request) {
   });
 }
 
-// Returns true once the signed-in user matches the configured admin email.
+// Whether the signed-in user holds the reviews surface permission.
 async function isAdmin(): Promise<boolean> {
   const session = await getSession();
-  return isAdminEmail(session?.user.email ?? null);
+  return hasAdminPerm(session?.user.email ?? null, "reviews");
 }
 
 export async function DELETE(req: Request) {
@@ -108,7 +110,7 @@ export async function DELETE(req: Request) {
 export async function PATCH(req: Request) {
   const session = await getSession();
   const email = session?.user.email ?? null;
-  if (!(await isAdminEmail(email))) {
+  if (!(await hasAdminPerm(email, "reviews"))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const { id, reply } = (await req.json()) as { id?: number; reply?: string };

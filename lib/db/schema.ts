@@ -66,15 +66,18 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Store admins + the notification surface in one table. Each admin email is a
-// ROW; `notify` holds the per-notification-type column toggles (missing key =
-// default on). Recipients for a notification type are the admins whose toggle
-// for it isn't explicitly false. The bootstrap ADMIN_EMAIL is seeded here and
-// is un-removable, so the store can never lock itself out. See lib/admin.ts.
+// Admin management: each email is a ROW that persists for good. `perms` holds
+// per-surface access toggles (missing key = NO access — deny by default); a row
+// with no true perm is not an admin at all. "Removing" an admin clears perms
+// but keeps the row. `notify` holds per-notification-type toggles (missing key
+// = default on), honored only while the row has at least one perm. The
+// bootstrap ADMIN_EMAIL always has full access regardless of its row, so the
+// store can never lock itself out. See lib/admin.ts + lib/permissions.ts.
 export const admins = pgTable("admins", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
   notify: jsonb("notify").$type<Record<string, boolean>>().notNull().default({}),
+  perms: jsonb("perms").$type<Record<string, boolean>>().notNull().default({}),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

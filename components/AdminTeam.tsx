@@ -1,23 +1,39 @@
 "use client";
 import { useState } from "react";
 
-type Row = { email: string; notify: Record<string, boolean>; bootstrap: boolean };
+type Row = {
+  email: string;
+  notify: Record<string, boolean>;
+  perms: Record<string, boolean>;
+  bootstrap: boolean;
+};
 type Type = { key: string; label: string };
 
+// The admin management table. One row per email; Access checkboxes gate each
+// admin surface (missing/false = no access, none at all = not an admin),
+// Notification checkboxes pick which emails the person receives. "Remove" only
+// revokes access — the row persists.
 export function AdminTeam({
   initial,
-  types,
+  permTypes,
+  notifyTypes,
 }: {
   initial: Row[];
-  types: Type[];
+  permTypes: Type[];
+  notifyTypes: Type[];
 }) {
   const [rows, setRows] = useState<Row[]>(initial);
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Missing key = default on (matches recipientsFor on the server).
-  const on = (r: Row, key: string) => r.notify?.[key] ?? true;
+  // Missing notify key = default on (matches recipientsFor on the server);
+  // missing perm key = no access (deny by default). Owner always has access.
+  const notifyOn = (r: Row, key: string) => r.notify?.[key] ?? true;
+  const permOn = (r: Row, key: string) =>
+    r.bootstrap || r.perms?.[key] === true;
+  const isActive = (r: Row) =>
+    r.bootstrap || permTypes.some((t) => r.perms?.[t.key] === true);
 
   async function addAdmin() {
     const e = email.trim().toLowerCase();
@@ -35,7 +51,7 @@ export function AdminTeam({
         setRows((l) =>
           l.some((x) => x.email === e)
             ? l
-            : [...l, { email: e, notify: {}, bootstrap: false }]
+            : [...l, { email: e, notify: {}, perms: {}, bootstrap: false }]
         );
         setEmail("");
       } else {
@@ -48,27 +64,46 @@ export function AdminTeam({
     }
   }
 
-  async function toggle(r: Row, key: string) {
-    const next = { ...(r.notify ?? {}) };
-    next[key] = !on(r, key);
-    setRows((l) =>
-      l.map((x) => (x.email === r.email ? { ...x, notify: next } : x))
-    );
+  async function patch(email: string, body: Record<string, unknown>) {
     await fetch("/api/admin/team", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: r.email, notify: next }),
+      body: JSON.stringify({ email, ...body }),
     }).catch(() => {});
   }
 
-  async function removeAdmin(r: Row) {
+  async function toggleNotify(r: Row, key: string) {
+    const next = { ...(r.notify ?? {}) };
+    next[key] = !notifyOn(r, key);
+    setRows((l) =>
+      l.map((x) => (x.email === r.email ? { ...x, notify: next } : x))
+    );
+    await patch(r.email, { notify: next });
+  }
+
+  async function togglePerm(r: Row, key: string) {
     if (r.bootstrap) return;
-    if (!confirm(`Remove ${r.email} from the team?`)) return;
-    setRows((l) => l.filter((x) => x.email !== r.email));
+    const next = { ...(r.perms ?? {}) };
+    next[key] = !permOn(r, key);
+    setRows((l) =>
+      l.map((x) => (x.email === r.email ? { ...x, perms: next } : x))
+    );
+    await patch(r.email, { perms: next });
+  }
+
+  async function revokeAdmin(r: Row) {
+    if (r.bootstrap) return;
+    if (!confirm(`Revoke all admin access for ${r.email}?`)) return;
+    // The row stays — only the permissions are cleared.
+    setRows((l) =>
+      l.map((x) => (x.email === r.email ? { ...x, perms: {} } : x))
+    );
     await fetch(`/api/admin/team?email=${encodeURIComponent(r.email)}`, {
       method: "DELETE",
     }).catch(() => {});
   }
+
+  const groupEdge = "border-l border-black/10 dark:border-white/10";
 
   return (
     <div className="space-y-4">
@@ -76,13 +111,40 @@ export function AdminTeam({
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left">
-              <th className="py-3 px-4 font-medium">Admin</th>
-              {types.map((t) => (
-                <th key={t.key} className="py-3 px-2 font-medium text-center">
+              <th rowSpan={2} className="py-2 px-4 font-medium align-bottom">
+                Admin
+              </th>
+              <th
+                colSpan={permTypes.length}
+                className={`pt-3 px-2 font-medium text-center ${groupEdge}`}
+              >
+                Access
+              </th>
+              <th
+                colSpan={notifyTypes.length}
+                className={`pt-3 px-2 font-medium text-center ${groupEdge}`}
+              >
+                Notifications
+              </th>
+              <th rowSpan={2} className="py-2 px-4"></th>
+            </tr>
+            <tr className="text-center">
+              {permTypes.map((t, i) => (
+                <th
+                  key={t.key}
+                  className={`pb-2 px-2 font-normal opacity-70 ${i === 0 ? groupEdge : ""}`}
+                >
                   {t.label}
                 </th>
               ))}
-              <th className="py-3 px-4"></th>
+              {notifyTypes.map((t, i) => (
+                <th
+                  key={t.key}
+                  className={`pb-2 px-2 font-normal opacity-70 ${i === 0 ? groupEdge : ""}`}
+                >
+                  {t.label}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -92,25 +154,50 @@ export function AdminTeam({
                 className="border-t border-black/10 dark:border-white/10"
               >
                 <td className="py-3 px-4">
-                  {r.email}
+                  <span className={isActive(r) ? "" : "opacity-50"}>
+                    {r.email}
+                  </span>
                   {r.bootstrap && <span className="opacity-50"> (owner)</span>}
+                  {!isActive(r) && (
+                    <span className="ml-2 text-xs opacity-50 whitespace-nowrap">
+                      no access
+                    </span>
+                  )}
                 </td>
-                {types.map((t) => (
-                  <td key={t.key} className="py-3 px-2 text-center">
+                {permTypes.map((t, i) => (
+                  <td
+                    key={t.key}
+                    className={`py-3 px-2 text-center ${i === 0 ? groupEdge : ""}`}
+                  >
                     <input
                       type="checkbox"
-                      checked={on(r, t.key)}
-                      onChange={() => toggle(r, t.key)}
+                      checked={permOn(r, t.key)}
+                      disabled={r.bootstrap}
+                      onChange={() => togglePerm(r, t.key)}
+                      aria-label={`${r.email}: access to ${t.label}`}
+                      className="h-4 w-4 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  </td>
+                ))}
+                {notifyTypes.map((t, i) => (
+                  <td
+                    key={t.key}
+                    className={`py-3 px-2 text-center ${i === 0 ? groupEdge : ""}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={notifyOn(r, t.key)}
+                      onChange={() => toggleNotify(r, t.key)}
                       aria-label={`${r.email}: ${t.label}`}
                       className="h-4 w-4 cursor-pointer"
                     />
                   </td>
                 ))}
                 <td className="py-3 px-4 text-right">
-                  {!r.bootstrap && (
+                  {!r.bootstrap && isActive(r) && (
                     <button
                       type="button"
-                      onClick={() => removeAdmin(r)}
+                      onClick={() => revokeAdmin(r)}
                       className="text-red-500 underline text-xs"
                     >
                       Remove
@@ -139,9 +226,12 @@ export function AdminTeam({
           className="rounded-full px-4 py-2 text-sm font-medium text-black border-2 border-black disabled:opacity-40"
           style={{ background: "var(--accent)" }}
         >
-          {busy ? "Adding…" : "Add admin"}
+          {busy ? "Adding…" : "Add row"}
         </button>
       </div>
+      <p className="opacity-60 text-xs">
+        New rows start with no access — enable the sections they may manage.
+      </p>
       {error && <p className="text-red-500 text-sm">{error}</p>}
     </div>
   );

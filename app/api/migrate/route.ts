@@ -121,18 +121,33 @@ export async function GET(req: Request) {
     last_request bigint NOT NULL
   )`;
 
-  // Store admins + the notification surface (see lib/admin.ts,
-  // lib/notifications.ts). Rows are admin emails; `notify` holds per-type
-  // toggles (missing key = on).
+  // Admin management (see lib/admin.ts, lib/permissions.ts,
+  // lib/notifications.ts). Rows are emails and persist for good; `perms` holds
+  // per-surface access toggles (missing key = no access; no perms = not an
+  // admin), `notify` holds per-type notification toggles (missing key = on).
   await sql`CREATE TABLE IF NOT EXISTS admins (
     id serial PRIMARY KEY,
     email text NOT NULL UNIQUE,
     notify jsonb NOT NULL DEFAULT '{}'::jsonb,
+    perms jsonb NOT NULL DEFAULT '{}'::jsonb,
     created_at timestamp NOT NULL DEFAULT now()
   )`;
+  // Adding `perms` to a pre-existing table must backfill existing rows with
+  // full access exactly ONCE (they were unconditional admins before the column
+  // existed). Guarded by a column-existence probe so re-running the migration
+  // never re-grants access to admins revoked since.
+  const permsCol = await sql`SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'admins' AND column_name = 'perms'`;
+  if (permsCol.length === 0) {
+    await sql`ALTER TABLE admins ADD COLUMN perms jsonb NOT NULL DEFAULT '{}'::jsonb`;
+    await sql`UPDATE admins SET perms =
+      '{"stock":true,"catalog":true,"reviews":true,"team":true}'::jsonb`;
+  }
   // Seed the bootstrap owner so the team is never empty and can't lock out.
+  // (It has full access regardless of the row — see lib/admin.ts.)
   if (process.env.ADMIN_EMAIL) {
-    await sql`INSERT INTO admins (email) VALUES (${process.env.ADMIN_EMAIL})
+    await sql`INSERT INTO admins (email, perms) VALUES (${process.env.ADMIN_EMAIL},
+      '{"stock":true,"catalog":true,"reviews":true,"team":true}'::jsonb)
       ON CONFLICT (email) DO NOTHING`;
   }
 

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { isAdminEmail } from "@/lib/admin";
+import { adminPermsFor, firstAdminPathFor } from "@/lib/admin";
 import { getDb } from "@/lib/db";
 import { inventory } from "@/lib/db/schema";
 import { PRODUCTS } from "@/lib/products";
@@ -15,9 +15,10 @@ export const metadata: Metadata = {
 export default async function AdminPage() {
   const session = await getSession();
   if (!session) redirect("/sign-in");
-  if (!(await isAdminEmail(session.user.email))) {
-    redirect("/");
-  }
+  const perms = await adminPermsFor(session.user.email);
+  // /admin is the Admin-link landing spot: someone without the Stock surface
+  // still lands on the first surface they CAN open (or home if none).
+  if (!perms.stock) redirect(firstAdminPathFor(perms) ?? "/");
 
   const db = getDb();
   const rows = await db.select().from(inventory);
