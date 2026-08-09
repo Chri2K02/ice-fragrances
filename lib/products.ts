@@ -21,6 +21,7 @@ export type Product = {
   notes?: string; // scent notes / description
   description?: string; // longer crawlable copy for the product page (SEO)
   oil?: string; // oil concentration, e.g. "18%"
+  material?: string; // fabric/composition, e.g. "cotton-poly" (apparel; SEO)
   freeShipping?: boolean; // true = always free shipping (colognes)
   sizes?: string[]; // apparel size options
 };

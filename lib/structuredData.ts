@@ -59,6 +59,14 @@ export const CATEGORY_LABELS: Record<string, string> = {
   accessories: "Accessories",
 };
 
+// PeopleAudience.suggestedGender for the gendered fragrance lines (a
+// merchant-listing recommended property). Apparel/accessories are unstated in
+// the catalog, so they assert no audience rather than a guessed one.
+export const AUDIENCE_GENDER: Record<string, string> = {
+  womens: "female",
+  mens: "male",
+};
+
 // JSON-LD payloads go through dangerouslySetInnerHTML, and review bodies are
 // user-generated — escape `<` so a "</script>" in a review can't break out of
 // the script tag (per the Next.js JSON-LD guide).

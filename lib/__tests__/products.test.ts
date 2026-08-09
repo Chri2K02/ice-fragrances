@@ -36,6 +36,8 @@ describe("catalog data (data/products.json)", () => {
       if (p.video !== undefined) expect(typeof p.video, p.id).toBe("string");
       if (p.tagline !== undefined) expect(typeof p.tagline, p.id).toBe("string");
       if (p.notes !== undefined) expect(typeof p.notes, p.id).toBe("string");
+      if (p.material !== undefined)
+        expect(typeof p.material, p.id).toBe("string");
       if (p.description !== undefined)
         expect(typeof p.description, p.id).toBe("string");
       if (p.oil !== undefined) expect(typeof p.oil, p.id).toBe("string");

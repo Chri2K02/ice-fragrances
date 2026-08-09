@@ -16,6 +16,7 @@ import {
   SHIPPING_DETAILS,
   VIDEO_UPLOAD_DATES,
   CATEGORY_LABELS,
+  AUDIENCE_GENDER,
   jsonLdString,
 } from "@/lib/structuredData";
 import { formatPrice } from "@/lib/currency";
@@ -38,6 +39,14 @@ export function generateStaticParams() {
 // Absolute URL for an in-app path (JSON-LD and OG require absolute URLs).
 const abs = (path: string) =>
   path.startsWith("http") ? path : `${SITE_URL}${path}`;
+
+// Offer.priceValidUntil, rolling +1 year. Module scope (render must stay
+// pure); re-evaluated on every build/server instance, and with hourly ISR it
+// never drifts anywhere near the past — a stale past date would suppress the
+// price display in results.
+const PRICE_VALID_UNTIL = new Date(Date.now() + 365 * 24 * 3600 * 1000)
+  .toISOString()
+  .slice(0, 10);
 
 function productCopy(p: NonNullable<ReturnType<typeof getProduct>>): string {
   return p.description ?? p.notes ?? p.tagline ?? SITE.description;
@@ -124,6 +133,15 @@ export default async function ProductPage({
         description,
         category: CATEGORY_LABELS[product.category],
         brand: { "@type": "Brand", name: SITE.name },
+        ...(AUDIENCE_GENDER[product.category]
+          ? {
+              audience: {
+                "@type": "PeopleAudience",
+                suggestedGender: AUDIENCE_GENDER[product.category],
+              },
+            }
+          : {}),
+        ...(product.material ? { material: product.material } : {}),
         offers: {
           "@type": "Offer",
           price: (product.priceCents / 100).toFixed(2),
@@ -132,6 +150,7 @@ export default async function ProductPage({
             ? "https://schema.org/OutOfStock"
             : "https://schema.org/InStock",
           itemCondition: "https://schema.org/NewCondition",
+          priceValidUntil: PRICE_VALID_UNTIL,
           url: pageUrl,
           seller: { "@id": ORG_ID },
           shippingDetails: SHIPPING_DETAILS,

@@ -87,6 +87,7 @@
     "tagline": "We might never make these again",
     "notes": "Limited cotton-poly half sleeve shirts",
     "description": "Limited cotton-poly half-sleeve shirts from Ice Fragrances, available in sizes L and XL. We might never make these again.",
+    "material": "cotton-poly",
     "poster": "/media/tshirt-5.jpg",
     "images": [
       "/media/tshirt-5.jpg",
@@ -105,6 +106,7 @@
     "tagline": "We might never make these again",
     "notes": "Limited button-up collared shirts",
     "description": "Limited button-up collared nylon dress shirts from Ice Fragrances, available in sizes M, L and XL. We might never make these again.",
+    "material": "nylon",
     "poster": "/media/dress-shirt-2.jpg",
     "images": ["/media/dress-shirt-2.jpg", "/media/dress-shirt-1.jpg"]
   },
