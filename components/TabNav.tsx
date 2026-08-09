@@ -26,7 +26,10 @@ export function TabNav({
   return (
     <nav
       aria-label={ariaLabel}
-      className={`flex gap-1 border-b border-black/10 dark:border-white/10 overflow-x-auto ${className}`}
+      // No overflow container: the -mb-px underline overlap would make the
+      // content 1px taller than the box and summon scrollbars. On viewports
+      // too narrow for every tab, they wrap instead.
+      className={`flex flex-wrap gap-1 border-b border-black/10 dark:border-white/10 ${className}`}
     >
       {tabs.map((tab) => (
         <Link

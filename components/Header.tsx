@@ -20,18 +20,20 @@ export function Header() {
   const [navOpen, setNavOpen] = useState(false);
   const pathname = usePathname();
   // Admins get an Admin link. Admin status is DB-backed, so it's resolved via a
-  // tiny server endpoint rather than anything the client could spoof.
-  const [isAdmin, setIsAdmin] = useState(false);
+  // tiny server endpoint rather than anything the client could spoof. The
+  // answer is stored with the email it was fetched for, so signing out or
+  // switching accounts derives back to false — no state reset in the effect.
+  const [admin, setAdmin] = useState<{ email: string; ok: boolean } | null>(
+    null
+  );
   const email = session?.user?.email ?? null;
+  const isAdmin = !!email && admin?.email === email && admin.ok;
   useEffect(() => {
-    if (!email) {
-      setIsAdmin(false);
-      return;
-    }
+    if (!email) return;
     let alive = true;
     fetch("/api/admin/me")
       .then((r) => r.json())
-      .then((d) => alive && setIsAdmin(!!d.isAdmin))
+      .then((d) => alive && setAdmin({ email, ok: !!d.isAdmin }))
       .catch(() => {});
     return () => {
       alive = false;

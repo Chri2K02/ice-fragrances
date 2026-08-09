@@ -8,6 +8,9 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
+    // Agent worktrees are checked out under .claude/worktrees inside the repo;
+    // without this, vitest also runs every suite's stale copy from there.
+    exclude: ["**/node_modules/**", ".claude/**"],
   },
   resolve: {
     alias: {
