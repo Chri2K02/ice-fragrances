@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { isAdminEmail } from "@/lib/admin";
 import { getDb } from "@/lib/db";
@@ -38,27 +37,14 @@ export default async function AdminPage() {
   );
 
   return (
-    <main className="px-4 py-12 max-w-2xl mx-auto min-h-[70vh]">
-      <div className="flex items-center justify-between mb-2 gap-3">
-        <h1 className="text-2xl font-semibold">Stock</h1>
-        <nav className="flex items-center gap-4 text-sm">
-          <Link href="/admin/catalog" className="underline opacity-70">
-            Catalog →
-          </Link>
-          <Link href="/admin/reviews" className="underline opacity-70">
-            Reviews →
-          </Link>
-          <Link href="/admin/settings" className="underline opacity-70">
-            Team →
-          </Link>
-        </nav>
-      </div>
+    <>
+      <h1 className="text-2xl font-semibold mb-2">Stock</h1>
       <p className="opacity-70 text-sm mb-6">
         Enter a number to track stock — it drops automatically on each sale, and
         the product shows <strong>Sold Out</strong> at 0. Leave blank to keep an
         item always available (untracked).
       </p>
       <StockEditor variants={variants} />
-    </main>
+    </>
   );
 }

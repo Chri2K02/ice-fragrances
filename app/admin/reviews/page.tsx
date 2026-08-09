@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { desc } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { isAdminEmail } from "@/lib/admin";
@@ -36,22 +35,12 @@ export default async function AdminReviewsPage() {
   }));
 
   return (
-    <main className="px-4 py-12 max-w-2xl mx-auto min-h-[70vh]">
-      <div className="flex items-center justify-between mb-2 gap-3">
-        <h1 className="text-2xl font-semibold">Reviews</h1>
-        <nav className="flex items-center gap-4 text-sm">
-          <Link href="/admin" className="underline opacity-70">
-            ← Stock
-          </Link>
-          <Link href="/admin/settings" className="underline opacity-70">
-            Team →
-          </Link>
-        </nav>
-      </div>
+    <>
+      <h1 className="text-2xl font-semibold mb-2">Reviews</h1>
       <p className="opacity-70 text-sm mb-6">
         Every review across all products. Remove any here.
       </p>
       <AdminReviewList reviews={list} />
-    </main>
+    </>
   );
 }
