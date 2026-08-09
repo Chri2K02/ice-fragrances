@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { isAdminEmail } from "@/lib/admin";
+import { adminPermsFor } from "@/lib/admin";
 import { getCatalog } from "@/lib/catalog";
 import { AdminCatalog } from "@/components/AdminCatalog";
 import type { Metadata } from "next";
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default async function AdminCatalogPage() {
   const session = await getSession();
   if (!session) redirect("/sign-in");
-  if (!(await isAdminEmail(session.user.email))) redirect("/");
+  if (!(await adminPermsFor(session.user.email)).catalog) redirect("/admin");
 
   const products = await getCatalog();
 

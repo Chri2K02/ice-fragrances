@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { isAdminEmail } from "@/lib/admin";
+import {
+  adminPermsFor,
+  hasAnyPerm,
+  isBootstrapAdmin,
+  normalizePerms,
+} from "@/lib/admin";
 import { getDb } from "@/lib/db";
 import { admins } from "@/lib/db/schema";
 import { NOTIFICATION_TYPES } from "@/lib/notifications";
@@ -15,19 +20,25 @@ export const metadata: Metadata = {
 export default async function AdminNotificationsPage() {
   const session = await getSession();
   if (!session) redirect("/sign-in");
-  if (!(await isAdminEmail(session.user.email))) redirect("/");
+  if (!(await adminPermsFor(session.user.email)).team) redirect("/admin");
 
   const rows = await getDb().select().from(admins).orderBy(admins.id);
   const list = rows.map((a) => ({
     email: a.email,
     notify: a.notify ?? {},
+    // Notifications are only honored while the row has admin access — the
+    // matrix keeps revoked rows (prefs persist) but shows them dimmed.
+    active:
+      isBootstrapAdmin(a.email) || hasAnyPerm(normalizePerms(a.perms)),
   }));
 
   return (
     <>
       <p className="opacity-70 text-sm mb-6">
-        Each checkbox controls which emails that person receives. Unchecked
-        means that notification type is muted for them.
+        Each checkbox controls which emails that person receives while they
+        have admin access. Unchecked means that notification type is muted for
+        them; dimmed rows have no access and receive nothing. Send test
+        delivers a sample email to that address.
       </p>
       <AdminNotifications
         initial={list}

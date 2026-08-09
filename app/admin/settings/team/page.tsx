@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { isAdminEmail, isBootstrapAdmin } from "@/lib/admin";
+import { adminPermsFor, isBootstrapAdmin, normalizePerms } from "@/lib/admin";
 import { getDb } from "@/lib/db";
 import { admins } from "@/lib/db/schema";
+import { PERMISSION_TYPES } from "@/lib/permissions";
 import { AdminTeamMembers } from "@/components/AdminTeamMembers";
 import type { Metadata } from "next";
 
@@ -14,22 +15,27 @@ export const metadata: Metadata = {
 export default async function AdminTeamPage() {
   const session = await getSession();
   if (!session) redirect("/sign-in");
-  if (!(await isAdminEmail(session.user.email))) redirect("/");
+  if (!(await adminPermsFor(session.user.email)).team) redirect("/admin");
 
   const rows = await getDb().select().from(admins).orderBy(admins.id);
   const list = rows.map((a) => ({
     email: a.email,
+    perms: normalizePerms(a.perms),
     bootstrap: isBootstrapAdmin(a.email),
   }));
 
   return (
     <>
       <p className="opacity-70 text-sm mb-6">
-        Everyone listed can access the admin dashboard. New admins default to
-        receiving every notification — tune that under Notifications. The owner
-        account can&apos;t be removed.
+        Access checkboxes control which admin sections each person can open —
+        someone with none is not an admin at all. New rows start with no
+        access; revoking someone only clears their access, their row stays.
+        The owner account always has full access.
       </p>
-      <AdminTeamMembers initial={list} />
+      <AdminTeamMembers
+        initial={list}
+        permTypes={PERMISSION_TYPES.map((t) => ({ key: t.key, label: t.label }))}
+      />
     </>
   );
 }

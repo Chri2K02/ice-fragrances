@@ -1,15 +1,32 @@
 "use client";
 import { useState } from "react";
 
-type Row = { email: string; bootstrap: boolean };
+type Row = {
+  email: string;
+  perms: Record<string, boolean>;
+  bootstrap: boolean;
+};
+type Type = { key: string; label: string };
 
-// Team membership: who can access the admin dashboard. Notification
-// preferences live on their own subroute (components/AdminNotifications).
-export function AdminTeamMembers({ initial }: { initial: Row[] }) {
+// Admin management: one row per email, one Access checkbox per admin surface
+// (missing/false = no access; none at all = not an admin). "Revoke" only
+// clears permissions — the row and its notification prefs persist. Notification
+// toggles live on the Notifications subroute (components/AdminNotifications).
+export function AdminTeamMembers({
+  initial,
+  permTypes,
+}: {
+  initial: Row[];
+  permTypes: Type[];
+}) {
   const [rows, setRows] = useState<Row[]>(initial);
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Missing perm key = no access (deny by default). Owner always has access.
+  const permOn = (r: Row, key: string) =>
+    r.bootstrap || r.perms?.[key] === true;
 
   async function addAdmin() {
     const e = email.trim().toLowerCase();
@@ -27,7 +44,7 @@ export function AdminTeamMembers({ initial }: { initial: Row[] }) {
         setRows((l) =>
           l.some((x) => x.email === e)
             ? l
-            : [...l, { email: e, bootstrap: false }]
+            : [...l, { email: e, perms: {}, bootstrap: false }]
         );
         setEmail("");
       } else {
@@ -40,10 +57,27 @@ export function AdminTeamMembers({ initial }: { initial: Row[] }) {
     }
   }
 
-  async function removeAdmin(r: Row) {
+  async function togglePerm(r: Row, key: string) {
     if (r.bootstrap) return;
-    if (!confirm(`Remove ${r.email} from the team?`)) return;
-    setRows((l) => l.filter((x) => x.email !== r.email));
+    const next = { ...(r.perms ?? {}) };
+    next[key] = !permOn(r, key);
+    setRows((l) =>
+      l.map((x) => (x.email === r.email ? { ...x, perms: next } : x))
+    );
+    await fetch("/api/admin/team", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: r.email, perms: next }),
+    }).catch(() => {});
+  }
+
+  async function revokeAdmin(r: Row) {
+    if (r.bootstrap) return;
+    if (!confirm(`Revoke all admin access for ${r.email}?`)) return;
+    // The row stays — only the permissions are cleared.
+    setRows((l) =>
+      l.map((x) => (x.email === r.email ? { ...x, perms: {} } : x))
+    );
     await fetch(`/api/admin/team?email=${encodeURIComponent(r.email)}`, {
       method: "DELETE",
     }).catch(() => {});
@@ -51,31 +85,60 @@ export function AdminTeamMembers({ initial }: { initial: Row[] }) {
 
   return (
     <div className="space-y-4">
-      <ul
-        className="rounded-xl divide-y divide-black/10 dark:divide-white/10"
+      <div
+        className="overflow-x-auto rounded-xl"
         style={{ background: "var(--card)" }}
       >
-        {rows.map((r) => (
-          <li
-            key={r.email}
-            className="flex items-center justify-between gap-3 py-3 px-4 text-sm"
-          >
-            <span>
-              {r.email}
-              {r.bootstrap && <span className="opacity-50"> (owner)</span>}
-            </span>
-            {!r.bootstrap && (
-              <button
-                type="button"
-                onClick={() => removeAdmin(r)}
-                className="text-red-500 underline text-xs"
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left">
+              <th className="py-3 px-4 font-medium">Admin</th>
+              {permTypes.map((t) => (
+                <th key={t.key} className="py-3 px-2 font-medium text-center">
+                  {t.label}
+                </th>
+              ))}
+              <th className="py-3 px-4"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr
+                key={r.email}
+                className="border-t border-black/10 dark:border-white/10"
               >
-                Remove
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+                <td className="py-3 px-4">
+                  {r.email}
+                  {r.bootstrap && <span className="opacity-50"> (owner)</span>}
+                </td>
+                {permTypes.map((t) => (
+                  <td key={t.key} className="py-3 px-2 text-center">
+                    <input
+                      type="checkbox"
+                      checked={permOn(r, t.key)}
+                      disabled={r.bootstrap}
+                      onChange={() => togglePerm(r, t.key)}
+                      aria-label={`${r.email}: ${t.label} access`}
+                      className="h-4 w-4 cursor-pointer disabled:cursor-default disabled:opacity-60"
+                    />
+                  </td>
+                ))}
+                <td className="py-3 px-4 text-right">
+                  {!r.bootstrap && (
+                    <button
+                      type="button"
+                      onClick={() => revokeAdmin(r)}
+                      className="text-red-500 underline text-xs"
+                    >
+                      Revoke
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <div className="flex items-center gap-2">
         <input

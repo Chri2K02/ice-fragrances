@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidateTag, revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
-import { isAdminEmail } from "@/lib/admin";
+import { hasAdminPerm } from "@/lib/admin";
 import { getCatalog } from "@/lib/catalog";
 import { getDb } from "@/lib/db";
 import { productContent } from "@/lib/db/schema";
@@ -9,7 +9,7 @@ import { getProduct } from "@/lib/products";
 
 async function requireAdmin(): Promise<boolean> {
   const session = await getSession();
-  return isAdminEmail(session?.user.email ?? null);
+  return hasAdminPerm(session?.user.email ?? null, "catalog");
 }
 
 const forbidden = () =>

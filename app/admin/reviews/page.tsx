@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { desc } from "drizzle-orm";
 import { getSession } from "@/lib/session";
-import { isAdminEmail } from "@/lib/admin";
+import { adminPermsFor } from "@/lib/admin";
 import { getDb } from "@/lib/db";
 import { reviews } from "@/lib/db/schema";
 import { getProduct } from "@/lib/products";
@@ -16,9 +16,7 @@ export const metadata: Metadata = {
 export default async function AdminReviewsPage() {
   const session = await getSession();
   if (!session) redirect("/sign-in");
-  if (!(await isAdminEmail(session.user.email))) {
-    redirect("/");
-  }
+  if (!(await adminPermsFor(session.user.email)).reviews) redirect("/admin");
 
   const db = getDb();
   const all = await db.select().from(reviews).orderBy(desc(reviews.createdAt));
