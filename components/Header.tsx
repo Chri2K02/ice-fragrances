@@ -109,12 +109,6 @@ export function Header() {
               </Link>
             ))}
             <MoreMenu links={MORE_LINKS} />
-            <Link
-              href={isSignedIn ? "/account" : "/sign-in"}
-              className="hover:opacity-70"
-            >
-              {isSignedIn ? "Account" : "Sign in"}
-            </Link>
             {isAdmin && (
               <Link
                 href="/admin"
@@ -157,6 +151,28 @@ export function Header() {
               <CurrencyToggle />
               <ThemeToggle />
             </div>
+            {/* Account/sign-in as an icon, desktop only — the mobile drawer
+                carries the labelled link. Filled dot when signed in. */}
+            <Link
+              href={isSignedIn ? "/account" : "/sign-in"}
+              aria-label={isSignedIn ? "Your account" : "Sign in"}
+              className={`${PILL_BUTTON} hidden lg:grid place-items-center w-9 h-9 px-0!`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="17"
+                height="17"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" fill={isSignedIn ? "currentColor" : "none"} />
+              </svg>
+            </Link>
             <button
               type="button"
               onClick={() => setCartOpen(true)}

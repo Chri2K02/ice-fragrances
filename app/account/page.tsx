@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { desc, eq, inArray, or } from "drizzle-orm";
-import { getSession } from "@/lib/session";
+import { getSession, getAuthMethods } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { orders, orderItems } from "@/lib/db/schema";
 import { SignOutButton } from "@/components/SignOutButton";
+import { AccountManager } from "@/components/AccountManager";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -16,6 +17,8 @@ export default async function AccountPage() {
   if (!session) redirect("/sign-in");
   const userId = session.user.id;
   const email = session.user.email;
+
+  const methods = await getAuthMethods(userId);
 
   const db = getDb();
   // Match orders by Better Auth id OR the checkout email — the email arm also
@@ -46,11 +49,23 @@ export default async function AccountPage() {
       <section>
         <div className="flex items-center justify-between mb-6 gap-3">
           <div>
-            <h1 className="text-2xl font-semibold">Your orders</h1>
+            <h1 className="text-2xl font-semibold">Your account</h1>
             <p className="opacity-70 text-sm mt-1">{email}</p>
           </div>
           <SignOutButton />
         </div>
+
+        <AccountManager
+          name={session.user.name ?? ""}
+          email={email}
+          hasPassword={methods.hasPassword}
+          google={methods.google}
+          canUnlinkGoogle={methods.canUnlinkGoogle}
+        />
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold mb-4">Your orders</h2>
         {myOrders.length === 0 ? (
           <p className="opacity-70">No orders yet.</p>
         ) : (

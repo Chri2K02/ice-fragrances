@@ -39,27 +39,40 @@ export function AuthForm({ mode }: { mode: Mode }) {
     }
   }
 
+  // Both flows go through our own route handlers instead of Better Auth's
+  // client methods, because those surface USER_NOT_FOUND / INVALID_PASSWORD /
+  // USER_ALREADY_EXISTS — an account-existence oracle. The handlers scrub
+  // every failure to one message and proxy the session cookie on success.
+  async function post(path: string, body: Record<string, unknown>) {
+    const res = await fetch(`/api/account/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).catch(() => null);
+    const data = (await res?.json().catch(() => null)) as
+      | { ok?: boolean; error?: string }
+      | null;
+    return { ok: !!res?.ok, error: data?.error };
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
       if (isSignup) {
-        const { error } = await authClient.signUp.email({
-          name,
-          email,
-          password,
-        });
-        if (error) {
-          setError(error.message ?? "Could not create account.");
+        const { ok, error } = await post("sign-up", { name, email, password });
+        if (!ok) {
+          setError(error ?? "Could not create account.");
         } else {
-          // OTP was auto-sent — move to the code-entry step.
+          // Always advances — a new account gets a verification code, an
+          // existing address gets nothing, and the UI can't tell you which.
           setStep("verify");
         }
       } else {
-        const { error } = await authClient.signIn.email({ email, password });
-        if (error) {
-          setError(error.message ?? "Could not sign in.");
+        const { ok, error } = await post("sign-in", { email, password });
+        if (!ok) {
+          setError(error ?? "Could not sign in.");
         } else {
           // Hard navigation so server components re-render against the new
           // session cookie (not just the store-based useSession in Header).
@@ -83,20 +96,19 @@ export function AuthForm({ mode }: { mode: Mode }) {
         otp,
       });
       if (verifyError) {
-        setError(verifyError.message ?? "Invalid or expired code.");
+        // Generic on purpose: a wrong code and a code that was never sent
+        // (because the address already had an account) must read the same.
+        setError("That code didn't work. Check it and try again.");
         setLoading(false);
         return;
       }
       // verifyEmail only establishes a session when the auth config sets
       // emailVerification.autoSignInAfterVerification — ours doesn't — so the
-      // user would otherwise land logged out. Explicitly sign in with the
-      // password we still hold (now permitted: requireEmailVerification is
-      // satisfied because the email was just verified).
-      const { error: signInError } = await authClient.signIn.email({
-        email,
-        password,
-      });
-      if (signInError) {
+      // user would otherwise land logged out. Sign in through the scrubbed
+      // handler with the password we still hold (now permitted:
+      // requireEmailVerification is satisfied by the just-verified email).
+      const { ok } = await post("sign-in", { email, password });
+      if (!ok) {
         // Verified but auto sign-in failed — send them to sign in manually.
         window.location.href = "/sign-in";
         return;
@@ -229,6 +241,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
               ? "Create account"
               : "Sign in"}
         </button>
+        {!isSignup && (
+          <Link
+            href="/reset-password"
+            className="text-sm opacity-60 hover:opacity-100 text-center"
+          >
+            Forgot your password?
+          </Link>
+        )}
       </form>
 
       <p className="text-sm opacity-70 text-center">

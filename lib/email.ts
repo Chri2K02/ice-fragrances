@@ -41,7 +41,8 @@ export function customerConfirmationHtml(
 
 // One-time passcode email for Better Auth's emailOTP plugin (sign-in,
 // email verification, password reset). Branded to match the order email.
-export function otpEmailHtml(otp: string): string {
+// `intro` tailors the lead line to the OTP's purpose (default: generic).
+export function otpEmailHtml(otp: string, intro?: string): string {
   const code = otp.replace(/[^0-9A-Za-z]/g, "");
   return `
   <div style="background:#0a0a0a;padding:32px 0;font-family:Helvetica,Arial,sans-serif">
@@ -50,7 +51,7 @@ export function otpEmailHtml(otp: string): string {
         <h1 style="margin:0;color:#fff;font-size:20px;letter-spacing:0.18em;text-transform:uppercase">Ice&nbsp;Fragrances</h1>
       </div>
       <div style="padding:28px 32px;color:#e8e8e8;font-size:15px;line-height:1.6">
-        <p style="margin:0 0 16px">Use this code to continue:</p>
+        <p style="margin:0 0 16px">${intro ?? "Use this code to continue:"}</p>
         <p style="margin:0 0 20px;text-align:center">
           <span style="display:inline-block;font-size:32px;font-weight:bold;letter-spacing:0.32em;color:${ACCENT};background:#0a0a0a;border:1px solid #1f1f1f;border-radius:12px;padding:16px 24px">${code}</span>
         </p>

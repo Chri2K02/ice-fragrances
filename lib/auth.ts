@@ -91,11 +91,21 @@ export const auth = betterAuth({
 
   plugins: [
     emailOTP({
-      async sendVerificationOTP({ email, otp }) {
+      async sendVerificationOTP({ email, otp, type }) {
+        const copy =
+          type === "forget-password"
+            ? {
+                subject: "Reset your Ice Fragrances password",
+                intro: "Use this code to reset your password:",
+              }
+            : {
+                subject: "Your Ice Fragrances verification code",
+                intro: "Use this code to continue:",
+              };
         await sendEmail({
           to: email,
-          subject: "Your Ice Fragrances verification code",
-          html: otpEmailHtml(otp),
+          subject: copy.subject,
+          html: otpEmailHtml(otp, copy.intro),
         });
       },
       otpLength: 6,
