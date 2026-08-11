@@ -14,6 +14,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
   return [
     { url: `${SITE_URL}/`, lastModified, changeFrequency: "weekly", priority: 1 },
+    {
+      url: `${SITE_URL}/collection`,
+      lastModified,
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
     ...products,
     {
       url: `${SITE_URL}/shipping`,
