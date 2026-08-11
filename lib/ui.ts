@@ -2,8 +2,10 @@ import { useSyncExternalStore } from "react";
 
 // Shared control idioms so the header's pill buttons (cart, currency, theme)
 // stay visually identical — one place to tune shape and hover feedback.
+// Borderless ghost style: outlines clashed with the text-link nav, so the
+// pills read as quiet text until hovered, like the More menu's items.
 export const PILL_BUTTON =
-  "rounded-full border px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-black/5 dark:hover:bg-white/10";
+  "rounded-full px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-black/5 dark:hover:bg-white/10";
 
 const emptySubscribe = () => () => {};
 

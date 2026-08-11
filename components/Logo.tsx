@@ -24,6 +24,32 @@ export function Logo() {
         className="h-10 sm:h-19 w-auto"
         aria-hidden="true"
       >
+        <defs>
+          {/* Diagonal gray glint band that sweeps the mark then rests — gray
+              at half opacity reads on the black outline (light mode) and the
+              white outline (dark mode) alike. SMIL, so it needs no JS; the
+              .logo-shimmer overlay is hidden under prefers-reduced-motion. */}
+          <linearGradient
+            id="logo-shimmer"
+            gradientUnits="userSpaceOnUse"
+            x1="93.851"
+            y1="40"
+            x2="132.914"
+            y2="66"
+          >
+            <stop offset="0.35" stopColor="#98a2ae" stopOpacity="0" />
+            <stop offset="0.5" stopColor="#98a2ae" stopOpacity="0.55" />
+            <stop offset="0.65" stopColor="#98a2ae" stopOpacity="0" />
+            <animateTransform
+              attributeName="gradientTransform"
+              type="translate"
+              values="-55 0; 55 0; 55 0"
+              keyTimes="0; 0.4; 1"
+              dur="5.5s"
+              repeatCount="indefinite"
+            />
+          </linearGradient>
+        </defs>
         <path
           className={INK}
           d="m113.384 34.89 2.044 1.039 16.987 8.817V66.05l-1.659 1.001-17.372 10.066L96.01 67.051l-1.659-1.001V44.746l16.987-8.817z"
@@ -44,6 +70,12 @@ export function Logo() {
           fill="#54c4f2"
           d="M117.684 93.575c-1.271-2.229-2.631-4.995-4.566-8.055-1.937 3.06-3.296 5.826-4.567 8.055-3.898 6.836-2.717 10.857 3.135 11.881a8.4 8.4 0 0 0 2.864 0c5.851-1.024 7.033-5.045 3.134-11.881"
         />
+        {/* Shimmer overlay: the two outline paths again, filled with the
+            sweeping gradient so the glint stays clipped to the ink. */}
+        <g className="logo-shimmer" fill="url(#logo-shimmer)">
+          <path d="m113.384 34.89 2.044 1.039 16.987 8.817V66.05l-1.659 1.001-17.372 10.066L96.01 67.051l-1.659-1.001V44.746l16.987-8.817z" />
+          <path d="M119.18 89.727c-.949-1.756-2.025-3.746-3.389-5.899l-2.674-4.226s-6.921 11.71-7.317 12.406c-2.754 4.83-3.388 8.675-1.938 11.757a7.5 7.5 0 0 0 2.036 2.593c1.271 1.046 2.829 1.683 4.421 2.05 2.152.496 4.352.402 6.465-.229 1.484-.444 2.908-1.162 4.029-2.246a7.4 7.4 0 0 0 1.56-2.168c1.45-3.082.815-6.927-1.938-11.757-.397-.696-.813-1.466-1.255-2.281" />
+        </g>
       </svg>
     </span>
   );

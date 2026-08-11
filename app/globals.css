@@ -124,6 +124,13 @@ a {
    menus). Inside base, utilities win again. Doubles as uniform hover easing
    for links and pills. Reduced-motion users keep the instant switch. */
 @layer base {
+  /* The logo's SMIL glint can't be paused by CSS — hide the overlay instead. */
+  @media (prefers-reduced-motion: reduce) {
+    .logo-shimmer {
+      display: none;
+    }
+  }
+
   @media (prefers-reduced-motion: no-preference) {
     *,
     *::before,
