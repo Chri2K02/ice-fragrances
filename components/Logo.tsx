@@ -1,22 +1,48 @@
-"use client";
-import Image from "next/image";
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
-import { logoForTheme } from "@/lib/theme";
+import { glacial } from "@/lib/fonts";
+
+// The lockup as live markup instead of theme-swapped PNGs: "Ice Fragrances"
+// set in Glacial Indifference Bold (the same face the old PNG had baked in)
+// over the cube+drop mark inlined as SVG. The mark's black/white swap per
+// theme via dark: fills (blues stay constant) and the text inherits the
+// theme color — no image swap, no mounted-state dance, no drop-shadow hack,
+// crisp at every size. PNG logos remain only for OG images and JSON-LD.
+const INK = "fill-[#100f0d] dark:fill-white";
+const FACE = "fill-white dark:fill-[#100f0d]";
 
 export function Logo() {
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const src = logoForTheme(mounted ? resolvedTheme : "light");
   return (
-    <Image
-      src={src}
-      alt="Ice Fragrances"
-      width={554}
-      height={283}
-      priority
-      className="w-30 sm:w-56 h-auto dark:filter-[drop-shadow(0_0_1px_rgba(255,255,255,0.55))]"
-    />
+    <span className="flex flex-col items-center gap-1 sm:gap-2">
+      <span
+        className={`${glacial.className} uppercase font-bold leading-none whitespace-nowrap tracking-[0.14em] text-[0.9rem] sm:text-[1.7rem]`}
+      >
+        Ice Fragrances
+      </span>
+      <svg
+        viewBox="94.351 34.89 38.063 73.834"
+        className="h-10 sm:h-[4.75rem] w-auto"
+        aria-hidden="true"
+      >
+        <path
+          className={INK}
+          d="m113.384 34.89 2.044 1.039 16.987 8.817V66.05l-1.659 1.001-17.372 10.066L96.01 67.051l-1.659-1.001V44.746l16.987-8.817z"
+        />
+        <path
+          fill="#66a4de"
+          d="M111.174 55.657v16.326a.217.217 0 0 1-.328.186l-13.222-7.84a.22.22 0 0 1-.107-.187V49.063c0-.163.171-.266.315-.195l13.223 6.594a.22.22 0 0 1 .119.195"
+        />
+        <path
+          className={FACE}
+          d="M128.718 49.063v15.079c0 .077-.04.148-.105.187l-13.224 7.84a.216.216 0 0 1-.326-.186V55.657c0-.082.046-.159.12-.195l13.221-6.594a.217.217 0 0 1 .314.195m-2.281-3.038-13.266 6.532a.22.22 0 0 1-.192 0l-13.318-6.631a.217.217 0 0 1-.005-.388l13.136-6.799a.22.22 0 0 1 .199 0l13.45 6.899a.216.216 0 0 1-.004.387"
+        />
+        <path
+          className={INK}
+          d="M119.18 89.727c-.949-1.756-2.025-3.746-3.389-5.899l-2.674-4.226s-6.921 11.71-7.317 12.406c-2.754 4.83-3.388 8.675-1.938 11.757a7.5 7.5 0 0 0 2.036 2.593c1.271 1.046 2.829 1.683 4.421 2.05 2.152.496 4.352.402 6.465-.229 1.484-.444 2.908-1.162 4.029-2.246a7.4 7.4 0 0 0 1.56-2.168c1.45-3.082.815-6.927-1.938-11.757-.397-.696-.813-1.466-1.255-2.281"
+        />
+        <path
+          fill="#54c4f2"
+          d="M117.684 93.575c-1.271-2.229-2.631-4.995-4.566-8.055-1.937 3.06-3.296 5.826-4.567 8.055-3.898 6.836-2.717 10.857 3.135 11.881a8.4 8.4 0 0 0 2.864 0c5.851-1.024 7.033-5.045 3.134-11.881"
+        />
+      </svg>
+    </span>
   );
 }

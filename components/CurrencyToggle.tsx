@@ -1,18 +1,17 @@
 "use client";
-import { useEffect, useState } from "react";
 import { useCurrency } from "@/lib/currencyStore";
+import { PILL_BUTTON, useMounted } from "@/lib/ui";
 
 export function CurrencyToggle() {
   const { currency, setCurrency } = useCurrency();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
   if (!mounted) return null;
   return (
     <button
       type="button"
       aria-label="Toggle currency (USD / CAD)"
       onClick={() => setCurrency(currency === "USD" ? "CAD" : "USD")}
-      className="rounded-full border px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap"
+      className={PILL_BUTTON}
     >
       {currency}
     </button>

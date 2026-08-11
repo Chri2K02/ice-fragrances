@@ -4,10 +4,17 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CurrencyToggle } from "@/components/CurrencyToggle";
+import { glacial, glacialRegular } from "@/lib/fonts";
 
-export const NAV_LINKS = [
+// Desktop shows PRIMARY inline and folds MORE into the More disclosure
+// (components/MoreMenu); the drawer renders everything flat. The Shipping
+// page still carries the PSA copy — the label stays short.
+export const PRIMARY_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/shipping", label: "Shipping/PSA" },
+  { href: "/collection", label: "Collection" },
+];
+export const MORE_LINKS = [
+  { href: "/shipping", label: "Shipping" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -43,7 +50,8 @@ export function NavDrawer({
   }, [open, onClose]);
 
   const items: { href: string; label: string; accent?: boolean }[] = [
-    ...NAV_LINKS,
+    ...PRIMARY_LINKS,
+    ...MORE_LINKS,
     isSignedIn
       ? { href: "/account", label: "Account" }
       : { href: "/sign-in", label: "Sign in" },
@@ -78,8 +86,12 @@ export function NavDrawer({
         }`}
         style={{ background: "var(--bg)" }}
       >
-        <div className="p-6 flex min-h-full flex-col">
-          <ul className="flex flex-col gap-1 uppercase tracking-widest text-2xl font-semibold">
+        {/* Same type system as the header: Glacial Bold for the big labels,
+            Regular for the controls row at the bottom. */}
+        <div className={`${glacialRegular.className} p-6 flex min-h-full flex-col`}>
+          <ul
+            className={`${glacial.className} flex flex-col gap-1 uppercase tracking-widest text-2xl font-semibold`}
+          >
             {items.map((l, i) => (
               <li key={l.href} {...enter(i)}>
                 <Link

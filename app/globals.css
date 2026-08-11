@@ -115,3 +115,23 @@ a {
     animation-delay: 0s !important;
   }
 }
+
+/* Theme changes cross-fade instead of snapping: every element eases its
+   color-ish properties (never transform/layout, so drawer and view-transition
+   animations are untouched — their own transition utilities also win over
+   this zero-specificity rule). Doubles as uniform hover easing for links and
+   pills. Reduced-motion users keep the instant switch. */
+@media (prefers-reduced-motion: no-preference) {
+  *,
+  *::before,
+  *::after {
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      color 200ms ease,
+      fill 200ms ease,
+      stroke 200ms ease,
+      opacity 200ms ease,
+      box-shadow 200ms ease;
+  }
+}

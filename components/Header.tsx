@@ -7,7 +7,10 @@ import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CurrencyToggle } from "@/components/CurrencyToggle";
 import { CartDrawer } from "@/components/CartDrawer";
-import { NavDrawer, NAV_LINKS } from "@/components/NavDrawer";
+import { NavDrawer, PRIMARY_LINKS, MORE_LINKS } from "@/components/NavDrawer";
+import { MoreMenu } from "@/components/MoreMenu";
+import { glacialRegular } from "@/lib/fonts";
+import { PILL_BUTTON } from "@/lib/ui";
 import { useCart } from "@/lib/cartStore";
 
 export function Header() {
@@ -88,9 +91,13 @@ export function Header() {
           viewTransitionName: "site-header",
         }}
       >
-        <div className="max-w-6xl mx-auto px-4 py-5 relative flex items-center justify-center">
+        {/* Glacial Regular is the header's UI face — nav links, More menu and
+            the pill buttons inherit it; the Logo overrides with the Bold cut. */}
+        <div
+          className={`${glacialRegular.className} max-w-6xl mx-auto px-4 py-5 relative flex items-center justify-center`}
+        >
           <nav className="absolute left-4 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-4 text-xs xl:text-sm uppercase tracking-widest">
-            {NAV_LINKS.map((l) => (
+            {PRIMARY_LINKS.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
@@ -101,6 +108,7 @@ export function Header() {
                 {l.label}
               </Link>
             ))}
+            <MoreMenu links={MORE_LINKS} />
             <Link
               href={isSignedIn ? "/account" : "/sign-in"}
               className="hover:opacity-70"
@@ -153,7 +161,7 @@ export function Header() {
               type="button"
               onClick={() => setCartOpen(true)}
               aria-label="Open cart"
-              className="rounded-full border px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap"
+              className={PILL_BUTTON}
             >
               <span className="sm:hidden" aria-hidden>
                 🛒
@@ -167,7 +175,7 @@ export function Header() {
               aria-label={navOpen ? "Close menu" : "Open menu"}
               aria-expanded={navOpen}
               aria-controls="site-nav-drawer"
-              className="relative w-9 h-9 -mr-1.5 grid place-items-center lg:hidden"
+              className="relative w-9 h-9 -mr-1.5 grid place-items-center lg:hidden rounded-full hover:bg-black/5 dark:hover:bg-white/10"
             >
               <span className={`${bar} ${navOpen ? "rotate-45" : "-translate-y-1.5"}`} />
               <span className={`${bar} ${navOpen ? "opacity-0" : "opacity-100"}`} />
