@@ -27,6 +27,11 @@ body {
   /* Logo glint: contrast against the outline it sweeps — the outline is
      black in light mode (white glint) and white in dark mode (black glint). */
   --logo-shimmer: #ffffff;
+  /* Ambient background blobs (components/BackgroundBlobs): faint blues and
+     warm grays in light mode, near-black blues and grays in dark. */
+  --blob-a: rgba(170, 210, 245, 0.5);
+  --blob-b: rgba(214, 224, 232, 0.55);
+  --blob-cursor: rgba(150, 200, 240, 0.4);
 }
 .dark {
   --bg: #060606;
@@ -34,6 +39,9 @@ body {
   --accent: #34b6f5;
   --card: #111418;
   --logo-shimmer: #000000;
+  --blob-a: rgba(12, 30, 55, 0.55);
+  --blob-b: rgba(20, 24, 30, 0.6);
+  --blob-cursor: rgba(14, 36, 66, 0.5);
 }
 body {
   background: var(--bg);
@@ -165,5 +173,65 @@ a {
         stroke 250ms ease,
         box-shadow 250ms ease !important;
     }
+  }
+}
+
+/* Ambient background blobs (components/BackgroundBlobs). Blurred radial
+   gradients drifting on decades-long loops; transform-only so they stay on
+   the GPU. Sizes/positions live here rather than utilities so the un-layered
+   rule can't collide with anything. */
+.bg-blob {
+  position: absolute;
+  width: 620px;
+  height: 620px;
+  border-radius: 50%;
+  filter: blur(70px);
+  will-change: transform;
+}
+.bg-blob-drift-a {
+  top: -180px;
+  left: -140px;
+  background: radial-gradient(circle, var(--blob-a), transparent 70%);
+  animation: blob-drift-a 53s ease-in-out infinite alternate;
+}
+.bg-blob-drift-b {
+  bottom: -220px;
+  right: -160px;
+  width: 740px;
+  height: 740px;
+  background: radial-gradient(circle, var(--blob-b), transparent 70%);
+  animation: blob-drift-b 67s ease-in-out infinite alternate;
+}
+.bg-blob-drift-c {
+  top: 28%;
+  left: 56%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, var(--blob-a), transparent 70%);
+  animation: blob-drift-c 41s ease-in-out infinite alternate;
+}
+.bg-blob-cursor {
+  top: 0;
+  left: 0;
+  background: radial-gradient(circle, var(--blob-cursor), transparent 70%);
+}
+@keyframes blob-drift-a {
+  to {
+    transform: translate3d(26vw, 16vh, 0) scale(1.15);
+  }
+}
+@keyframes blob-drift-b {
+  to {
+    transform: translate3d(-22vw, -13vh, 0) scale(0.9);
+  }
+}
+@keyframes blob-drift-c {
+  to {
+    transform: translate3d(-17vw, 20vh, 0) scale(1.12);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bg-blob {
+    animation: none;
   }
 }

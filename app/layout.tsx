@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
+import { BackgroundBlobs } from "@/components/BackgroundBlobs";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Toaster } from "@/components/Toaster";
@@ -119,6 +120,7 @@ export default function RootLayout({
         <JsonLd />
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           {/* Better Auth needs no global provider (was: ClerkThemed/ClerkProvider). */}
+          <BackgroundBlobs />
           <ScrollTop />
           <MetaPixel />
           <Header />
