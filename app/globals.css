@@ -117,37 +117,42 @@ a {
 }
 
 /* Theme changes cross-fade instead of snapping: every element eases its
-   color-ish properties (never transform/layout, so drawer and view-transition
-   animations are untouched — their own transition utilities also win over
-   this zero-specificity rule). Doubles as uniform hover easing for links and
-   pills. Reduced-motion users keep the instant switch. */
-@media (prefers-reduced-motion: no-preference) {
-  *,
-  *::before,
-  *::after {
-    transition:
-      background-color 200ms ease,
-      border-color 200ms ease,
-      color 200ms ease,
-      fill 200ms ease,
-      stroke 200ms ease,
-      opacity 200ms ease,
-      box-shadow 200ms ease;
-  }
+   color-ish properties. IN @layer base ON PURPOSE — Tailwind's transition
+   utilities live in @layer utilities, and un-layered CSS beats ALL layered
+   CSS regardless of specificity, so an un-layered version of this rule was
+   silently overriding transition-transform etc. (frozen chevron, snapping
+   menus). Inside base, utilities win again. Doubles as uniform hover easing
+   for links and pills. Reduced-motion users keep the instant switch. */
+@layer base {
+  @media (prefers-reduced-motion: no-preference) {
+    *,
+    *::before,
+    *::after {
+      transition:
+        background-color 200ms ease,
+        border-color 200ms ease,
+        color 200ms ease,
+        fill 200ms ease,
+        stroke 200ms ease,
+        opacity 200ms ease,
+        box-shadow 200ms ease;
+    }
 
-  /* During a theme switch (ThemeToggle adds this class for ~300ms), FORCE one
-     uniform timing on every element. Without it, components carrying their own
-     transition utilities (drawer 300ms, menus 150ms) re-color at different
-     speeds than the 200ms base rule and the page shimmers mid-switch. */
-  html.theme-fade *,
-  html.theme-fade *::before,
-  html.theme-fade *::after {
-    transition:
-      background-color 250ms ease,
-      border-color 250ms ease,
-      color 250ms ease,
-      fill 250ms ease,
-      stroke 250ms ease,
-      box-shadow 250ms ease !important;
+    /* During a theme switch (ThemeToggle adds this class for ~300ms), FORCE
+       one uniform timing on every element — !important outranks the utility
+       layer for the switch window. Without it, components carrying their own
+       transition utilities (drawer 300ms, menus 150ms) re-color at different
+       speeds than the base rule and the page shimmers mid-switch. */
+    html.theme-fade *,
+    html.theme-fade *::before,
+    html.theme-fade *::after {
+      transition:
+        background-color 250ms ease,
+        border-color 250ms ease,
+        color 250ms ease,
+        fill 250ms ease,
+        stroke 250ms ease,
+        box-shadow 250ms ease !important;
+    }
   }
 }
