@@ -24,12 +24,16 @@ body {
   --fg: #0a0a0a;
   --accent: #34b6f5; /* logo sky blue */
   --card: #f4f8fb;
+  /* Logo glint: contrast against the outline it sweeps — the outline is
+     black in light mode (white glint) and white in dark mode (black glint). */
+  --logo-shimmer: #ffffff;
 }
 .dark {
   --bg: #060606;
   --fg: #f5f5f5;
   --accent: #34b6f5;
   --card: #111418;
+  --logo-shimmer: #000000;
 }
 body {
   background: var(--bg);

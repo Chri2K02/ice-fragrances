@@ -25,10 +25,11 @@ export function Logo() {
         aria-hidden="true"
       >
         <defs>
-          {/* Diagonal gray glint band that sweeps the mark then rests — gray
-              at half opacity reads on the black outline (light mode) and the
-              white outline (dark mode) alike. SMIL, so it needs no JS; the
-              .logo-shimmer overlay is hidden under prefers-reduced-motion. */}
+          {/* Diagonal glint band that sweeps the mark then rests. The color
+              contrasts the outline it rides: white over the black outline in
+              light mode, black over the white outline in dark mode (the
+              --logo-shimmer var flips with the theme). SMIL, so it needs no
+              JS; the overlay is hidden under prefers-reduced-motion. */}
           <linearGradient
             id="logo-shimmer"
             gradientUnits="userSpaceOnUse"
@@ -37,9 +38,21 @@ export function Logo() {
             x2="132.914"
             y2="66"
           >
-            <stop offset="0.35" stopColor="#98a2ae" stopOpacity="0" />
-            <stop offset="0.5" stopColor="#98a2ae" stopOpacity="0.55" />
-            <stop offset="0.65" stopColor="#98a2ae" stopOpacity="0" />
+            <stop
+              offset="0.35"
+              style={{ stopColor: "var(--logo-shimmer)" }}
+              stopOpacity="0"
+            />
+            <stop
+              offset="0.5"
+              style={{ stopColor: "var(--logo-shimmer)" }}
+              stopOpacity="0.6"
+            />
+            <stop
+              offset="0.65"
+              style={{ stopColor: "var(--logo-shimmer)" }}
+              stopOpacity="0"
+            />
             <animateTransform
               attributeName="gradientTransform"
               type="translate"
