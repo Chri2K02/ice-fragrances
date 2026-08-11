@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { glacial, glacialRegular } from "@/lib/fonts";
+import { EMAILS } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Shipping",
@@ -28,6 +29,13 @@ export default function ShippingPage() {
         <li>
           Spray on your own skin at your discretion — high alcohol content can
           cause side effects to certain individuals.
+        </li>
+        <li>
+          Questions about a shipment? Write to{" "}
+          <a href={`mailto:${EMAILS.help}`} className="underline">
+            {EMAILS.help}
+          </a>
+          .
         </li>
       </ul>
       <p className="text-center text-3xl mt-12">🇨🇦 💟</p>

@@ -21,6 +21,7 @@ import {
 } from "@/lib/structuredData";
 import { formatPrice } from "@/lib/currency";
 import { glacial, glacialRegular } from "@/lib/fonts";
+import { Chevron } from "@/components/Chevron";
 
 // Per-product pages are statically generated (one per catalog entry) so the
 // name, description, price and rating are real server-rendered HTML for
@@ -227,8 +228,12 @@ export default async function ProductPage({
       />
 
       <nav className={`${glacialRegular.className} text-sm mb-8`}>
-        <Link href="/#products" className="opacity-60 hover:opacity-100">
-          ← Back to the collection
+        <Link
+          href="/#products"
+          className="opacity-60 hover:opacity-100 inline-flex items-center gap-1.5"
+        >
+          <Chevron dir="left" />
+          Back to the collection
         </Link>
       </nav>
 

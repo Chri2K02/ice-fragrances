@@ -1,30 +1,102 @@
 "use client";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import { PILL_BUTTON, useMounted } from "@/lib/ui";
 
+// Three-way cycle: Light → Dark → Match Device → (repeat), after recanon's
+// toggle. The icon and label reflect the CHOSEN mode (not the resolved one),
+// so "Match Device" shows a monitor regardless of what the system resolves
+// to. On change the label rides a horizontal accordion — it expands to
+// announce the new mode, then collapses back to an icon-only pill.
+const ORDER = ["light", "dark", "system"] as const;
+type Mode = (typeof ORDER)[number];
+
+const LABELS: Record<Mode, string> = {
+  light: "Light",
+  dark: "Dark",
+  system: "Match Device",
+};
+
+// How long the label stays expanded after a change before collapsing.
+const LABEL_HOLD_MS = 1800;
+
+// Feather-style strokes, same icon language as the bag and Instagram icons.
+function ModeIcon({ mode }: { mode: Mode }) {
+  const common = {
+    viewBox: "0 0 24 24",
+    width: 15,
+    height: 15,
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+  if (mode === "light") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="5" />
+        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+      </svg>
+    );
+  }
+  if (mode === "dark") {
+    return (
+      <svg {...common}>
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...common}>
+      <rect x="2" y="3" width="20" height="14" rx="2" />
+      <path d="M8 21h8M12 17v4" />
+    </svg>
+  );
+}
+
 export function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const mounted = useMounted();
+  const [expanded, setExpanded] = useState(false);
+  const timerRef = useRef(0);
+  useEffect(() => () => window.clearTimeout(timerRef.current), []);
   if (!mounted) return null;
-  const isDark = resolvedTheme === "dark";
-  // theme-fade forces ONE transition timing on everything while the swap
-  // plays out (see globals.css) — without it, elements with their own
-  // transition utilities re-color at different speeds and the page shimmers.
-  const toggle = () => {
+
+  const mode: Mode = ORDER.includes(theme as Mode) ? (theme as Mode) : "system";
+  const label = LABELS[mode];
+
+  const cycle = () => {
+    const next = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    // theme-fade forces ONE transition timing on everything while the swap
+    // plays out (see globals.css) — otherwise elements with their own
+    // transition utilities re-color at different speeds and the page shimmers.
     const root = document.documentElement;
     root.classList.add("theme-fade");
-    setTheme(isDark ? "light" : "dark");
+    setTheme(next);
     window.setTimeout(() => root.classList.remove("theme-fade"), 320);
+    setExpanded(true);
+    window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => setExpanded(false), LABEL_HOLD_MS);
   };
+
   return (
     <button
       type="button"
-      aria-label="Toggle dark mode"
-      onClick={toggle}
-      className={PILL_BUTTON}
+      onClick={cycle}
+      aria-label={`Theme: ${label}. Click to change.`}
+      title={`Theme: ${label}`}
+      className={`${PILL_BUTTON} inline-flex items-center`}
     >
-      <span aria-hidden>{isDark ? "☀" : "☾"}</span>
-      <span className="hidden sm:inline">{isDark ? " Light" : " Dark"}</span>
+      <ModeIcon mode={mode} />
+      <span
+        className={`inline-block overflow-hidden whitespace-nowrap transition-[max-width,margin-left,opacity] duration-300 ${
+          expanded ? "max-w-32 ml-1.5 opacity-100" : "max-w-0 ml-0 opacity-0"
+        }`}
+      >
+        {label}
+      </span>
     </button>
   );
 }

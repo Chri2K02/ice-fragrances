@@ -17,9 +17,11 @@ export function Logo() {
       >
         Ice Fragrances
       </span>
+      {/* viewBox carries 0.5u padding beyond the artwork's exact bounds — the
+          export was edge-tight and antialiasing clipped the drop's bottom. */}
       <svg
-        viewBox="94.351 34.89 38.063 73.834"
-        className="h-10 sm:h-[4.75rem] w-auto"
+        viewBox="93.851 34.39 39.063 74.834"
+        className="h-10 sm:h-19 w-auto"
         aria-hidden="true"
       >
         <path

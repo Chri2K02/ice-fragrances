@@ -17,11 +17,25 @@ export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || PRODUCTION_URL
 ).replace(/\/+$/, "");
 
+// Purpose-specific inboxes (Google Workspace aliases on the main account).
+// Use the narrowest fitting address so customers land in the right context
+// and the inboxes stay filterable.
+export const EMAILS = {
+  general: "icefragrances@icefragrances.com", // the original catch-all
+  support: "support@icefragrances.com", // order/product help — default public contact
+  help: "help@icefragrances.com", // synonym; used where "help" reads better
+  legal: "legal@icefragrances.com", // terms of service
+  privacy: "privacy@icefragrances.com", // privacy policy / data requests
+  orders: "orders@icefragrances.com", // transactional From (Resend EMAIL_FROM)
+  security: "security@icefragrances.com", // vulnerability reports (security.txt)
+  press: "press@icefragrances.com", // media / PR
+} as const;
+
 export const SITE = {
   name: "Ice Fragrances",
   title: "Ice Fragrances — Premium, Timeless Fragrances",
   description: "Premium, Timeless Fragrances. Free shipping to US & Canada.",
   url: SITE_URL,
   locale: "en_US",
-  email: "icefragrances@icefragrances.com",
+  email: EMAILS.support,
 } as const;

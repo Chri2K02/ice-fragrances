@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { EMAILS } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -117,12 +118,9 @@ export default function PrivacyPage() {
         <section>
           <h2 className="font-semibold text-base mb-1">Contact</h2>
           <p>
-            Questions? Email us at{" "}
-            <a
-              href="mailto:icefragrances@icefragrances.com"
-              className="underline"
-            >
-              icefragrances@icefragrances.com
+            Questions or data requests? Email us at{" "}
+            <a href={`mailto:${EMAILS.privacy}`} className="underline">
+              {EMAILS.privacy}
             </a>
             .
           </p>

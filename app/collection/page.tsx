@@ -5,6 +5,7 @@ import { getCatalog } from "@/lib/catalog";
 import { SITE, SITE_URL } from "@/lib/site";
 import { glacial, glacialRegular } from "@/lib/fonts";
 import { jsonLdString } from "@/lib/structuredData";
+import { Chevron } from "@/components/Chevron";
 
 // The collection's editorial page: the story of the line — the song pairings,
 // the cold-weather identity, the oil concentrations. This copy is written for
@@ -159,9 +160,10 @@ export default async function CollectionPage() {
                 <p className="mt-3">
                   <Link
                     href={`/products/${product.id}`}
-                    className={`${glacialRegular.className} text-sm underline opacity-80 hover:opacity-100`}
+                    className={`${glacialRegular.className} text-sm underline opacity-80 hover:opacity-100 inline-flex items-center gap-1`}
                   >
-                    Explore {product.name} →
+                    Explore {product.name}
+                    <Chevron />
                   </Link>
                 </p>
               </div>

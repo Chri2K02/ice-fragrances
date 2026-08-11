@@ -7,6 +7,7 @@ import { getProduct } from "@/lib/products";
 import { sendCapiEvent } from "@/lib/capi";
 import { sendEmail, customerConfirmationHtml } from "@/lib/email";
 import { recipientsFor } from "@/lib/admin";
+import { EMAILS } from "@/lib/site";
 import type { CartItem } from "@/lib/cartStore";
 
 function formatAddress(a: Stripe.Address | null | undefined): string {
@@ -141,8 +142,7 @@ export async function POST(req: Request) {
       // on); falls back to the bootstrap owner. Keep one stable store address
       // for the customer email's reply-to.
       const orderRecipients = await recipientsFor("orders");
-      const storeReplyTo =
-        orderRecipients[0] ?? "icefragrances@icefragrances.com";
+      const storeReplyTo = orderRecipients[0] ?? EMAILS.support;
       await sendEmail({
         to: orderRecipients.join(", "),
         replyTo: email ?? undefined,

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EMAILS } from "@/lib/site";
 
 export function Footer() {
   return (
@@ -19,11 +20,8 @@ export function Footer() {
           <Link href="/contact" className="underline">
             Contact
           </Link>
-          <a
-            href="mailto:icefragrances@icefragrances.com"
-            className="underline"
-          >
-            icefragrances@icefragrances.com
+          <a href={`mailto:${EMAILS.support}`} className="underline">
+            {EMAILS.support}
           </a>
         </span>
       </div>
