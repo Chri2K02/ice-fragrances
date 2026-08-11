@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Currency } from "@/lib/currency";
+import { useMounted } from "@/lib/ui";
 
 type CurrencyState = {
   currency: Currency;
@@ -19,10 +19,9 @@ export const useCurrency = create<CurrencyState>()(
   )
 );
 
-// Returns "USD" until mounted (avoids hydration mismatch), then the saved value.
+// Returns "CAD" until hydration (avoids hydration mismatch), then the saved
+// value — useMounted is the setState-free hydration guard from lib/ui.
 export function useDisplayCurrency(): Currency {
   const currency = useCurrency((s) => s.currency);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  return mounted ? currency : "CAD";
+  return useMounted() ? currency : "CAD";
 }

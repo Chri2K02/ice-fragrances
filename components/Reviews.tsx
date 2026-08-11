@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type ReviewItem = {
   id: number;
@@ -165,18 +165,28 @@ export function Reviews({ productId }: { productId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function load() {
+  // The fetcher never touches state itself; callers apply the result. In the
+  // effect, setData runs inside the promise callback — the pattern the
+  // set-state-in-effect rule endorses (state changes on external events).
+  const fetchReviews = useCallback(async (): Promise<Data | null> => {
     try {
       const res = await fetch(`/api/reviews?productId=${productId}`);
-      setData(await res.json());
+      return await res.json();
     } catch {
-      /* ignore */
+      return null;
     }
-  }
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
+  useEffect(() => {
+    let alive = true;
+    fetchReviews().then((d) => alive && d && setData(d));
+    return () => {
+      alive = false;
+    };
+  }, [fetchReviews]);
+  async function load() {
+    const d = await fetchReviews();
+    if (d) setData(d);
+  }
 
   async function submit() {
     setSubmitting(true);

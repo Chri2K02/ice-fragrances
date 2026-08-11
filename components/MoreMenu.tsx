@@ -57,12 +57,15 @@ export function MoreMenu({
         style={activeInside ? { color: "var(--accent)" } : undefined}
       >
         More
+        {/* Explicit transforms on BOTH states so the rotation always
+            interpolates — a conditionally-removed class can snap. */}
         <svg
           viewBox="0 0 10 6"
           width="9"
           height="6"
           aria-hidden
-          className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className="transition-transform duration-200"
+          style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
         >
           <path
             d="M1 1l4 4 4-4"
@@ -74,11 +77,12 @@ export function MoreMenu({
           />
         </svg>
       </button>
+      {/* Scale from the trigger corner instead of translating: growing open
+          and shrinking closed reads as intent in both directions, where the
+          old slide-up exit looked like the panel bumping before the fade. */}
       <div
-        className={`absolute left-0 top-full mt-3 min-w-36 rounded-xl border border-black/10 dark:border-white/10 shadow-xl p-2 flex flex-col transition-all duration-150 ${
-          open
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 -translate-y-1 pointer-events-none"
+        className={`absolute left-0 top-full mt-3 min-w-36 rounded-xl border border-black/10 dark:border-white/10 shadow-xl p-2 flex flex-col origin-top-left transition-[opacity,scale] duration-150 ${
+          open ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
         }`}
         style={{ background: "var(--bg)" }}
         aria-hidden={!open}

@@ -16,6 +16,7 @@ import { cartNeedsShipping } from "@/lib/shipping";
 import { formatPrice, convertCents, type Currency } from "@/lib/currency";
 import { US_TARIFF_CENTS } from "@/lib/checkout";
 import { fbTrack } from "@/lib/fbpixel";
+import { useMounted } from "@/lib/ui";
 
 // Created once, outside the component, so the Stripe object isn't rebuilt on
 // every render. The publishable key is public by design (shipped to the browser).
@@ -39,8 +40,7 @@ export default function CheckoutPage() {
 
   // Persisted cart/currency only exist after client hydration; wait for it so we
   // don't create a session from an empty server-rendered cart or mismatch HTML.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,12 +52,13 @@ export default function CheckoutPage() {
   const needsAddress = cartNeedsShipping(items);
   const missingAddress = needsAddress && !address;
 
-  // Create the Checkout Session up front so we can show a spinner while it loads
-  // (instead of a blank card) and surface a real error if it fails.
-  const startCheckout = useCallback(async () => {
-    setError(null);
-    setClientSecret(null);
-    setFormReady(false);
+  // Create the Checkout Session up front so we can show a spinner while it
+  // loads (instead of a blank card) and surface a real error if it fails. The
+  // creator never touches state itself — callers apply the result — so the
+  // kick-off effect below stays free of synchronous setState.
+  const createSession = useCallback(async (): Promise<
+    { cs: string } | { err: string }
+  > => {
     if (!initiated.current) {
       initiated.current = true;
       fbTrack("InitiateCheckout", {
@@ -90,12 +91,21 @@ export default function CheckoutPage() {
         }),
       });
       const data = await res.json();
-      if (data.client_secret) setClientSecret(data.client_secret as string);
-      else setError(data.error ?? "Checkout failed. Please try again.");
+      return data.client_secret
+        ? { cs: data.client_secret as string }
+        : { err: data.error ?? "Checkout failed. Please try again." };
     } catch {
-      setError("Couldn't reach checkout — check your connection and try again.");
+      return {
+        err: "Couldn't reach checkout — check your connection and try again.",
+      };
     }
-  }, [items, address, currency]);
+  }, [items, address, currency, shipTo]);
+
+  // Applied from promise callbacks (kick-off effect + retry button).
+  const applySession = (r: { cs: string } | { err: string }) => {
+    if ("cs" in r) setClientSecret(r.cs);
+    else setError(r.err);
+  };
 
   // Prefer the session the cart drawer already started (overlapped with the
   // navigation) so the form is ready immediately; fall back to creating one here
@@ -114,9 +124,9 @@ export default function CheckoutPage() {
           )
         );
     } else {
-      startCheckout();
+      createSession().then(applySession);
     }
-  }, [mounted, items.length, missingAddress, startCheckout]);
+  }, [mounted, items.length, missingAddress, createSession]);
 
   const fetchClientSecret = useCallback(
     () => Promise.resolve(clientSecret as string),
@@ -161,7 +171,10 @@ export default function CheckoutPage() {
 
   function retry() {
     requested.current = true;
-    startCheckout();
+    setError(null);
+    setClientSecret(null);
+    setFormReady(false);
+    createSession().then(applySession);
   }
 
   if (!mounted) {

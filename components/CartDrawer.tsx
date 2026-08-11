@@ -40,28 +40,41 @@ export function CartDrawer({
   const router = useRouter();
   const setDraftAddress = useCheckoutDraft((s) => s.setAddress);
 
-  // Keep the apparel address country aligned with the ship-to choice.
-  useEffect(() => {
-    setAddr((a) => (a.country === shipTo ? a : { ...a, country: shipTo, state: "" }));
-  }, [shipTo]);
+  // Keep the apparel address country aligned with the ship-to choice —
+  // state-adjust-during-render, so a misaligned address never paints.
+  const [prevShipTo, setPrevShipTo] = useState(shipTo);
+  if (prevShipTo !== shipTo) {
+    setPrevShipTo(shipTo);
+    setAddr((a) =>
+      a.country === shipTo ? a : { ...a, country: shipTo, state: "" }
+    );
+  }
 
   // The drawer lives in the persistent layout, so it does NOT unmount when we
-  // navigate to /checkout. Clear the stale "loading" flag (and prefetch the
-  // checkout route) every time the cart reopens — otherwise the button stays
-  // stuck on "Loading…" after a checkout -> back -> reopen.
-  useEffect(() => {
+  // navigate to /checkout. Clear the stale "loading" flag every time the cart
+  // reopens — otherwise the button stays stuck on "Loading…" after a
+  // checkout -> back -> reopen. Adjust-during-render (not an effect), so the
+  // stale spinner never paints.
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (open) {
       setLoading(false);
       setError(null);
-      router.prefetch("/checkout");
-      // Warm Stripe.js (code-split, so it stays out of the main bundle) so the
-      // embedded form renders sooner once we reach /checkout.
-      const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-      if (key) {
-        import("@stripe/stripe-js")
-          .then((m) => m.loadStripe(key))
-          .catch(() => {});
-      }
+    }
+  }
+
+  // External-system work on open stays in an effect: prefetch the checkout
+  // route and warm Stripe.js (code-split, so it stays out of the main bundle)
+  // so the embedded form renders sooner once we reach /checkout.
+  useEffect(() => {
+    if (!open) return;
+    router.prefetch("/checkout");
+    const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    if (key) {
+      import("@stripe/stripe-js")
+        .then((m) => m.loadStripe(key))
+        .catch(() => {});
     }
   }, [open, router]);
 

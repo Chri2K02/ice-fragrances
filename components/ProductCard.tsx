@@ -6,6 +6,7 @@ import { VideoPlayer } from "@/components/VideoPlayer";
 import { useCart } from "@/lib/cartStore";
 import type { Product } from "@/lib/products";
 import { glacialRegular } from "@/lib/fonts";
+import { useReducedMotion } from "@/lib/ui";
 import { Reviews } from "@/components/Reviews";
 import { formatPrice, convertCents } from "@/lib/currency";
 import { useDisplayCurrency } from "@/lib/currencyStore";
@@ -82,15 +83,7 @@ export function ProductCard({
   // hover/focus, and respects prefers-reduced-motion.
   const [videoReady, setVideoReady] = useState(false);
   const [paused, setPaused] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-    if (!mq) return;
-    setReduceMotion(mq.matches);
-    const onChange = () => setReduceMotion(mq.matches);
-    mq.addEventListener?.("change", onChange);
-    return () => mq.removeEventListener?.("change", onChange);
-  }, []);
+  const reduceMotion = useReducedMotion();
   useEffect(() => {
     if (!multi || paused || reduceMotion) return;
     const t = setInterval(() => {
