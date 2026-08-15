@@ -9,11 +9,25 @@ import { CurrencyToggle } from "@/components/CurrencyToggle";
 import { CartDrawer } from "@/components/CartDrawer";
 import { NavDrawer, PRIMARY_LINKS, MORE_LINKS } from "@/components/NavDrawer";
 import { MoreMenu } from "@/components/MoreMenu";
+import { Chevron } from "@/components/Chevron";
 import { glacialRegular } from "@/lib/fonts";
-import { PILL_BUTTON } from "@/lib/ui";
+import { PILL_BUTTON, useBrowserValue } from "@/lib/ui";
 import { useCart } from "@/lib/cartStore";
+import { CANONICAL_ORIGIN, canonicalOriginFor, isAdminHost } from "@/lib/site";
 
 export function Header() {
+  // On admin.icefragrances.com the header is the DASHBOARD chrome: no shop
+  // nav/cart/currency — just the logo, a "Back to main site" link to the
+  // canonical host, and the theme toggle. Detected after mount (host isn't
+  // known during SSR of this shared shell).
+  const onAdminHost = useBrowserValue(
+    () => isAdminHost(window.location.host),
+    false
+  );
+  const mainSiteUrl = useBrowserValue(
+    () => canonicalOriginFor(window.location.host, window.location.protocol),
+    CANONICAL_ORIGIN
+  );
   const count = useCart((s) => s.count());
   // Better Auth's useSession is store-based (no provider needed); !!session
   // toggles the Account vs Sign-in link.
@@ -78,6 +92,41 @@ export function Header() {
 
   const bar =
     "absolute h-0.5 w-5 rounded-full bg-current transition-all duration-300";
+
+  // Dashboard chrome for the admin host. Placed AFTER every hook above — an
+  // early return before them would change hook order between hosts. Styled
+  // with the shared pill/chevron idioms so it matches the storefront header.
+  if (onAdminHost) {
+    return (
+      <header
+        className="sticky top-0 z-40 backdrop-blur-md border-b border-black/10 dark:border-white/10"
+        style={{
+          background: "color-mix(in srgb, var(--bg) 80%, transparent)",
+          viewTransitionName: "site-header",
+        }}
+      >
+        <div
+          className={`${glacialRegular.className} max-w-6xl mx-auto px-4 py-5 relative flex items-center justify-center`}
+        >
+          <nav className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-4 text-xs sm:text-sm">
+            <a
+              href={mainSiteUrl}
+              className={`${PILL_BUTTON} inline-flex items-center gap-1.5`}
+            >
+              <Chevron dir="left" />
+              Back to main site
+            </a>
+          </nav>
+          <Link href="/" aria-label="Admin dashboard home">
+            <Logo />
+          </Link>
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3">
+            <ThemeToggle />
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <>
