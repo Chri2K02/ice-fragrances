@@ -316,6 +316,10 @@ a {
 .hdr-drop {
   transform: scale(max(0, calc(1 - 1.4 * var(--hdr-p, 0))));
   transform-origin: top center;
+  /* Fade in lockstep with the wordmark (same 0→0.3 ramp as .hdr-word), so
+     text and drop dissolve as one; the shrink carries on invisibly to keep
+     the height animation smooth. */
+  opacity: calc(1 - var(--hdr-p, 0) / 0.3);
 }
 /* The header row trades a bit of breathing room away as it collapses. */
 .hdr-row {
