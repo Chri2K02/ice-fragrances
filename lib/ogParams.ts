@@ -23,11 +23,14 @@ export type OgParams = {
   gap: number; // vertical gap between blocks (px)
 };
 
-// Defaults reproduce the shipped brand card: dark radial surface, light
-// lockup, sky-blue slogan.
+// Defaults are the "Deep sea" preset from the /AB/OG lab, promoted to
+// production: a deep blue radial surface instead of the earlier neutral gray,
+// which ties the card to the brand accent. Light lockup, sky-blue slogan.
+// Change these and the production card, the render route and the lab's
+// starting point all move together.
 export const OG_DEFAULTS: OgParams = {
-  bg1: "41414b",
-  bg2: "060606",
+  bg1: "123a5c",
+  bg2: "060b12",
   gx: 50,
   gy: 20,
   gr: 72,
@@ -40,7 +43,7 @@ export const OG_DEFAULTS: OgParams = {
   cube: 190,
   dh: 134,
   tag: "Reinvent Yourself",
-  tc: "34b6f5",
+  tc: "54c4f2",
   ts: 40,
   gap: 28,
 };
