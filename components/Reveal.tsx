@@ -43,9 +43,13 @@ export function Reveal({
           }
         }
       },
-      // Slight negative bottom margin so it fires just after the element starts
-      // entering, not the instant its first pixel appears.
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.05 }
+      // Shrink the root well up from the bottom so the reveal fires when the
+      // element is genuinely being LOOKED at, not when its first pixel peeks
+      // in. Product cards are tall: at a small threshold their top edge
+      // intersects immediately and the animation finished before it was ever
+      // on screen, which read as no animation at all. threshold 0 is right
+      // once the root is shrunk — the margin, not the ratio, is the gate.
+      { rootMargin: "0px 0px -18% 0px", threshold: 0 }
     );
     io.observe(el);
     return () => io.disconnect();

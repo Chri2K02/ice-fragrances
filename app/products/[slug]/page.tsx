@@ -22,6 +22,7 @@ import {
 import { formatPrice } from "@/lib/currency";
 import { glacial, glacialRegular } from "@/lib/fonts";
 import { Chevron } from "@/components/Chevron";
+import { Reveal } from "@/components/Reveal";
 
 // Per-product pages are statically generated (one per catalog entry) so the
 // name, description, price and rating are real server-rendered HTML for
@@ -237,7 +238,7 @@ export default async function ProductPage({
         </Link>
       </nav>
 
-      <header className={`${glacial.className} uppercase mb-8 max-w-2xl`}>
+      <Reveal as="section" className={`${glacial.className} uppercase mb-8 max-w-2xl block`}>
         <h1 className="text-4xl font-semibold">{product.name}</h1>
 
         {product.tagline && (
@@ -271,7 +272,7 @@ export default async function ProductPage({
             {description}
           </p>
         )}
-      </header>
+      </Reveal>
 
       {/* Interactive island: gallery, size/stock, add-to-cart, and the Reviews
           thread — reused from the storefront in `compact` mode so the name,

@@ -314,6 +314,12 @@ export function Header() {
                 <path d="M3 6h18" />
                 <path d="M16 10a4 4 0 0 1-8 0" />
               </svg>
+              {/* NOTE: deliberately NOT swapped for a pre-paint value. Making
+                  this text differ between the server render and React's first
+                  client render trips hydration (React #418), and a failed
+                  hydration re-renders <html> — wiping the very attributes
+                  boot.js set, which broke reveals and the theme entirely. A
+                  brief "0" is a far smaller problem than that. */}
               <span>{count}</span>
             </button>
             <button

@@ -6,6 +6,7 @@ import { SITE, SITE_URL } from "@/lib/site";
 import { glacial, glacialRegular } from "@/lib/fonts";
 import { jsonLdString } from "@/lib/structuredData";
 import { Chevron } from "@/components/Chevron";
+import { Reveal } from "@/components/Reveal";
 
 // The collection's editorial page: the story of the line — the song pairings,
 // the cold-weather identity, the oil concentrations. This copy is written for
@@ -118,8 +119,8 @@ export default async function CollectionPage() {
       </header>
 
       <div className="space-y-14">
-        {fragrances.map(({ story, product }) => (
-          <section key={product.id}>
+        {fragrances.map(({ story, product }, i) => (
+          <Reveal as="section" key={product.id} index={i}>
             <div className="flex items-start gap-5">
               <Link
                 href={`/products/${product.id}`}
@@ -168,7 +169,7 @@ export default async function CollectionPage() {
                 </p>
               </div>
             </div>
-          </section>
+          </Reveal>
         ))}
       </div>
 
