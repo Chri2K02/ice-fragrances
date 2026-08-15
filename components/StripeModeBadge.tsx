@@ -1,0 +1,109 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useToast } from "@/lib/toastStore";
+
+// The visible half of admin-only Stripe test mode (authority lives in
+// lib/stripeMode). On every page load it:
+//
+//   1. reads `?stripeMode=` straight off window.location — NOT useSearchParams,
+//      which would deopt every statically-rendered page to client rendering
+//      from the root layout;
+//   2. hands the value to /api/stripe-mode, which verifies admin server-side;
+//   3. strips the param from the URL with replaceState, so it vanishes for
+//      non-admins and for `live` exactly as it does for admins — the bar
+//      never keeps a trace either way;
+//   4. shows a persistent badge while test mode is on, with one-click exit.
+//
+// A non-admin sees nothing at any point: no badge, no error, no hint that the
+// parameter means anything.
+export function StripeModeBadge() {
+  const [testMode, setTestMode] = useState(false);
+  const toast = useToast((s) => s.show);
+
+  useEffect(() => {
+    let alive = true;
+    const url = new URL(window.location.href);
+    const param = url.searchParams.get("stripeMode");
+
+    // Clean the URL first so the param is transient regardless of outcome.
+    if (param !== null) {
+      url.searchParams.delete("stripeMode");
+      window.history.replaceState(
+        null,
+        "",
+        url.pathname + (url.search || "") + url.hash
+      );
+    }
+
+    const apply = async () => {
+      if (param === null) {
+        // No param: just read the current mode (cookie-backed, admin-verified).
+        const res = await fetch("/api/stripe-mode").catch(() => null);
+        const data = await res?.json().catch(() => null);
+        if (alive) setTestMode(data?.mode === "test");
+        return;
+      }
+      const res = await fetch("/api/stripe-mode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: param }),
+      }).catch(() => null);
+      const data = await res?.json().catch(() => null);
+      if (!alive) return;
+      const isTest = data?.mode === "test";
+      setTestMode(isTest);
+      // Only ever speak up for someone who asked for test and is entitled to
+      // an answer — a non-admin's request resolves silently to live.
+      if (param === "test" && data?.reason) toast(data.reason);
+      else if (isTest) toast("Stripe test mode on — no real charges.");
+    };
+    void apply();
+
+    return () => {
+      alive = false;
+    };
+  }, [toast]);
+
+  async function exit() {
+    await fetch("/api/stripe-mode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "live" }),
+    }).catch(() => {});
+    setTestMode(false);
+    toast("Back to live mode.");
+    // Full reload so server components re-render against the cleared cookie.
+    window.location.reload();
+  }
+
+  if (!testMode) return null;
+
+  return (
+    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-full bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black shadow-lg">
+      <span
+        aria-hidden
+        className="inline-block h-2 w-2 rounded-full bg-black/70"
+      />
+      <span>Stripe test mode</span>
+      <button
+        type="button"
+        onClick={exit}
+        aria-label="Exit Stripe test mode"
+        className="ml-0.5 grid h-4 w-4 place-items-center rounded-full hover:bg-black/15"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="11"
+          height="11"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={3}
+          strokeLinecap="round"
+          aria-hidden
+        >
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  );
+}

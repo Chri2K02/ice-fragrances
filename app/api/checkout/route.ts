@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getSession } from "@/lib/session";
+import { resolveStripeMode, stripeFor } from "@/lib/stripeMode";
 import { buildLineItems, tariffLineItem } from "@/lib/checkout";
 import {
   cartNeedsShipping,
@@ -106,7 +107,11 @@ export async function POST(req: Request) {
       }
     }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+    // Admin-only test mode, re-verified server-side here (cookie + admin +
+    // configured keys) — the client can't ask for it. Everything downstream in
+    // this request uses the matching key.
+    const mode = await resolveStripeMode();
+    const stripe = stripeFor(mode);
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
     // Embedded Checkout renders on our own /checkout page (no redirect to
     // checkout.stripe.com). After payment, Stripe redirects the top window to
@@ -185,7 +190,9 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json({ client_secret: session.client_secret });
+    // The mode rides back so the browser mounts Stripe.js with the matching
+    // publishable key — a client secret is only valid against its own mode.
+    return NextResponse.json({ client_secret: session.client_secret, mode });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Checkout failed";
     return NextResponse.json({ error: message }, { status: 400 });

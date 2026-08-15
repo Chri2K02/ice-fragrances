@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { loadStripe } from "@stripe/stripe-js";
 import {
@@ -18,10 +18,21 @@ import { US_TARIFF_CENTS } from "@/lib/checkout";
 import { fbTrack } from "@/lib/fbpixel";
 import { useMounted } from "@/lib/ui";
 
-// Created once, outside the component, so the Stripe object isn't rebuilt on
-// every render. The publishable key is public by design (shipped to the browser).
-const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
+// Both publishable keys are public by design and inlined into the bundle; the
+// SERVER decides which mode applies (admin-only test mode — see lib/stripeMode)
+// and reports it with the session, so the client never chooses. Instances are
+// cached per mode so they're not rebuilt on every render.
+const KEYS: Record<"test" | "live", string | undefined> = {
+  live: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+  test: process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY,
+};
+const stripeCache: Partial<Record<"test" | "live", ReturnType<typeof loadStripe>>> = {};
+function stripeForMode(mode: "test" | "live") {
+  const key = KEYS[mode];
+  if (!key) return null;
+  stripeCache[mode] ??= loadStripe(key);
+  return stripeCache[mode]!;
+}
 
 // Reused frame so the spinner, error, and the live form all look identical and
 // swap in place without a layout jump. min-height reserves the form's space.
@@ -43,6 +54,8 @@ export default function CheckoutPage() {
   const mounted = useMounted();
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  // Which Stripe mode the SERVER put this session in (admin-only test mode).
+  const [stripeMode, setStripeMode] = useState<"test" | "live">("live");
   const [error, setError] = useState<string | null>(null);
   const [formReady, setFormReady] = useState(false);
   const requested = useRef(false);
@@ -57,7 +70,7 @@ export default function CheckoutPage() {
   // creator never touches state itself — callers apply the result — so the
   // kick-off effect below stays free of synchronous setState.
   const createSession = useCallback(async (): Promise<
-    { cs: string } | { err: string }
+    { cs: string; mode: "test" | "live" } | { err: string }
   > => {
     if (!initiated.current) {
       initiated.current = true;
@@ -92,7 +105,10 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       return data.client_secret
-        ? { cs: data.client_secret as string }
+        ? {
+            cs: data.client_secret as string,
+            mode: data.mode === "test" ? ("test" as const) : ("live" as const),
+          }
         : { err: data.error ?? "Checkout failed. Please try again." };
     } catch {
       return {
@@ -102,9 +118,13 @@ export default function CheckoutPage() {
   }, [items, address, currency, shipTo]);
 
   // Applied from promise callbacks (kick-off effect + retry button).
-  const applySession = (r: { cs: string } | { err: string }) => {
-    if ("cs" in r) setClientSecret(r.cs);
-    else setError(r.err);
+  const applySession = (
+    r: { cs: string; mode: "test" | "live" } | { err: string }
+  ) => {
+    if ("cs" in r) {
+      setStripeMode(r.mode);
+      setClientSecret(r.cs);
+    } else setError(r.err);
   };
 
   // Prefer the session the cart drawer already started (overlapped with the
@@ -117,7 +137,10 @@ export default function CheckoutPage() {
     const pending = takeCheckoutSession();
     if (pending) {
       pending
-        .then((cs) => setClientSecret(cs))
+        .then((s) => {
+          setStripeMode(s.mode);
+          setClientSecret(s.clientSecret);
+        })
         .catch((e: unknown) =>
           setError(
             e instanceof Error ? e.message : "Checkout failed. Please try again."
@@ -132,6 +155,9 @@ export default function CheckoutPage() {
     () => Promise.resolve(clientSecret as string),
     [clientSecret]
   );
+
+  // Stripe.js bound to the key matching the session's mode (cached per mode).
+  const stripePromise = useMemo(() => stripeForMode(stripeMode), [stripeMode]);
 
   // Keep the spinner up until Stripe's iframe actually loads, not just until we
   // have the session — otherwise the card flashes blank white while the iframe

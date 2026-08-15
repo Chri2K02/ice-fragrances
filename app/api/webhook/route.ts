@@ -22,21 +22,37 @@ function formatAddress(a: Stripe.Address | null | undefined): string {
     .join(", ");
 }
 
-export async function POST(req: Request) {
+// Stripe calls this endpoint directly, so there's no cookie to read the
+// admin's test mode from. Instead: verify against the LIVE signing secret
+// first, then the TEST one if configured. Live verification is never weakened
+// — a test-signed payload simply fails the live check and falls through — and
+// the mode comes from `event.livemode` on the verified event, not from us.
+function verifyEvent(body: string, sig: string): Stripe.Event | null {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+  const secrets = [
+    process.env.STRIPE_WEBHOOK_SECRET,
+    process.env.STRIPE_TEST_WEBHOOK_SECRET,
+  ].filter(Boolean) as string[];
+  for (const secret of secrets) {
+    try {
+      return stripe.webhooks.constructEvent(body, sig, secret);
+    } catch {
+      /* not this secret — try the next */
+    }
+  }
+  return null;
+}
+
+export async function POST(req: Request) {
   const sig = req.headers.get("stripe-signature");
   const body = await req.text();
 
-  let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      sig!,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
-  } catch {
+  const event = sig ? verifyEvent(body, sig) : null;
+  if (!event) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
+  // Authoritative, straight from the signed event.
+  const isTestOrder = !event.livemode;
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
@@ -67,6 +83,7 @@ export async function POST(req: Request) {
           email,
           name: session.customer_details?.name ?? null,
           totalCents: session.amount_total ?? 0,
+          testMode: isTestOrder,
         })
         .returning({ id: orders.id });
 
@@ -83,39 +100,45 @@ export async function POST(req: Request) {
         );
       }
 
-      // Decrement tracked inventory (no-op for untracked variants).
-      for (const i of items) {
-        await db
-          .update(inventory)
-          .set({ stock: sql`GREATEST(${inventory.stock} - ${i.qty}, 0)` })
-          .where(
-            and(
-              eq(inventory.productId, i.id),
-              eq(inventory.size, i.size ?? "")
-            )
-          );
+      // Decrement tracked inventory (no-op for untracked variants). Test
+      // orders never touch real stock counts.
+      if (!isTestOrder) {
+        for (const i of items) {
+          await db
+            .update(inventory)
+            .set({ stock: sql`GREATEST(${inventory.stock} - ${i.qty}, 0)` })
+            .where(
+              and(
+                eq(inventory.productId, i.id),
+                eq(inventory.size, i.size ?? "")
+              )
+            );
+        }
       }
 
       // Server-side Purchase to Meta (Conversions API) — reliable, immune to
       // ad blockers. eventId = session.id matches the browser Purchase on
-      // /success, so Meta de-duplicates the two.
-      await sendCapiEvent({
-        eventName: "Purchase",
-        eventId: session.id,
-        eventSourceUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/success`,
-        userData: {
-          email,
-          fbp: session.metadata?.fbp ?? null,
-          fbc: session.metadata?.fbc ?? null,
-        },
-        customData: {
-          value: (session.amount_total ?? 0) / 100,
-          currency: (session.currency ?? "cad").toUpperCase(),
-          content_ids: items.map((i) => i.id),
-          content_type: "product",
-          num_items: items.reduce((n, i) => n + i.qty, 0),
-        },
-      });
+      // /success, so Meta de-duplicates the two. Skipped for test orders so
+      // admin test runs never pollute real ad/conversion data.
+      if (!isTestOrder) {
+        await sendCapiEvent({
+          eventName: "Purchase",
+          eventId: session.id,
+          eventSourceUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/success`,
+          userData: {
+            email,
+            fbp: session.metadata?.fbp ?? null,
+            fbc: session.metadata?.fbc ?? null,
+          },
+          customData: {
+            value: (session.amount_total ?? 0) / 100,
+            currency: (session.currency ?? "cad").toUpperCase(),
+            content_ids: items.map((i) => i.id),
+            content_type: "product",
+            num_items: items.reduce((n, i) => n + i.qty, 0),
+          },
+        });
+      }
 
       // Notify the store owner that an order came in.
       const totalStr = `${((session.amount_total ?? 0) / 100).toFixed(2)} ${(
@@ -143,11 +166,19 @@ export async function POST(req: Request) {
       // for the customer email's reply-to.
       const orderRecipients = await recipientsFor("orders");
       const storeReplyTo = orderRecipients[0] ?? EMAILS.support;
+      // Emails still send for test orders (that's the point of testing them),
+      // but they're labelled so a test can never be mistaken for a real sale.
+      const testTag = isTestOrder ? "[TEST] " : "";
       await sendEmail({
         to: orderRecipients.join(", "),
         replyTo: email ?? undefined,
-        subject: `New order — Ice Fragrances (${totalStr})`,
+        subject: `${testTag}New order — Ice Fragrances (${totalStr})`,
         html: `
+          ${
+            isTestOrder
+              ? `<p style="background:#fef3c7;color:#000;padding:8px 12px;border-radius:8px;font-weight:600">Stripe TEST mode — no real payment was taken, and stock was not adjusted.</p>`
+              : ""
+          }
           <h2 style="margin:0 0 8px">New order — ${totalStr}</h2>
           <p><strong>Customer:</strong> ${
             session.customer_details?.name ?? ""
@@ -169,7 +200,7 @@ export async function POST(req: Request) {
         await sendEmail({
           to: email,
           replyTo: storeReplyTo,
-          subject: "Your Ice Fragrances order is confirmed ❄️",
+          subject: `${testTag}Your Ice Fragrances order is confirmed ❄️`,
           html: customerConfirmationHtml(
             session.customer_details?.name ?? null,
             customerItems

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import type { Metadata } from "next";
@@ -10,6 +9,7 @@ import { orders, orderItems } from "@/lib/db/schema";
 import { getSession } from "@/lib/session";
 import { ORDER_ACCESS_COOKIE, hasOrderAccess } from "@/lib/orderAccess";
 import { PurchaseTracker } from "@/components/PurchaseTracker";
+import { retrieveSessionEitherMode } from "@/lib/stripeMode";
 
 // Order-specific, GATED confirmation page (goal 3). /success?orderNumber=N
 // shows the real order only to its owner — the logged-in buyer OR a guest
@@ -80,17 +80,18 @@ async function renderGated(orderNumberStr: string, justArrived: boolean) {
         // Fire the browser Purchase pixel ONCE, on first arrival after checkout
         // (just=1). eventId = Stripe session id, matching the webhook's CAPI
         // event so Meta de-duplicates them. Revisits/shared links never re-fire.
+        // Test orders never fire it at all — the webhook skips the matching
+        // CAPI event for the same reason (no fake conversions in ad data).
         let pixel: { value: number; currency: string } | null = null;
-        if (justArrived) {
+        if (justArrived && !order.testMode) {
           try {
-            const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-            const s = await stripe.checkout.sessions.retrieve(
-              order.stripeSessionId
-            );
-            pixel = {
-              value: (s.amount_total ?? 0) / 100,
-              currency: (s.currency ?? "cad").toUpperCase(),
-            };
+            const found = await retrieveSessionEitherMode(order.stripeSessionId);
+            if (found) {
+              pixel = {
+                value: (found.session.amount_total ?? 0) / 100,
+                currency: (found.session.currency ?? "cad").toUpperCase(),
+              };
+            }
           } catch {
             /* pixel is best-effort; the webhook CAPI event is the source of truth */
           }
@@ -103,6 +104,11 @@ async function renderGated(orderNumberStr: string, justArrived: boolean) {
         return (
           <Shell>
             <div className="w-full max-w-md">
+              {order.testMode && (
+                <p className="mb-4 rounded-full bg-amber-500 px-3 py-1.5 text-center text-xs font-semibold text-black">
+                  Stripe test mode — no real payment was taken
+                </p>
+              )}
               <h1 className="text-3xl font-semibold text-center">Thank you ❄️</h1>
               <p className="mt-2 text-center opacity-70">
                 Order #{order.id} is confirmed
@@ -156,20 +162,33 @@ async function renderGated(orderNumberStr: string, justArrived: boolean) {
 // ── Webhook-lag fallback: receipt straight from the Stripe session (as before).
 async function renderStripeFallback(sessionId: string) {
   let purchase: { value: number; currency: string } | null = null;
+  let isTest = false;
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-    purchase = {
-      value: (session.amount_total ?? 0) / 100,
-      currency: (session.currency ?? "cad").toUpperCase(),
-    };
+    // The order row doesn't exist yet, so the mode comes from the session
+    // itself — livemode is set on every Stripe object.
+    const found = await retrieveSessionEitherMode(sessionId);
+    if (found) {
+      isTest = found.mode === "test";
+      purchase = {
+        value: (found.session.amount_total ?? 0) / 100,
+        currency: (found.session.currency ?? "cad").toUpperCase(),
+      };
+    }
   } catch {
     /* ignore — still show the thank-you */
   }
   return (
     <Shell>
-      <ThankYou note="Your order is confirmed. A receipt is on its way to your email." />
-      {purchase && (
+      <div className="w-full max-w-md">
+        {isTest && (
+          <p className="mb-4 rounded-full bg-amber-500 px-3 py-1.5 text-center text-xs font-semibold text-black">
+            Stripe test mode — no real payment was taken
+          </p>
+        )}
+        <ThankYou note="Your order is confirmed. A receipt is on its way to your email." />
+      </div>
+      {/* Never fire a conversion pixel for a test purchase. */}
+      {purchase && !isTest && (
         <PurchaseTracker
           value={purchase.value}
           currency={purchase.currency}

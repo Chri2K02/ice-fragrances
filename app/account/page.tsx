@@ -77,7 +77,15 @@ export default async function AccountPage() {
                 style={{ background: "var(--card)" }}
               >
                 <div className="flex justify-between text-sm opacity-70">
-                  <span>{new Date(o.createdAt).toLocaleDateString()}</span>
+                  <span className="flex items-center gap-2">
+                    {new Date(o.createdAt).toLocaleDateString()}
+                    {/* Only ever present on an admin's own test purchases. */}
+                    {o.testMode && (
+                      <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-semibold text-black">
+                        TEST
+                      </span>
+                    )}
+                  </span>
                   <span>${(o.totalCents / 100).toFixed(2)}</span>
                 </div>
                 <ul className="mt-2 text-sm">

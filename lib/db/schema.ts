@@ -18,6 +18,10 @@ export const orders = pgTable("orders", {
   email: text("email"),
   name: text("name"),
   totalCents: integer("total_cents").notNull().default(0),
+  // Placed through admin-only Stripe TEST mode (see lib/stripeMode). Test
+  // orders are recorded but quarantined: no stock decrement, no Meta
+  // Purchase event, and they're labelled wherever orders are displayed.
+  testMode: boolean("test_mode").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

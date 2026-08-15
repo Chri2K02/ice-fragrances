@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { BackgroundBlobs } from "@/components/BackgroundBlobs";
+import { StripeModeBadge } from "@/components/StripeModeBadge";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Toaster } from "@/components/Toaster";
@@ -127,6 +128,8 @@ export default function RootLayout({
           {children}
           <Footer />
           <Toaster />
+          {/* Applies/strips ?stripeMode= on every page and badges test mode. */}
+          <StripeModeBadge />
         </ThemeProvider>
       </body>
     </html>

@@ -14,8 +14,12 @@ export async function GET(req: Request) {
     stripe_session_id text NOT NULL UNIQUE,
     email text,
     total_cents integer NOT NULL DEFAULT 0,
+    test_mode boolean NOT NULL DEFAULT false,
     created_at timestamp NOT NULL DEFAULT now()
   )`;
+  // Admin-only Stripe test mode (lib/stripeMode). Defaults false, so every
+  // pre-existing order is correctly a live one — no backfill needed.
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS test_mode boolean NOT NULL DEFAULT false`;
 
   await sql`CREATE TABLE IF NOT EXISTS order_items (
     id serial PRIMARY KEY,
