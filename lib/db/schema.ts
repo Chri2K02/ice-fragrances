@@ -9,15 +9,54 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 
+// Fulfillment lifecycle. Stripe owns whether MONEY moved; this owns whether
+// the parcel moved. `refunded` is mirrored from Stripe for display only —
+// Stripe stays authoritative for the refund itself.
+export const ORDER_STATUSES = [
+  "paid",
+  "fulfilled",
+  "cancelled",
+  "refunded",
+] as const;
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+// Orders are OURS; Stripe is the system of record for the payment. We keep the
+// stripe ids as the foreign key into Stripe, plus a snapshot of everything
+// needed to display and fulfil an order without an API round-trip (and that
+// survives ever changing processors). We never store card data.
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   stripeSessionId: text("stripe_session_id").notNull().unique(),
+  // The PaymentIntent behind the session — the id refunds/disputes hang off,
+  // so reconciliation doesn't need a session lookup first.
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
   // Better Auth user id (post-cutover). Legacy clerk_user_id was dropped
   // once every row had a user_id (go-live §5).
   userId: text("user_id"),
   email: text("email"),
   name: text("name"),
   totalCents: integer("total_cents").notNull().default(0),
+  // The charge currency. Orders ship to the US (USD) or Canada (CAD), so a
+  // bare total is genuinely ambiguous — this is required to render any amount.
+  currency: text("currency").notNull().default("CAD"),
+  // Breakdown, captured from the session because it's painful to reconstruct
+  // later. Nullable: unknown for orders placed before this column existed.
+  taxCents: integer("tax_cents"),
+  shippingCents: integer("shipping_cents"),
+  // Where it ships. Previously this only ever existed in the notification
+  // email — losing that email meant digging through the Stripe dashboard.
+  shipName: text("ship_name"),
+  shipLine1: text("ship_line1"),
+  shipLine2: text("ship_line2"),
+  shipCity: text("ship_city"),
+  shipState: text("ship_state"),
+  shipPostal: text("ship_postal"),
+  shipCountry: text("ship_country"),
+  // Fulfillment, ours alone — Stripe has no concept of it.
+  status: text("status").$type<OrderStatus>().notNull().default("paid"),
+  trackingNumber: text("tracking_number"),
+  fulfilledAt: timestamp("fulfilled_at"),
+  adminNote: text("admin_note"),
   // Placed through admin-only Stripe TEST mode (see lib/stripeMode). Test
   // orders are recorded but quarantined: no stock decrement, no Meta
   // Purchase event, and they're labelled wherever orders are displayed.
@@ -31,8 +70,14 @@ export const orderItems = pgTable("order_items", {
     .notNull()
     .references(() => orders.id, { onDelete: "cascade" }),
   productId: text("product_id").notNull(),
+  // Display name at time of purchase. Size used to be concatenated in here;
+  // it now has its own column so variants are queryable ("how many XL?").
   name: text("name").notNull(),
+  size: text("size"),
   qty: integer("qty").notNull().default(1),
+  // Price snapshot — the catalog price can change after the sale, so the
+  // order must remember what was actually charged per unit.
+  unitPriceCents: integer("unit_price_cents"),
 });
 
 export const inventory = pgTable(

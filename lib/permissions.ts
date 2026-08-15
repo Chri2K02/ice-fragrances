@@ -5,6 +5,8 @@
 // no notifications. See lib/admin.ts for the server-side checks.
 export const PERMISSION_TYPES = [
   { key: "stock", label: "Stock", href: "/admin" },
+  { key: "orders", label: "Orders", href: "/admin/orders" },
+  { key: "users", label: "Users", href: "/admin/users" },
   { key: "catalog", label: "Catalog", href: "/admin/catalog" },
   { key: "reviews", label: "Reviews", href: "/admin/reviews" },
   { key: "team", label: "Team", href: "/admin/settings" },

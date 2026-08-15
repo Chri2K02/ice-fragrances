@@ -4,6 +4,7 @@ import { getSession, getAuthMethods } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { orders, orderItems } from "@/lib/db/schema";
 import { SignOutButton } from "@/components/SignOutButton";
+import { formatMoney } from "@/lib/currency";
 import { AccountManager } from "@/components/AccountManager";
 import type { Metadata } from "next";
 
@@ -86,7 +87,9 @@ export default async function AccountPage() {
                       </span>
                     )}
                   </span>
-                  <span>${(o.totalCents / 100).toFixed(2)}</span>
+                  {/* Currency-qualified: the store settles in USD and CAD, so
+                      a bare "$" left customers guessing which they paid. */}
+                  <span>{formatMoney(o.totalCents, o.currency)}</span>
                 </div>
                 <ul className="mt-2 text-sm">
                   {(itemsByOrder.get(o.id) ?? []).map((it) => (

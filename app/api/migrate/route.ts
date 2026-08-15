@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 
-// One-time (idempotent) table setup. Guarded by MIGRATE_SECRET.
+// LEGACY bootstrap. Drizzle is now the schema tool — lib/db/schema.ts is the
+// single source of truth and `npm run db:push` applies the diff (see
+// drizzle.config.ts). This route is kept only because it can stand a database
+// up from nothing, and it is NOT maintained for new columns: anything added
+// after 2026-08 (orders.currency, shipping, fulfilment, order_items.size …)
+// exists only in the Drizzle schema. Guarded by MIGRATE_SECRET.
 export async function GET(req: Request) {
   const secret = new URL(req.url).searchParams.get("secret");
   if (!process.env.MIGRATE_SECRET || secret !== process.env.MIGRATE_SECRET) {

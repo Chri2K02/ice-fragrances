@@ -68,6 +68,22 @@ export async function POST(req: Request) {
     // Better Auth user id passed through checkout metadata (empty for guests).
     const userId = session.metadata?.userId || null;
 
+    // Shipping destination. Cologne carts let Stripe collect it, apparel carts
+    // pass ours through — either way the session is authoritative. Persisted
+    // (not just emailed) so fulfilment never depends on finding an email.
+    const ship = session as unknown as {
+      shipping_details?: { name?: string | null; address?: Stripe.Address };
+      collected_information?: {
+        shipping_details?: { name?: string | null; address?: Stripe.Address };
+      };
+    };
+    const shipDetails =
+      ship.collected_information?.shipping_details ??
+      ship.shipping_details ??
+      null;
+    const shipAddress =
+      shipDetails?.address ?? session.customer_details?.address ?? null;
+
     const db = getDb();
     const existing = await db
       .select({ id: orders.id })
@@ -79,10 +95,27 @@ export async function POST(req: Request) {
         .insert(orders)
         .values({
           stripeSessionId: session.id,
+          stripePaymentIntentId:
+            typeof session.payment_intent === "string"
+              ? session.payment_intent
+              : (session.payment_intent?.id ?? null),
           userId,
           email,
           name: session.customer_details?.name ?? null,
           totalCents: session.amount_total ?? 0,
+          // Required to render any amount unambiguously — orders settle in USD
+          // (US) or CAD (Canada).
+          currency: (session.currency ?? "cad").toUpperCase(),
+          taxCents: session.total_details?.amount_tax ?? null,
+          shippingCents: session.total_details?.amount_shipping ?? null,
+          shipName:
+            shipDetails?.name ?? session.customer_details?.name ?? null,
+          shipLine1: shipAddress?.line1 ?? null,
+          shipLine2: shipAddress?.line2 ?? null,
+          shipCity: shipAddress?.city ?? null,
+          shipState: shipAddress?.state ?? null,
+          shipPostal: shipAddress?.postal_code ?? null,
+          shipCountry: shipAddress?.country ?? null,
           testMode: isTestOrder,
         })
         .returning({ id: orders.id });
@@ -92,10 +125,16 @@ export async function POST(req: Request) {
           items.map((i) => ({
             orderId: order.id,
             productId: i.id,
+            // Name stays human-readable including the size; `size` is also its
+            // own column so variants stay queryable.
             name:
               (getProduct(i.id)?.name ?? i.id) +
               (i.size ? ` (${i.size})` : ""),
+            size: i.size ?? null,
             qty: i.qty,
+            // Catalog price at the moment of sale — the list price can change
+            // later, but the order must remember what it charged.
+            unitPriceCents: getProduct(i.id)?.priceCents ?? null,
           }))
         );
       }
@@ -144,15 +183,8 @@ export async function POST(req: Request) {
       const totalStr = `${((session.amount_total ?? 0) / 100).toFixed(2)} ${(
         session.currency ?? "cad"
       ).toUpperCase()}`;
-      const ship = session as unknown as {
-        shipping_details?: { address?: Stripe.Address };
-        collected_information?: { shipping_details?: { address?: Stripe.Address } };
-      };
-      const address =
-        ship.collected_information?.shipping_details?.address ??
-        ship.shipping_details?.address ??
-        session.customer_details?.address ??
-        null;
+      // Same address resolved once above and persisted with the order.
+      const address = shipAddress;
       const itemsHtml = items
         .map(
           (i) =>
