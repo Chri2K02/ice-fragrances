@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CurrencyToggle } from "@/components/CurrencyToggle";
 import { glacial, glacialRegular } from "@/lib/fonts";
+import { useStripeMode } from "@/lib/stripeModeStore";
+import { useToast } from "@/lib/toastStore";
 
 // Desktop shows PRIMARY inline and folds MORE into the More disclosure
 // (components/MoreMenu); the drawer renders everything flat. The Shipping
@@ -34,6 +36,9 @@ export function NavDrawer({
   isAdmin: boolean;
 }) {
   const pathname = usePathname();
+  const stripeMode = useStripeMode((s) => s.mode);
+  const applyStripeMode = useStripeMode((s) => s.apply);
+  const showToast = useToast((s) => s.show);
 
   useEffect(() => {
     if (!open) return;
@@ -49,13 +54,43 @@ export function NavDrawer({
     };
   }, [open, onClose]);
 
-  const items: { href: string; label: string; accent?: boolean }[] = [
+  // The drawer is flat (no nested disclosure), so it carries everything the
+  // desktop More menu holds — including the admin-only entries.
+  const items: {
+    href?: string;
+    label: string;
+    accent?: boolean;
+    onSelect?: () => void;
+  }[] = [
     ...PRIMARY_LINKS,
     ...MORE_LINKS,
     isSignedIn
       ? { href: "/account", label: "Account" }
       : { href: "/sign-in", label: "Sign in" },
-    ...(isAdmin ? [{ href: "/admin", label: "Admin", accent: true }] : []),
+    ...(isAdmin
+      ? [
+          { href: "/admin", label: "Admin", accent: true },
+          {
+            label: stripeMode === "test" ? "Exit test mode" : "Enter test mode",
+            accent: true,
+            onSelect: () => {
+              void applyStripeMode(
+                stripeMode === "test" ? "live" : "test"
+              ).then((r) => {
+                if (r.reason) showToast(r.reason);
+                else {
+                  showToast(
+                    r.mode === "test"
+                      ? "Stripe test mode on — no real charges."
+                      : "Back to live mode."
+                  );
+                  window.location.reload();
+                }
+              });
+            },
+          },
+        ]
+      : []),
   ];
 
   // Labels slide+fade in one after another as the drawer extends.
@@ -93,20 +128,34 @@ export function NavDrawer({
             className={`${glacial.className} flex flex-col gap-1 uppercase tracking-widest text-2xl font-semibold`}
           >
             {items.map((l, i) => (
-              <li key={l.href} {...enter(i)}>
-                <Link
-                  href={l.href}
-                  onClick={onClose}
-                  aria-current={pathname === l.href ? "page" : undefined}
-                  className="block py-3 hover:opacity-70"
-                  style={
-                    l.accent || pathname === l.href
-                      ? { color: "var(--accent)" }
-                      : undefined
-                  }
-                >
-                  {l.label}
-                </Link>
+              <li key={l.label} {...enter(i)}>
+                {l.href ? (
+                  <Link
+                    href={l.href}
+                    onClick={onClose}
+                    aria-current={pathname === l.href ? "page" : undefined}
+                    className="block py-3 hover:opacity-70"
+                    style={
+                      l.accent || pathname === l.href
+                        ? { color: "var(--accent)" }
+                        : undefined
+                    }
+                  >
+                    {l.label}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      l.onSelect?.();
+                    }}
+                    className="block w-full text-left py-3 hover:opacity-70 uppercase tracking-widest"
+                    style={l.accent ? { color: "var(--accent)" } : undefined}
+                  >
+                    {l.label}
+                  </button>
+                )}
               </li>
             ))}
             <li {...enter(items.length)}>

@@ -3,14 +3,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+// An entry is either a destination or an action (Stripe test mode toggles in
+// place rather than navigating). `accent` marks admin-only entries so they
+// read as distinct from the public ones.
+export type MoreItem = {
+  label: string;
+  href?: string;
+  onSelect?: () => void;
+  accent?: boolean;
+};
+
 // Desktop-nav disclosure for the less-used routes — keeps the inline nav to
 // two destinations so the centered logo keeps its room. The mobile drawer
 // stays flat (dropdowns inside drawers are an anti-pattern).
-export function MoreMenu({
-  links,
-}: {
-  links: { href: string; label: string }[];
-}) {
+export function MoreMenu({ links }: { links: MoreItem[] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
@@ -87,18 +93,41 @@ export function MoreMenu({
         style={{ background: "var(--bg)" }}
         aria-hidden={!open}
       >
-        {links.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            onClick={() => setOpen(false)}
-            aria-current={pathname === l.href ? "page" : undefined}
-            className="px-3 py-2 rounded-lg uppercase tracking-widest hover:bg-black/5 dark:hover:bg-white/10"
-            style={pathname === l.href ? { color: "var(--accent)" } : undefined}
-          >
-            {l.label}
-          </Link>
-        ))}
+        {links.map((l) => {
+          const itemClass =
+            "px-3 py-2 rounded-lg uppercase tracking-widest text-left whitespace-nowrap hover:bg-black/5 dark:hover:bg-white/10";
+          const accent =
+            l.accent || (l.href && pathname === l.href)
+              ? { color: "var(--accent)" }
+              : undefined;
+          // Actions (test mode) close the menu and run in place; destinations
+          // navigate. Both share the row styling.
+          return l.href ? (
+            <Link
+              key={l.label}
+              href={l.href}
+              onClick={() => setOpen(false)}
+              aria-current={pathname === l.href ? "page" : undefined}
+              className={itemClass}
+              style={accent}
+            >
+              {l.label}
+            </Link>
+          ) : (
+            <button
+              key={l.label}
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                l.onSelect?.();
+              }}
+              className={itemClass}
+              style={accent}
+            >
+              {l.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

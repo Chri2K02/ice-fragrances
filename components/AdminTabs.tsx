@@ -9,7 +9,7 @@ import { useBrowserValue } from "@/lib/ui";
 // The admin section bar: the surfaces from lib/permissions.ts, filtered to
 // what the viewer may open (fetched from /api/admin/me, same as the header's
 // Admin link). Purely cosmetic — every page and API re-checks server-side.
-export function AdminTabs() {
+export function AdminTabs({ inline = false }: { inline?: boolean } = {}) {
   const [perms, setPerms] = useState<Record<string, boolean> | null>(null);
   // On admin.icefragrances.com the dashboard is served from the subdomain
   // ROOT (proxy.ts rewrites / → /admin/*), so tab hrefs drop the /admin
@@ -40,8 +40,15 @@ export function AdminTabs() {
     label: t.key === "team" ? "Settings" : t.label,
   }));
 
-  // min-h keeps the bar's height while perms load so the page doesn't jump.
+  // Inline: sits in the admin header, so no bottom margin/min-height.
+  // Standalone: min-h keeps the bar's height while perms load, so the page
+  // below doesn't jump once they arrive.
   return (
-    <TabNav tabs={tabs} ariaLabel="Admin sections" className="mb-8 min-h-10" />
+    <TabNav
+      tabs={tabs}
+      ariaLabel="Admin sections"
+      inline={inline}
+      className={inline ? "" : "mb-8 min-h-10"}
+    />
   );
 }

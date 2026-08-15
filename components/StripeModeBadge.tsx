@@ -1,10 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useToast } from "@/lib/toastStore";
-import { clearCheckoutSession } from "@/lib/checkoutSession";
+import { useStripeMode } from "@/lib/stripeModeStore";
 
 // The visible half of admin-only Stripe test mode (authority lives in
-// lib/stripeMode). On every page load it:
+// lib/stripeMode; shared client state in lib/stripeModeStore). On every page
+// load it:
 //
 //   1. reads `?stripeMode=` straight off window.location — NOT useSearchParams,
 //      which would deopt every statically-rendered page to client rendering
@@ -14,15 +15,17 @@ import { clearCheckoutSession } from "@/lib/checkoutSession";
 //      non-admins and for `live` exactly as it does for admins — the bar
 //      never keeps a trace either way;
 //   4. shows a persistent badge while test mode is on, with one-click exit.
+//      (The header's More menu offers the same toggle.)
 //
 // A non-admin sees nothing at any point: no badge, no error, no hint that the
 // parameter means anything.
 export function StripeModeBadge() {
-  const [testMode, setTestMode] = useState(false);
+  const mode = useStripeMode((s) => s.mode);
+  const refresh = useStripeMode((s) => s.refresh);
+  const apply = useStripeMode((s) => s.apply);
   const toast = useToast((s) => s.show);
 
   useEffect(() => {
-    let alive = true;
     const url = new URL(window.location.href);
     const param = url.searchParams.get("stripeMode");
 
@@ -36,64 +39,34 @@ export function StripeModeBadge() {
       );
     }
 
-    const apply = async () => {
-      if (param === null) {
-        // No param: just read the current mode (cookie-backed, admin-verified).
-        const res = await fetch("/api/stripe-mode").catch(() => null);
-        const data = await res?.json().catch(() => null);
-        if (alive) setTestMode(data?.mode === "test");
-        return;
-      }
-      const res = await fetch("/api/stripe-mode", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: param }),
-      }).catch(() => null);
-      const data = await res?.json().catch(() => null);
-      if (!alive) return;
-      const isTest = data?.mode === "test";
-      // A Checkout Session created before this switch belongs to the OLD mode
-      // and would still be consumed by /checkout (module state survives
-      // client-side navigation), so discard it whenever the mode is applied.
-      clearCheckoutSession();
-      setTestMode(isTest);
+    if (param === null) {
+      void refresh();
+      return;
+    }
+    void apply(param === "test" ? "test" : "live").then((r) => {
       // Only ever speak up for someone who asked for test and is entitled to
       // an answer — a non-admin's request resolves silently to live.
-      if (param === "test" && data?.reason) toast(data.reason);
-      else if (isTest) toast("Stripe test mode on — no real charges.");
-    };
-    void apply();
+      if (param === "test" && r.reason) toast(r.reason);
+      else if (r.mode === "test") toast("Stripe test mode on — no real charges.");
+    });
+  }, [refresh, apply, toast]);
 
-    return () => {
-      alive = false;
-    };
-  }, [toast]);
-
-  async function exit() {
-    await fetch("/api/stripe-mode", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode: "live" }),
-    }).catch(() => {});
-    clearCheckoutSession();
-    setTestMode(false);
-    toast("Back to live mode.");
-    // Full reload so server components re-render against the cleared cookie.
-    window.location.reload();
-  }
-
-  if (!testMode) return null;
+  if (mode !== "test") return null;
 
   return (
     <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-full bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black shadow-lg">
-      <span
-        aria-hidden
-        className="inline-block h-2 w-2 rounded-full bg-black/70"
-      />
+      <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-black/70" />
       <span>Stripe test mode</span>
       <button
         type="button"
-        onClick={exit}
+        onClick={() => {
+          void apply("live").then(() => {
+            toast("Back to live mode.");
+            // Full reload so server components re-render against the cleared
+            // cookie (the Stripe admin section reads mode server-side).
+            window.location.reload();
+          });
+        }}
         aria-label="Exit Stripe test mode"
         className="ml-0.5 grid h-4 w-4 place-items-center rounded-full hover:bg-black/15"
       >

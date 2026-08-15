@@ -4,11 +4,15 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { Logo } from "@/components/Logo";
+import { LogoMark } from "@/components/LogoMark";
+import { AdminTabs } from "@/components/AdminTabs";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CurrencyToggle } from "@/components/CurrencyToggle";
 import { CartDrawer } from "@/components/CartDrawer";
 import { NavDrawer, PRIMARY_LINKS, MORE_LINKS } from "@/components/NavDrawer";
-import { MoreMenu } from "@/components/MoreMenu";
+import { MoreMenu, type MoreItem } from "@/components/MoreMenu";
+import { useStripeMode } from "@/lib/stripeModeStore";
+import { useToast } from "@/lib/toastStore";
 import { Chevron } from "@/components/Chevron";
 import { glacialRegular } from "@/lib/fonts";
 import { PILL_BUTTON, useBrowserValue } from "@/lib/ui";
@@ -29,6 +33,10 @@ export function Header() {
     CANONICAL_ORIGIN
   );
   const count = useCart((s) => s.count());
+  // Shared with the test-mode badge, so the two can't disagree.
+  const stripeMode = useStripeMode((s) => s.mode);
+  const applyStripeMode = useStripeMode((s) => s.apply);
+  const showToast = useToast((s) => s.show);
   // Better Auth's useSession is store-based (no provider needed); !!session
   // toggles the Account vs Sign-in link.
   const { data: session } = authClient.useSession();
@@ -93,9 +101,44 @@ export function Header() {
   const bar =
     "absolute h-0.5 w-5 rounded-full bg-current transition-all duration-300";
 
+  // The More menu carries the public overflow routes, and for admins the
+  // dashboard link plus the Stripe test-mode switch — keeping admin-only
+  // controls out of the storefront's top level entirely.
+  const moreItems: MoreItem[] = [
+    ...MORE_LINKS,
+    ...(isAdmin
+      ? [
+          { href: "/admin", label: "Admin", accent: true },
+          {
+            label: stripeMode === "test" ? "Exit test mode" : "Enter test mode",
+            accent: true,
+            onSelect: () => {
+              void applyStripeMode(stripeMode === "test" ? "live" : "test").then(
+                (r) => {
+                  if (r.reason) showToast(r.reason);
+                  else {
+                    showToast(
+                      r.mode === "test"
+                        ? "Stripe test mode on — no real charges."
+                        : "Back to live mode."
+                    );
+                    // Server components read the mode too, so re-render them.
+                    window.location.reload();
+                  }
+                }
+              );
+            },
+          },
+        ]
+      : []),
+  ];
+
   // Dashboard chrome for the admin host. Placed AFTER every hook above — an
-  // early return before them would change hook order between hosts. Styled
-  // with the shared pill/chevron idioms so it matches the storefront header.
+  // early return before them would change hook order between hosts.
+  //
+  // ONE row: the section tabs live here rather than in a second bar below, and
+  // the brand is the bare cube (the full stacked lockup is storefront-scale and
+  // was pushing the dashboard's content far down the page).
   if (onAdminHost) {
     return (
       <header
@@ -106,21 +149,24 @@ export function Header() {
         }}
       >
         <div
-          className={`${glacialRegular.className} max-w-6xl mx-auto px-4 py-5 relative flex items-center justify-center`}
+          className={`${glacialRegular.className} max-w-6xl mx-auto px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2`}
         >
-          <nav className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-4 text-xs sm:text-sm">
+          <Link
+            href="/"
+            aria-label="Admin dashboard home"
+            className="shrink-0 hover:opacity-70"
+          >
+            <LogoMark />
+          </Link>
+          <AdminTabs inline />
+          <div className="ml-auto flex items-center gap-2 shrink-0">
             <a
               href={mainSiteUrl}
               className={`${PILL_BUTTON} inline-flex items-center gap-1.5`}
             >
               <Chevron dir="left" />
-              Back to main site
+              <span className="hidden sm:inline">Main site</span>
             </a>
-          </nav>
-          <Link href="/" aria-label="Admin dashboard home">
-            <Logo />
-          </Link>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3">
             <ThemeToggle />
           </div>
         </div>
@@ -157,16 +203,7 @@ export function Header() {
                 {l.label}
               </Link>
             ))}
-            <MoreMenu links={MORE_LINKS} />
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className="hover:opacity-70 font-medium"
-                style={{ color: "var(--accent)" }}
-              >
-                Admin
-              </Link>
-            )}
+            <MoreMenu links={moreItems} />
             <a
               href="https://www.instagram.com/icefragrances/"
               target="_blank"
