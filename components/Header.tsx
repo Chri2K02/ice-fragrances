@@ -204,9 +204,14 @@ export function Header() {
 
   return (
     <>
+      {/* Constant-height stand-in for the FIXED header below: it reserves the
+          header's at-rest height in the flow permanently, so the collapse
+          animation never changes the document's length (which made the top of
+          the page recede while scrolling up). */}
+      <div className="hdr-spacer" aria-hidden />
       <header
         ref={headerRef}
-        className="sticky top-0 z-40 backdrop-blur-md border-b border-black/10 dark:border-white/10"
+        className="fixed inset-x-0 top-0 z-40 backdrop-blur-md border-b border-black/10 dark:border-white/10"
         style={{
           background: "color-mix(in srgb, var(--bg) 80%, transparent)",
           // Persist the sticky header across route navigations so only the

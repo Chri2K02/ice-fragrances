@@ -20,10 +20,10 @@ const FACE = "fill-white dark:fill-[#100f0d]";
 export function Logo() {
   return (
     <span className="logo-lockup flex flex-col items-center">
-      {/* Font size lives on the WRAPPER so its collapse math is just 1em —
-          the height var tracks the breakpoint font size automatically. */}
+      {/* Font size comes from --word-size via .hdr-word-wrap, so the
+          collapse math (1em) and the flow spacer share one source. */}
       <span
-        className={`${glacial.className} hdr-word-wrap uppercase font-bold leading-none tracking-[0.14em] text-[0.9rem] sm:text-[1.7rem]`}
+        className={`${glacial.className} hdr-word-wrap uppercase font-bold leading-none tracking-[0.14em]`}
       >
         <span className="hdr-word whitespace-nowrap">Ice Fragrances</span>
       </span>
@@ -33,7 +33,8 @@ export function Logo() {
           edge-tight and antialiasing clipped the edges. */}
       <svg
         viewBox="93.851 34.39 39.063 43.227"
-        className="h-[23.1px] sm:h-[43.9px] w-auto"
+        className="w-auto"
+        style={{ height: "var(--cube-h, 43.9px)" }}
         aria-hidden="true"
       >
         <defs>
