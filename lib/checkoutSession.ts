@@ -51,3 +51,13 @@ export function takeCheckoutSession(): Promise<CheckoutSession> | null {
   inflight = null;
   return p;
 }
+
+// Drop any in-flight session without consuming it. Called when Stripe test
+// mode is toggled: `inflight` is module state that survives client-side
+// navigation, so a session created BEFORE the switch would otherwise be
+// consumed by /checkout afterwards — producing a live session while the badge
+// says test (Stripe then rejects the test card as "live mode, known test
+// card"). The next checkout click creates a fresh session in the new mode.
+export function clearCheckoutSession(): void {
+  inflight = null;
+}

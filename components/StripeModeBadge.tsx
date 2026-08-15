@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useToast } from "@/lib/toastStore";
+import { clearCheckoutSession } from "@/lib/checkoutSession";
 
 // The visible half of admin-only Stripe test mode (authority lives in
 // lib/stripeMode). On every page load it:
@@ -51,6 +52,10 @@ export function StripeModeBadge() {
       const data = await res?.json().catch(() => null);
       if (!alive) return;
       const isTest = data?.mode === "test";
+      // A Checkout Session created before this switch belongs to the OLD mode
+      // and would still be consumed by /checkout (module state survives
+      // client-side navigation), so discard it whenever the mode is applied.
+      clearCheckoutSession();
       setTestMode(isTest);
       // Only ever speak up for someone who asked for test and is entitled to
       // an answer — a non-admin's request resolves silently to live.
@@ -70,6 +75,7 @@ export function StripeModeBadge() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mode: "live" }),
     }).catch(() => {});
+    clearCheckoutSession();
     setTestMode(false);
     toast("Back to live mode.");
     // Full reload so server components re-render against the cleared cookie.
