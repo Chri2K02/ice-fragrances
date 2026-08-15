@@ -98,8 +98,36 @@ export function Header() {
     return () => ro.disconnect();
   }, []);
 
+  // Scroll-collapse progress: 0 at the top of the page → 1 once scrolled
+  // past COLLAPSE_RANGE. Written straight onto the <header> element as the
+  // --hdr-p custom property each scroll frame (rAF-throttled), so scrolling
+  // never re-renders React; the wordmark slide-away, teardrop shrink and row
+  // padding all derive from it in CSS (see "Scroll-collapsing header" in
+  // globals.css). Storefront only — the admin chrome has no lockup.
+  useEffect(() => {
+    if (onAdminHost) return;
+    const el = headerRef.current;
+    if (!el) return;
+    let raf = 0;
+    const COLLAPSE_RANGE = 140;
+    const apply = () => {
+      raf = 0;
+      const p = Math.min(1, Math.max(0, window.scrollY / COLLAPSE_RANGE));
+      el.style.setProperty("--hdr-p", p.toFixed(4));
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(apply);
+    };
+    apply();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [onAdminHost]);
+
   const bar =
-    "absolute h-0.5 w-5 rounded-full bg-current transition-all duration-300";
+    "absolute h-0.5 w-6 rounded-full bg-current transition-all duration-300";
 
   // The More menu carries the public overflow routes, and for admins the
   // dashboard link plus the Stripe test-mode switch — keeping admin-only
@@ -176,9 +204,14 @@ export function Header() {
 
   return (
     <>
+      {/* Constant-height stand-in for the FIXED header below: it reserves the
+          header's at-rest height in the flow permanently, so the collapse
+          animation never changes the document's length (which made the top of
+          the page recede while scrolling up). */}
+      <div className="hdr-spacer" aria-hidden />
       <header
         ref={headerRef}
-        className="sticky top-0 z-40 backdrop-blur-md border-b border-black/10 dark:border-white/10"
+        className="fixed inset-x-0 top-0 z-40 backdrop-blur-md border-b border-black/10 dark:border-white/10"
         style={{
           background: "color-mix(in srgb, var(--bg) 80%, transparent)",
           // Persist the sticky header across route navigations so only the
@@ -189,9 +222,9 @@ export function Header() {
         {/* Glacial Regular is the header's UI face — nav links, More menu and
             the pill buttons inherit it; the Logo overrides with the Bold cut. */}
         <div
-          className={`${glacialRegular.className} max-w-6xl mx-auto px-4 py-5 relative flex items-center justify-center`}
+          className={`${glacialRegular.className} hdr-row max-w-6xl mx-auto px-4 relative flex items-center justify-center`}
         >
-          <nav className="absolute left-4 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-4 text-xs xl:text-sm uppercase tracking-widest">
+          <nav className="absolute left-4 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-4 text-sm xl:text-[15px] uppercase tracking-widest">
             {PRIMARY_LINKS.map((l) => (
               <Link
                 key={l.href}
@@ -242,12 +275,12 @@ export function Header() {
             <Link
               href={isSignedIn ? "/account" : "/sign-in"}
               aria-label={isSignedIn ? "Your account" : "Sign in"}
-              className={`${PILL_BUTTON} hidden lg:grid place-items-center w-9 h-9 px-0!`}
+              className={`${PILL_BUTTON} hidden lg:grid place-items-center w-10 h-10 px-0!`}
             >
               <svg
                 viewBox="0 0 24 24"
-                width="17"
-                height="17"
+                width="19"
+                height="19"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
@@ -268,8 +301,8 @@ export function Header() {
               {/* Feather-style bag, matching the Instagram icon's stroke language. */}
               <svg
                 viewBox="0 0 24 24"
-                width="15"
-                height="15"
+                width="17"
+                height="17"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}

@@ -24,8 +24,8 @@ const LABEL_HOLD_MS = 1800;
 function ModeIcon({ mode }: { mode: Mode }) {
   const common = {
     viewBox: "0 0 24 24",
-    width: 15,
-    height: 15,
+    width: 17,
+    height: 17,
     fill: "none",
     stroke: "currentColor",
     strokeWidth: 2,

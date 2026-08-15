@@ -235,3 +235,89 @@ a {
     animation: none;
   }
 }
+
+/* ─── Scroll-collapsing header ────────────────────────────────────────
+ * The lockup collapses to just the CUBE as you scroll: the wordmark
+ * shrinks a little (never illegible) while sliding up out of a clipping
+ * window, and the teardrop scales away to nothing — both return as you
+ * approach the top, the teardrop reaching full size right at it.
+ *
+ * Everything is driven by one custom property, --hdr-p (0 at the top of
+ * the page → 1 once fully collapsed), which Header.tsx writes straight
+ * onto the <header> element per scroll frame — no React re-renders. Where
+ * the var is absent (404 page, no JS yet) every rule below resolves to
+ * the at-rest full-size lockup.
+ *
+ * The teardrop runs on a FASTER ramp — min(1, 1.4 · p) — so it is gone
+ * by p ≈ 0.7 on the way down and only reaches full size at the very top
+ * on the way back. Its wrapper height and its scale use the same factor,
+ * so the visual bottom of the shrinking drop tracks its layout box and
+ * nothing below it jumps.
+ */
+:root {
+  /* Single source for every lockup dimension: the wordmark size, the gap
+     it keeps below itself, and the cube/teardrop rendered heights. The
+     spacer sums these, so the reserved flow height and the header's
+     at-rest height can never disagree. */
+  --word-size: 0.9rem;
+  --word-gap: 4px;
+  --cube-h: 23.1px;
+  --drop-h: 16.4px;
+}
+@media (min-width: 640px) {
+  :root {
+    --word-size: 1.7rem;
+    --word-gap: 8px;
+    --cube-h: 43.9px;
+    --drop-h: 31.1px;
+  }
+}
+/* Holds the header's AT-REST height in the document flow permanently while
+   the header itself is position:fixed. The document's length never changes
+   with the collapse — scrolling to the very top works in one motion instead
+   of chasing a page that keeps re-growing. 2.5rem = the row's at-rest
+   vertical padding (2 × 1.25rem). */
+.hdr-spacer {
+  height: calc(
+    2.5rem + var(--word-size) + var(--word-gap) + var(--cube-h) + var(--drop-h)
+  );
+}
+.hdr-word-wrap {
+  font-size: var(--word-size);
+  /* The window holds FULL height until the wordmark has fully faded
+     (p = 0.3), then collapses over the rest of the range — glyphs are
+     never visibly cut off: the text is either present or gone. 1em = the
+     wordmark's height (leading-none). */
+  height: calc(
+    (1 - max(0, var(--hdr-p, 0) - 0.3) / 0.7) * (1em + var(--word-gap))
+  );
+  overflow: clip;
+}
+.hdr-word {
+  display: block;
+  /* While visible: only a subtle shrink (≥95%), no movement. The upward
+     slide starts at p = 0.3 — after opacity has already reached zero — so
+     the collapse stays smooth but no half-clipped text ever shows. */
+  transform: translateY(calc(max(0, var(--hdr-p, 0) - 0.3) / 0.7 * -130%))
+    scale(calc(1 - 0.15 * var(--hdr-p, 0)));
+  transform-origin: bottom center;
+  /* Fully faded by 30% of the collapse range (clamped 1→0). */
+  opacity: calc(1 - var(--hdr-p, 0) / 0.3);
+}
+/* The cube survives the collapse but gives back a QUARTER of its height
+   when scrolled — it's the tallest thing left in the bar. Full size only
+   at the top, alongside the returning wordmark and teardrop. */
+.hdr-cube {
+  height: calc(var(--cube-h) * (1 - 0.25 * var(--hdr-p, 0)));
+}
+.hdr-drop-wrap {
+  height: calc((1 - min(1, 1.4 * var(--hdr-p, 0))) * var(--drop-h));
+}
+.hdr-drop {
+  transform: scale(max(0, calc(1 - 1.4 * var(--hdr-p, 0))));
+  transform-origin: top center;
+}
+/* The header row trades a bit of breathing room away as it collapses. */
+.hdr-row {
+  padding-block: calc(1.25rem - 0.5rem * var(--hdr-p, 0));
+}
