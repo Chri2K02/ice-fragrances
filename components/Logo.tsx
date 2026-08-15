@@ -33,8 +33,7 @@ export function Logo() {
           edge-tight and antialiasing clipped the edges. */}
       <svg
         viewBox="93.851 34.39 39.063 43.227"
-        className="w-auto"
-        style={{ height: "var(--cube-h, 43.9px)" }}
+        className="hdr-cube w-auto"
         aria-hidden="true"
       >
         <defs>

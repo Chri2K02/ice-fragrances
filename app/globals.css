@@ -304,6 +304,12 @@ a {
   /* Fully faded by 30% of the collapse range (clamped 1→0). */
   opacity: calc(1 - var(--hdr-p, 0) / 0.3);
 }
+/* The cube survives the collapse but gives back a QUARTER of its height
+   when scrolled — it's the tallest thing left in the bar. Full size only
+   at the top, alongside the returning wordmark and teardrop. */
+.hdr-cube {
+  height: calc(var(--cube-h) * (1 - 0.25 * var(--hdr-p, 0)));
+}
 .hdr-drop-wrap {
   height: calc((1 - min(1, 1.4 * var(--hdr-p, 0))) * var(--drop-h));
 }

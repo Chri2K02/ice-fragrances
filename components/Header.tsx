@@ -127,7 +127,7 @@ export function Header() {
   }, [onAdminHost]);
 
   const bar =
-    "absolute h-0.5 w-5 rounded-full bg-current transition-all duration-300";
+    "absolute h-0.5 w-6 rounded-full bg-current transition-all duration-300";
 
   // The More menu carries the public overflow routes, and for admins the
   // dashboard link plus the Stripe test-mode switch — keeping admin-only
@@ -224,7 +224,7 @@ export function Header() {
         <div
           className={`${glacialRegular.className} hdr-row max-w-6xl mx-auto px-4 relative flex items-center justify-center`}
         >
-          <nav className="absolute left-4 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-4 text-xs xl:text-sm uppercase tracking-widest">
+          <nav className="absolute left-4 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-4 text-sm xl:text-[15px] uppercase tracking-widest">
             {PRIMARY_LINKS.map((l) => (
               <Link
                 key={l.href}
@@ -275,12 +275,12 @@ export function Header() {
             <Link
               href={isSignedIn ? "/account" : "/sign-in"}
               aria-label={isSignedIn ? "Your account" : "Sign in"}
-              className={`${PILL_BUTTON} hidden lg:grid place-items-center w-9 h-9 px-0!`}
+              className={`${PILL_BUTTON} hidden lg:grid place-items-center w-10 h-10 px-0!`}
             >
               <svg
                 viewBox="0 0 24 24"
-                width="17"
-                height="17"
+                width="19"
+                height="19"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
@@ -301,8 +301,8 @@ export function Header() {
               {/* Feather-style bag, matching the Instagram icon's stroke language. */}
               <svg
                 viewBox="0 0 24 24"
-                width="15"
-                height="15"
+                width="17"
+                height="17"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
