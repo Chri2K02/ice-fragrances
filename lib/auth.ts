@@ -6,9 +6,13 @@ import * as schema from "@/lib/auth-schema";
 import { sendEmail, otpEmailHtml } from "@/lib/email";
 
 // Better Auth, stood up ALONGSIDE Clerk (additive, nothing consumes it yet).
-// Single-tenant subset of zcanon: NO organization/admin/PAT/relay plugins, no
-// cross-subdomain cookies — this site is a single host.
+// Single-tenant subset of zcanon: NO organization/admin/PAT/relay plugins.
 const isProd = process.env.NODE_ENV === "production";
+
+// Cross-subdomain cookies are scoped to the PRODUCTION deploy only: preview
+// deploys live on *.vercel.app where a Domain=.icefragrances.com cookie would
+// be rejected by the browser and break sign-in, and dev is localhost.
+const isProdDeploy = process.env.VERCEL_ENV === "production";
 
 // Lazy DB handle: getDb() calls neon(DATABASE_URL!) which THROWS when the URL
 // is unset. Reuse the existing instance (lib/db) but defer that call to the
@@ -41,6 +45,11 @@ export const auth = betterAuth({
       "127.0.0.1:*",
       "www.icefragrances.com",
       "icefragrances.com",
+      // The admin subdomain calls /api/auth/get-session for its own header;
+      // interactive sign-in still only happens on the canonical host (proxy.ts
+      // redirects the admin host's auth pages there).
+      "admin.icefragrances.com",
+      "admin.localhost:*",
     ],
     fallback:
       process.env.BETTER_AUTH_URL ||
@@ -85,9 +94,28 @@ export const auth = betterAuth({
   trustedOrigins: [
     "https://www.icefragrances.com",
     "https://icefragrances.com",
+    // Admin subdomain: trusted both as a request Origin (its header fetches
+    // /api/auth/get-session) and as a sign-in callbackURL target.
+    "https://admin.icefragrances.com",
     "http://localhost:*",
     "http://127.0.0.1:*",
+    "http://admin.localhost:*",
   ],
+
+  // Session persists across www ↔ admin subdomains in production: the cookie
+  // is issued for .icefragrances.com, so logging in on the canonical host
+  // signs you in on admin.icefragrances.com too. Sessions issued BEFORE this
+  // shipped were host-only (www) — those users just sign in once more.
+  ...(isProdDeploy
+    ? {
+        advanced: {
+          crossSubDomainCookies: {
+            enabled: true,
+            domain: ".icefragrances.com",
+          },
+        },
+      }
+    : {}),
 
   plugins: [
     emailOTP({

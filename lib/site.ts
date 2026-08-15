@@ -25,3 +25,57 @@ export const SITE = {
   locale: "en_US",
   email: "icefragrances@icefragrances.com",
 } as const;
+
+// ── Host topology ─────────────────────────────────────────────────────────
+// The store lives on the canonical host above; the admin dashboard is ALSO
+// served from admin.icefragrances.com, where the proxy rewrites / → /admin/*.
+// Sign-in is forced through the canonical host — the admin host never renders
+// auth pages — and the session carries across via cross-subdomain cookies
+// (lib/auth.ts). In dev the same shape works on admin.localhost:<port>.
+// Helpers are shared by proxy.ts, server pages, and client components.
+
+export const CANONICAL_ORIGIN = PRODUCTION_URL;
+export const ADMIN_ORIGIN = "https://admin.icefragrances.com";
+
+// A host (optionally host:port) serving the admin dashboard.
+export function isAdminHost(host: string | null | undefined): boolean {
+  const h = (host ?? "").split(":")[0];
+  return h === "admin.icefragrances.com" || h === "admin.localhost";
+}
+
+// The canonical (store) origin for a request/browser host. Prod admin host
+// maps to the www origin; dev admin.localhost:3000 maps to localhost:3000 on
+// the same protocol.
+export function canonicalOriginFor(
+  host: string | null | undefined,
+  protocol: string = "https:"
+): string {
+  const h = host ?? "";
+  if (h.split(":")[0].endsWith("icefragrances.com")) return CANONICAL_ORIGIN;
+  return `${protocol}//${h.replace(/^admin\./, "")}`;
+}
+
+// Post-auth redirect targets arrive as a ?callbackURL= query param on the
+// canonical sign-in page. Only same-site paths or our own origins are honored,
+// so the param can never become an open redirect.
+export function safeCallbackURL(raw: string | null | undefined): string {
+  if (!raw) return "/";
+  if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
+  try {
+    const u = new URL(raw);
+    const h = u.hostname;
+    const ours =
+      h === "www.icefragrances.com" ||
+      h === "icefragrances.com" ||
+      h === "admin.icefragrances.com" ||
+      h === "localhost" ||
+      h === "admin.localhost" ||
+      h === "127.0.0.1";
+    if (ours && (u.protocol === "https:" || u.protocol === "http:")) {
+      return u.toString();
+    }
+  } catch {
+    /* fall through */
+  }
+  return "/";
+}

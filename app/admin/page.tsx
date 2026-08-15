@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { getSession } from "@/lib/session";
 import { adminPermsFor, firstAdminPathFor } from "@/lib/admin";
+import { canonicalOriginFor, isAdminHost } from "@/lib/site";
 import { getDb } from "@/lib/db";
 import { inventory } from "@/lib/db/schema";
 import { PRODUCTS } from "@/lib/products";
@@ -17,8 +19,17 @@ export default async function AdminPage() {
   if (!session) redirect("/sign-in");
   const perms = await adminPermsFor(session.user.email);
   // /admin is the Admin-link landing spot: someone without the Stock surface
-  // still lands on the first surface they CAN open (or home if none).
-  if (!perms.stock) redirect(firstAdminPathFor(perms) ?? "/");
+  // still lands on the first surface they CAN open. With no permissions at
+  // all they leave the dashboard — on the admin subdomain that must be the
+  // ABSOLUTE canonical origin ("/" would rewrite straight back here and loop).
+  if (!perms.stock) {
+    const first = firstAdminPathFor(perms);
+    if (first) redirect(first);
+    const h = await headers();
+    const host = h.get("host");
+    const proto = `${h.get("x-forwarded-proto") ?? "https"}:`;
+    redirect(isAdminHost(host) ? canonicalOriginFor(host, proto) : "/");
+  }
 
   const db = getDb();
   const rows = await db.select().from(inventory);

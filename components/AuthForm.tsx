@@ -12,7 +12,16 @@ const input =
 const primaryBtn =
   "mt-1 w-full rounded-full px-4 py-3 font-medium text-black border-2 border-black disabled:opacity-40";
 
-export function AuthForm({ mode }: { mode: Mode }) {
+export function AuthForm({
+  mode,
+  callbackURL = "/",
+}: {
+  mode: Mode;
+  // Pre-validated by the page via safeCallbackURL — our own origins only.
+  // Lets the admin subdomain force login through this canonical page and land
+  // back where it started.
+  callbackURL?: string;
+}) {
   const isSignup = mode === "signup";
 
   // Sign-up has a second step: Better Auth auto-emails a 6-digit code on
@@ -31,7 +40,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     // Full-page redirect to Google; better-auth handles the callback.
     const { error } = await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/",
+      callbackURL,
     });
     if (error) {
       setError(error.message ?? "Google sign-in failed.");
@@ -63,7 +72,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         } else {
           // Hard navigation so server components re-render against the new
           // session cookie (not just the store-based useSession in Header).
-          window.location.href = "/";
+          window.location.href = callbackURL;
           return;
         }
       }
@@ -98,10 +107,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
       });
       if (signInError) {
         // Verified but auto sign-in failed — send them to sign in manually.
-        window.location.href = "/sign-in";
+        window.location.href = `/sign-in?callbackURL=${encodeURIComponent(callbackURL)}`;
         return;
       }
-      window.location.href = "/";
+      window.location.href = callbackURL;
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
@@ -235,14 +244,20 @@ export function AuthForm({ mode }: { mode: Mode }) {
         {isSignup ? (
           <>
             Already have an account?{" "}
-            <Link href="/sign-in" className="underline">
+            <Link
+              href={`/sign-in?callbackURL=${encodeURIComponent(callbackURL)}`}
+              className="underline"
+            >
               Sign in
             </Link>
           </>
         ) : (
           <>
             New here?{" "}
-            <Link href="/sign-up" className="underline">
+            <Link
+              href={`/sign-up?callbackURL=${encodeURIComponent(callbackURL)}`}
+              className="underline"
+            >
               Create an account
             </Link>
           </>

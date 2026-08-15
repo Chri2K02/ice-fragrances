@@ -7,8 +7,23 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { CurrencyToggle } from "@/components/CurrencyToggle";
 import { CartDrawer } from "@/components/CartDrawer";
 import { useCart } from "@/lib/cartStore";
+import { CANONICAL_ORIGIN, canonicalOriginFor, isAdminHost } from "@/lib/site";
 
 export function Header() {
+  // On admin.icefragrances.com the header is the DASHBOARD chrome: no shop
+  // nav/cart/currency — just the logo, a "Back to main site" link to the
+  // canonical host, and the theme toggle. Detected after mount (host isn't
+  // known during SSR of this shared shell).
+  const [onAdminHost, setOnAdminHost] = useState(false);
+  const [mainSiteUrl, setMainSiteUrl] = useState(CANONICAL_ORIGIN);
+  useEffect(() => {
+    if (isAdminHost(window.location.host)) {
+      setOnAdminHost(true);
+      setMainSiteUrl(
+        canonicalOriginFor(window.location.host, window.location.protocol)
+      );
+    }
+  }, []);
   const count = useCart((s) => s.count());
   // Better Auth's useSession is store-based (no provider needed); !!session
   // toggles the Account vs Sign-in link.
@@ -33,6 +48,35 @@ export function Header() {
       alive = false;
     };
   }, [email]);
+
+  if (onAdminHost) {
+    return (
+      <header
+        className="sticky top-0 z-40 backdrop-blur-md border-b border-black/10 dark:border-white/10"
+        style={{
+          background: "color-mix(in srgb, var(--bg) 80%, transparent)",
+          viewTransitionName: "site-header",
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-4 py-5 relative flex items-center justify-center">
+          <nav className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-4 text-xs sm:text-sm">
+            <a
+              href={mainSiteUrl}
+              className="rounded-full border px-3 py-1 whitespace-nowrap hover:opacity-70"
+            >
+              ‹ Back to main site
+            </a>
+          </nav>
+          <Link href="/" aria-label="Admin dashboard home">
+            <Logo />
+          </Link>
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3">
+            <ThemeToggle />
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <>
