@@ -62,7 +62,22 @@ export function ThemeToggle() {
   const [expanded, setExpanded] = useState(false);
   const timerRef = useRef(0);
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
-  if (!mounted) return null;
+
+  // The CHOSEN mode (light/dark/system) lives in localStorage and isn't known
+  // until hydration — unlike the RESOLVED theme, which next-themes' own
+  // blocking script applies pre-paint. So instead of rendering nothing (which
+  // popped the pill in late and shifted the controls beside it), reserve the
+  // exact footprint and let the icon fade in.
+  if (!mounted) {
+    return (
+      <span
+        aria-hidden
+        className={`${PILL_BUTTON} inline-flex items-center invisible`}
+      >
+        <ModeIcon mode="system" />
+      </span>
+    );
+  }
 
   const mode: Mode = ORDER.includes(theme as Mode) ? (theme as Mode) : "system";
   const label = LABELS[mode];

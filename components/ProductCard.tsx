@@ -8,7 +8,8 @@ import type { Product } from "@/lib/products";
 import { glacialRegular } from "@/lib/fonts";
 import { useReducedMotion } from "@/lib/ui";
 import { Reviews } from "@/components/Reviews";
-import { formatPrice, convertCents } from "@/lib/currency";
+import { convertCents } from "@/lib/currency";
+import { Price } from "@/components/Price";
 import { useDisplayCurrency } from "@/lib/currencyStore";
 import { useToast } from "@/lib/toastStore";
 import { fbTrack } from "@/lib/fbpixel";
@@ -53,8 +54,10 @@ export function ProductCard({
 }) {
   const add = useCart((s) => s.add);
   const show = useToast((s) => s.show);
+  // The displayed price renders BOTH currencies with CSS choosing (see
+  // components/Price) so it's correct on first paint. `currency` here is only
+  // for analytics values, which fire after hydration and so can read the store.
   const currency = useDisplayCurrency();
-  const price = formatPrice(product.priceCents, currency);
 
   // Build the ordered media list: first photo (thumbnail), then the video
   // (if any), then the rest of the gallery.
@@ -219,7 +222,7 @@ export function ProductCard({
                 {product.name}
               </Link>
             </h3>
-            <span className="font-semibold">{price}</span>
+            <Price cents={product.priceCents} className="font-semibold" />
           </div>
 
           {(product.tagline || product.notes || product.oil) && (

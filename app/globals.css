@@ -325,3 +325,46 @@ a {
 .hdr-row {
   padding-block: calc(1.25rem - 0.5rem * var(--hdr-p, 0));
 }
+
+/* ─── Pre-paint variant switching ─────────────────────────────────────
+ * Client-only state (display currency) used to render server-side as the
+ * default and then correct itself after hydration — a visible flip of every
+ * price for anyone browsing in USD. Instead, BOTH variants are rendered and
+ * CSS picks, keyed on the attribute public/boot.js writes before first paint.
+ *
+ * Because both variants are always in the markup, server and client render
+ * identically — the flash goes away with no hydration mismatch. The attribute
+ * is owned by boot.js at load and by lib/currencyStore on every toggle. */
+.cur-swap [data-cur] {
+  display: none;
+}
+html:not([data-currency="USD"]) .cur-swap [data-cur="CAD"],
+html[data-currency="USD"] .cur-swap [data-cur="USD"] {
+  display: inline;
+}
+
+/* ─── Scroll reveal ───────────────────────────────────────────────────
+ * Classic fade-up as elements enter the viewport (components/Reveal adds
+ * data-shown via IntersectionObserver).
+ *
+ * The hidden start state is scoped to html.js — set pre-paint by
+ * public/boot.js — so with scripts blocked or slow the content renders
+ * normally instead of staying invisible forever. Reduced-motion users skip
+ * the whole thing.
+ *
+ * UNLAYERED on purpose: the base `*` rule in @layer base sets a 200ms
+ * opacity transition, and un-layered CSS outranks any layer, so these
+ * longer timings and the transform actually apply. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal] {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  html.js [data-reveal][data-shown] {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 520ms ease-out var(--reveal-delay, 0ms),
+      transform 520ms ease-out var(--reveal-delay, 0ms);
+  }
+}

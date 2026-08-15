@@ -117,6 +117,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Blocking, before first paint: writes display-state attributes on
+            <html> so CSS can paint the right variant immediately instead of
+            waiting for hydration. See public/boot.js. Must stay a plain
+            <script src> with no async/defer — that's what makes it blocking. */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src="/boot.js" />
+      </head>
       <body>
         <JsonLd />
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>

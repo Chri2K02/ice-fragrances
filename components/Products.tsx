@@ -2,6 +2,7 @@ import { getCatalog } from "@/lib/catalog";
 import { getReviewAggregate } from "@/lib/productStats";
 import { ProductCard } from "@/components/ProductCard";
 import { glacial } from "@/lib/fonts";
+import { Reveal } from "@/components/Reveal";
 
 export async function Products() {
   // Catalog = versioned JSON identity merged with the editable DB overlay
@@ -35,13 +36,14 @@ export async function Products() {
             Women&apos;s
           </h3>
           <div className="grid gap-8">
-            {women.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                audio={p.audio}
-                rating={ratings.get(p.id)}
-              />
+            {women.map((p, i) => (
+              <Reveal key={p.id} index={i}>
+                <ProductCard
+                  product={p}
+                  audio={p.audio}
+                  rating={ratings.get(p.id)}
+                />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -52,13 +54,14 @@ export async function Products() {
             Men&apos;s
           </h3>
           <div className="grid gap-8">
-            {men.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                audio={p.audio}
-                rating={ratings.get(p.id)}
-              />
+            {men.map((p, i) => (
+              <Reveal key={p.id} index={i}>
+                <ProductCard
+                  product={p}
+                  audio={p.audio}
+                  rating={ratings.get(p.id)}
+                />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -71,13 +74,14 @@ export async function Products() {
             Apparel
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto">
-            {apparel.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                audio={p.audio}
-                rating={ratings.get(p.id)}
-              />
+            {apparel.map((p, i) => (
+              <Reveal key={p.id} index={i}>
+                <ProductCard
+                  product={p}
+                  audio={p.audio}
+                  rating={ratings.get(p.id)}
+                />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -90,13 +94,14 @@ export async function Products() {
             Accessories
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto">
-            {accessories.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                audio={p.audio}
-                rating={ratings.get(p.id)}
-              />
+            {accessories.map((p, i) => (
+              <Reveal key={p.id} index={i}>
+                <ProductCard
+                  product={p}
+                  audio={p.audio}
+                  rating={ratings.get(p.id)}
+                />
+              </Reveal>
             ))}
           </div>
         </div>
