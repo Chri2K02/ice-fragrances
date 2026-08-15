@@ -31,10 +31,18 @@ export const EMAILS = {
   press: "press@icefragrances.com", // media / PR
 } as const;
 
+// Brand voice system: "Reinvent Yourself" (the slogan) LEADS wherever the
+// brand name is visibly present — the name itself carries the category
+// ("Fragrances"), so the slogan can't confuse. "premium, timeless
+// fragrances" (the descriptor) demotes to supporting copy: it keeps SEO
+// keyword presence in the description/keywords, never as a headline.
+// Product-level metadata and transactional email stay purely descriptive —
+// the surfaces where a slogan would displace needed facts.
 export const SITE = {
   name: "Ice Fragrances",
-  title: "Ice Fragrances — Premium, Timeless Fragrances",
-  description: "Premium, Timeless Fragrances. Free shipping to US & Canada.",
+  title: "Ice Fragrances — Reinvent Yourself",
+  description:
+    "Reinvent yourself with premium, timeless fragrances. Free shipping to US & Canada.",
   url: SITE_URL,
   locale: "en_US",
   email: EMAILS.support,
