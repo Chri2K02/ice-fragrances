@@ -98,6 +98,34 @@ export function Header() {
     return () => ro.disconnect();
   }, []);
 
+  // Scroll-collapse progress: 0 at the top of the page → 1 once scrolled
+  // past COLLAPSE_RANGE. Written straight onto the <header> element as the
+  // --hdr-p custom property each scroll frame (rAF-throttled), so scrolling
+  // never re-renders React; the wordmark slide-away, teardrop shrink and row
+  // padding all derive from it in CSS (see "Scroll-collapsing header" in
+  // globals.css). Storefront only — the admin chrome has no lockup.
+  useEffect(() => {
+    if (onAdminHost) return;
+    const el = headerRef.current;
+    if (!el) return;
+    let raf = 0;
+    const COLLAPSE_RANGE = 140;
+    const apply = () => {
+      raf = 0;
+      const p = Math.min(1, Math.max(0, window.scrollY / COLLAPSE_RANGE));
+      el.style.setProperty("--hdr-p", p.toFixed(4));
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(apply);
+    };
+    apply();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [onAdminHost]);
+
   const bar =
     "absolute h-0.5 w-5 rounded-full bg-current transition-all duration-300";
 
@@ -189,7 +217,7 @@ export function Header() {
         {/* Glacial Regular is the header's UI face — nav links, More menu and
             the pill buttons inherit it; the Logo overrides with the Bold cut. */}
         <div
-          className={`${glacialRegular.className} max-w-6xl mx-auto px-4 py-5 relative flex items-center justify-center`}
+          className={`${glacialRegular.className} hdr-row max-w-6xl mx-auto px-4 relative flex items-center justify-center`}
         >
           <nav className="absolute left-4 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-4 text-xs xl:text-sm uppercase tracking-widest">
             {PRIMARY_LINKS.map((l) => (

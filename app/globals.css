@@ -235,3 +235,61 @@ a {
     animation: none;
   }
 }
+
+/* ─── Scroll-collapsing header ────────────────────────────────────────
+ * The lockup collapses to just the CUBE as you scroll: the wordmark
+ * shrinks a little (never illegible) while sliding up out of a clipping
+ * window, and the teardrop scales away to nothing — both return as you
+ * approach the top, the teardrop reaching full size right at it.
+ *
+ * Everything is driven by one custom property, --hdr-p (0 at the top of
+ * the page → 1 once fully collapsed), which Header.tsx writes straight
+ * onto the <header> element per scroll frame — no React re-renders. Where
+ * the var is absent (404 page, no JS yet) every rule below resolves to
+ * the at-rest full-size lockup.
+ *
+ * The teardrop runs on a FASTER ramp — min(1, 1.4 · p) — so it is gone
+ * by p ≈ 0.7 on the way down and only reaches full size at the very top
+ * on the way back. Its wrapper height and its scale use the same factor,
+ * so the visual bottom of the shrinking drop tracks its layout box and
+ * nothing below it jumps.
+ */
+.logo-lockup {
+  /* Gap the wordmark keeps below itself, and the teardrop's rendered
+     height (its wrapper collapse + the svg's own height both read it). */
+  --word-gap: 4px;
+  --drop-h: 16.4px;
+}
+@media (min-width: 640px) {
+  .logo-lockup {
+    --word-gap: 8px;
+    --drop-h: 31.1px;
+  }
+}
+.hdr-word-wrap {
+  /* 1em = the wrapper's own font size = the wordmark's height
+     (leading-none), so the window is font-size-agnostic. */
+  height: calc((1 - var(--hdr-p, 0)) * (1em + var(--word-gap)));
+  overflow: clip;
+}
+.hdr-word {
+  display: block;
+  /* Slide up and out of the clipping window while shrinking a LITTLE —
+     80% at full collapse, still legible the whole way out. */
+  transform: translateY(calc(var(--hdr-p, 0) * -130%))
+    scale(calc(1 - 0.2 * var(--hdr-p, 0)));
+  transform-origin: bottom center;
+  /* Holds 1 until halfway (clamped), fades over the second half. */
+  opacity: calc(2 - 2 * var(--hdr-p, 0));
+}
+.hdr-drop-wrap {
+  height: calc((1 - min(1, 1.4 * var(--hdr-p, 0))) * var(--drop-h));
+}
+.hdr-drop {
+  transform: scale(max(0, calc(1 - 1.4 * var(--hdr-p, 0))));
+  transform-origin: top center;
+}
+/* The header row trades a bit of breathing room away as it collapses. */
+.hdr-row {
+  padding-block: calc(1.25rem - 0.5rem * var(--hdr-p, 0));
+}
