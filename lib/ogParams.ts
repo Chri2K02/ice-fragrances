@@ -44,7 +44,7 @@ export const OG_DEFAULTS: OgParams = {
   dh: 134,
   tag: "Reinvent Yourself",
   tc: "54c4f2",
-  ts: 40,
+  ts: 70,
   gap: 28,
 };
 
